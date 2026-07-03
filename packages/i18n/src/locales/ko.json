@@ -1,0 +1,10 @@
+{
+  "common": {
+    "appName": "AideTalk",
+    "loading": "불러오는 중...",
+    "welcome": "AideTalk에 오신 것을 환영합니다"
+  },
+  "widget": {
+    "launcherLabel": "채팅 시작하기"
+  }
+}

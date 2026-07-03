@@ -1,0 +1,10 @@
+{
+  "common": {
+    "appName": "AideTalk",
+    "loading": "Loading...",
+    "welcome": "Welcome to AideTalk"
+  },
+  "widget": {
+    "launcherLabel": "Start chat"
+  }
+}
