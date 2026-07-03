@@ -1,0 +1,118 @@
+name: 버그 리포트 (Bug Report)
+description: 예상과 다르게 동작하는 부분을 신고합니다.
+title: "[Bug] "
+labels:
+  - bug
+  - triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        버그를 신고해 주셔서 감사합니다. 아래 항목을 최대한 구체적으로 작성해 주시면
+        재현·수정이 빨라집니다.
+
+        > **취약점(보안 문제)을 발견하셨다면 여기가 아니라
+        > [SECURITY.md](../../SECURITY.md)의 절차(GitHub Security Advisories)로
+        > 비공개 신고해 주세요.**
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: 실행 환경
+      description: 셀프호스팅인지 클라우드(SaaS)인지 선택해 주세요.
+      options:
+        - 셀프호스팅 (Docker Compose)
+        - 셀프호스팅 (직접 빌드/커스텀 배포)
+        - 클라우드 (aidetalk 제공 SaaS)
+        - 로컬 개발 환경 (pnpm dev)
+        - 잘 모르겠음
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 버전 / 커밋
+      description: |
+        `docker compose` 이미지 태그, `package.json` 버전, 또는 `git rev-parse HEAD` 결과.
+        클라우드 사용자는 발생 일시(가능하면 워크스페이스 ID 없이)를 적어주세요.
+      placeholder: "예: v0.3.1 / commit a1b2c3d"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: 영향 받는 영역
+      multiple: true
+      options:
+        - 위젯 (embed script / chat UI)
+        - 대시보드 (인박스/설정)
+        - 서버 API / WebSocket
+        - Agent 커넥터 / Dispatcher
+        - 전환 트래킹 (링크/추정 매출)
+        - 실시간 어시스트
+        - 인증/권한
+        - 셀프호스팅 배포 (Docker/DB 마이그레이션)
+        - 기타 / 잘 모르겠음
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 무엇이 잘못되었나요?
+      description: 실제로 발생한 동작을 설명해 주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 예상했던 동작
+      description: 정상이라면 어떻게 동작해야 하나요?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 재현 절차
+      description: 문제를 재현하는 순서를 단계별로 적어주세요.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+        4. 오류 발생
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 로그 / 스크린샷 / 에러 메시지
+      description: |
+        관련 로그, 콘솔 에러, 스크린샷을 붙여넣어 주세요.
+        **주의: 시크릿(agent secret, 세션 토큰, 비밀번호 등)이 포함되지 않았는지
+        확인 후 첨부해 주세요.** (`adt_ab****`처럼 마스킹된 형태는 괜찮습니다.)
+      render: shell
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 기타 환경 정보
+      description: OS, 브라우저(위젯 관련 이슈인 경우 특히 중요), Node 버전 등.
+      placeholder: |
+        - OS:
+        - 브라우저/기기 (위젯 이슈 시 필수):
+        - Node 버전:
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 확인 사항
+      options:
+        - label: 기존 Issue 중 동일한 문제가 없는지 검색했습니다.
+          required: true
+        - label: 재현 절차에 시크릿/개인정보가 포함되지 않았는지 확인했습니다.
+          required: true

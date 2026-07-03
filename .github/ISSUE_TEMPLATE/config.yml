@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 질문 / 사용법 문의 (Question)
+    url: https://github.com/aidetalk/aidetalk/discussions
+    about: "버그나 기능 제안이 아닌 일반 질문, 사용법, 아이디어 논의는 Discussions를 이용해 주세요."
+  - name: 보안 취약점 신고 (Security Vulnerability)
+    url: https://github.com/aidetalk/aidetalk/security/advisories/new
+    about: "취약점은 공개 Issue 대신 GitHub Security Advisories로 비공개 신고해 주세요. 자세한 내용은 SECURITY.md 참고."
