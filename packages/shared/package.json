@@ -2,7 +2,7 @@
   "name": "@aidetalk/shared",
   "version": "0.0.0",
   "private": true,
-  "description": "API 계약 단일 출처(zod 스키마) + 공유 타입 — 실제 구현은 이후 세션에서 채운다 (placeholder)",
+  "description": "API 계약 단일 출처(zod 스키마) + 공유 타입 — 서버/위젯/대시보드가 계약을 여기서 import",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
@@ -13,6 +13,10 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "nanoid": "^3.3.11",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
