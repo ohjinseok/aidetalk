@@ -1,0 +1,2 @@
+# 독립 패키지이므로 lockfile은 커밋하지 않는다 (README의 npm install 안내만 제공)
+package-lock.json

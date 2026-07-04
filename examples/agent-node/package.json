@@ -1,0 +1,21 @@
+{
+  "name": "aidetalk-agent-node-example",
+  "private": true,
+  "version": "0.0.0",
+  "description": "AideTalk 예제 에이전트 (Node/Hono + Claude API) — docs/05_AGENT_PROTOCOL.md 참고 구현",
+  "type": "module",
+  "scripts": {
+    "start": "tsx index.ts",
+    "dev": "tsx watch index.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0",
+    "@hono/node-server": "^1.13.0",
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
