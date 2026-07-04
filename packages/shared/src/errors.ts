@@ -16,6 +16,7 @@ export const ERROR_STATUS = {
   "agent/bad_response": 502, // 에이전트 응답 스키마 불일치
   "conversion/duplicate": 409, // 동일 external_ref 재수신 (내부용 — /t/*는 204로 감춤)
   conflict: 409, // 기타 상태 충돌(이미 active agent 존재 등)
+  internal: 500, // 미처리 서버 내부 오류 (상세는 로그에만, 응답엔 일반 문구)
 } as const satisfies Record<string, number>;
 
 export type ErrorCode = keyof typeof ERROR_STATUS;

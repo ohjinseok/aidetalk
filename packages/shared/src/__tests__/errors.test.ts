@@ -15,8 +15,9 @@ describe("AppError", () => {
       "agent/bad_response": 502,
       "conversion/duplicate": 409,
       conflict: 409,
+      internal: 500,
     });
-    expect(ERROR_CODES).toHaveLength(10);
+    expect(ERROR_CODES).toHaveLength(11);
   });
 
   it("AppError.of는 표에서 status를 자동 매핑한다", () => {
