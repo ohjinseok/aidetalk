@@ -95,6 +95,18 @@ export function makeMessageRepo(db: Database) {
         .limit(limit);
     },
 
+    /** 대화의 마지막 메시지 1건(인박스 요약용). 없으면 undefined. */
+    async getLast(workspaceId: string, conversationId: string) {
+      await assertOwned(workspaceId, conversationId);
+      const [row] = await db
+        .select()
+        .from(messages)
+        .where(eq(messages.conversationId, conversationId))
+        .orderBy(desc(messages.createdAt), desc(messages.id))
+        .limit(1);
+      return row;
+    },
+
     /** 최근 n개 — 최신 n개를 뽑되 오래된→최신 순으로 정렬해 반환. */
     async listRecent(workspaceId: string, conversationId: string, n = 50) {
       await assertOwned(workspaceId, conversationId);

@@ -2,10 +2,11 @@
  * conversationRepo — 03_DATA_MODEL.md §3.
  */
 import { newId } from "@aidetalk/shared";
-import { and, desc, eq, lt, or } from "drizzle-orm";
+import { and, desc, eq, lt, or, sql } from "drizzle-orm";
 
 import type { Database } from "../client";
 import { conversations, type ConversationMetadata } from "../schema/conversations";
+import { messages } from "../schema/messages";
 import type { Cursor } from "./_context";
 
 export interface CreateConversationInput {
@@ -19,6 +20,7 @@ export interface ListInboxParams {
   status?: "open" | "pending" | "closed";
   cursor?: Cursor; // 이 커서보다 오래된(lastMessageAt 기준) 항목
   limit?: number; // 기본 30
+  q?: string; // messages.content->>'text' ILIKE 단순 검색(v1)
 }
 
 export function makeConversationRepo(db: Database) {
@@ -55,6 +57,13 @@ export function makeConversationRepo(db: Database) {
       const limit = params.limit ?? 30;
       const conds = [eq(conversations.workspaceId, workspaceId)];
       if (params.status) conds.push(eq(conversations.status, params.status));
+      if (params.q) {
+        // 메시지 본문 ILIKE 검색 — 대화별 EXISTS 상관 서브쿼리(v1 단순 검색).
+        const like = `%${params.q}%`;
+        conds.push(
+          sql`EXISTS (SELECT 1 FROM ${messages} WHERE ${messages.conversationId} = ${conversations.id} AND ${messages.content}->>'text' ILIKE ${like})`,
+        );
+      }
       if (params.cursor) {
         // (lastMessageAt, id) < (cursor.createdAt, cursor.id) — desc 페이지네이션
         const cursorAt = new Date(params.cursor.createdAt);

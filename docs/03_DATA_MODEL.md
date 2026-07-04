@@ -69,6 +69,7 @@ export const agents = pgTable("agents", {
   name: text("name").notNull(),
   endpointUrl: text("endpoint_url").notNull(),       // 클라우드: https 필수
   secretHash: text("secret_hash").notNull(),         // sha256(secret). 원문은 생성 시 1회 노출
+  secretEnc: text("secret_enc").notNull(),           // AES-256-GCM(secret) — 아웃바운드 HMAC 서명용, 서명 시에만 복호화 (08 §1)
   status: text("status").notNull().default("active"),// 'active' | 'disabled' | 'auto_disabled'
   failureCount: integer("failure_count").notNull().default(0), // reply 연속 실패, 성공 시 0
   timeoutMs: integer("timeout_ms").notNull().default(30000),

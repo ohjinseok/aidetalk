@@ -3,13 +3,52 @@
  * - agent/webhook secret: sha256(secret) 저장(03 §2). 원문은 저장/로그 금지(CLAUDE.md 규칙 5).
  * - password: argon2id(03 §2 users.passwordHash). pure-WASM(hash-wasm)이라 네이티브 빌드 불필요.
  */
-import { createHash } from "node:crypto";
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+} from "node:crypto";
 
 import { argon2id, argon2Verify } from "hash-wasm";
 
 /** secret 원문 → sha256 hex. 커넥터/웹훅 시크릿 저장·비교에만 사용. */
 export function hashSecret(secret: string): string {
   return createHash("sha256").update(secret, "utf8").digest("hex");
+}
+
+/** 키 문자열(예: SESSION_SECRET) → AES-256 키(32바이트). */
+function deriveAesKey(keyMaterial: string): Buffer {
+  return createHash("sha256").update(keyMaterial, "utf8").digest();
+}
+
+/**
+ * 아웃바운드 서명용 secret 원문을 AES-256-GCM으로 암호화.
+ * 반환 형식: `{iv}.{authTag}.{ciphertext}` (전부 base64url).
+ * ⚠️ 원문은 절대 로그/응답에 남기지 않는다(규칙 5). DB에는 이 암호문만 보관.
+ */
+export function encryptSecret(plaintext: string, keyMaterial: string): string {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", deriveAesKey(keyMaterial), iv);
+  const ciphertext = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return `${iv.toString("base64url")}.${tag.toString("base64url")}.${ciphertext.toString("base64url")}`;
+}
+
+/** encryptSecret로 만든 암호문을 복호화해 원문 secret을 반환. 형식 오류/변조 시 throw. */
+export function decryptSecret(payload: string, keyMaterial: string): string {
+  const [ivB, tagB, dataB] = payload.split(".");
+  if (!ivB || !tagB || !dataB) throw new Error("secret 암호문 형식 오류");
+  const decipher = createDecipheriv(
+    "aes-256-gcm",
+    deriveAesKey(keyMaterial),
+    Buffer.from(ivB, "base64url"),
+  );
+  decipher.setAuthTag(Buffer.from(tagB, "base64url"));
+  return Buffer.concat([
+    decipher.update(Buffer.from(dataB, "base64url")),
+    decipher.final(),
+  ]).toString("utf8");
 }
 
 /** 저장된 secretHash와 원문 secret이 일치하는지 상수시간에 준하는 비교(hex 동등). */

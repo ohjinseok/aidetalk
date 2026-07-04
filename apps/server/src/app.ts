@@ -14,6 +14,7 @@ import {
 } from "./http/middleware";
 import type { HonoEnv } from "./http/types";
 import { createAuthRoutes, createMeRoute } from "./routes/auth";
+import { createInviteRoutes } from "./routes/invites";
 import { createWidgetRoutes } from "./routes/widget";
 import { createWorkspaceRoutes } from "./routes/workspaces";
 
@@ -33,6 +34,7 @@ export function createApp(ctx: AppContext): Hono<HonoEnv> {
   app.route("/v1/widget", createWidgetRoutes());
   app.route("/v1/auth", createAuthRoutes());
   app.route("/v1", createMeRoute()); // GET /v1/me
+  app.route("/v1/invites", createInviteRoutes());
   app.route("/v1/workspaces", createWorkspaceRoutes());
 
   return app;

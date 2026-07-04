@@ -48,6 +48,27 @@ export function makeWorkspaceRepo(db: Database) {
       return row;
     },
 
+    /** name/widgetSettings/attributionRule 부분 갱신(PATCH /settings). 변경 필드만 전달. */
+    async updateSettingsFields(
+      workspaceId: string,
+      patch: {
+        name?: string;
+        widgetSettings?: WidgetSettings;
+        attributionRule?: "last_click" | "first_click";
+      },
+    ) {
+      const set: Record<string, unknown> = { updatedAt: new Date() };
+      if (patch.name !== undefined) set.name = patch.name;
+      if (patch.widgetSettings !== undefined) set.widgetSettings = patch.widgetSettings;
+      if (patch.attributionRule !== undefined) set.attributionRule = patch.attributionRule;
+      const [row] = await db
+        .update(workspaces)
+        .set(set)
+        .where(eq(workspaces.id, workspaceId))
+        .returning();
+      return row;
+    },
+
     async updatePlan(workspaceId: string, plan: "oss" | "starter" | "pro") {
       const [row] = await db
         .update(workspaces)

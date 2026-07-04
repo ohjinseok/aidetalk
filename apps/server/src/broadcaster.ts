@@ -20,6 +20,13 @@ export interface Broadcaster {
   conversationUpdated(conversation: Conversation): Promise<void>;
   typing(conversationId: string, by: "ai" | "human", isTyping: boolean): Promise<void>;
   inboxUpsert(workspaceId: string, summary: ConversationSummary): Promise<void>;
+  /** 핸드오프 알림 — ws:{id}:inbox 채널(agent 소켓 전용). 브라우저 알림 트리거(§5.4). */
+  handoffNew(
+    workspaceId: string,
+    summary: ConversationSummary,
+    reason: string,
+    handoffSummary: string | null,
+  ): Promise<void>;
   presence(conversationId: string, visitorOnline: boolean): Promise<void>;
   /** ⚠️ agents 채널 전용. */
   suggestionNew(conversationId: string, suggestion: Suggestion): Promise<void>;
@@ -50,6 +57,16 @@ export function createBroadcaster(pubsub: PubSubAdapter): Broadcaster {
       await pubsub.publish(
         channels.wsInbox(workspaceId),
         envelope("inbox.upsert", { conversationSummary: summary }),
+      );
+    },
+    async handoffNew(workspaceId, summary, reason, handoffSummary) {
+      await pubsub.publish(
+        channels.wsInbox(workspaceId),
+        envelope("handoff.new", {
+          conversationSummary: summary,
+          reason,
+          summary: handoffSummary,
+        }),
       );
     },
     async presence(conversationId, visitorOnline) {

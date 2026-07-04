@@ -15,6 +15,13 @@
       "when": 1783139331009,
       "tag": "0001_parallel_firebird",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783140030018,
+      "tag": "0002_fuzzy_triton",
+      "breakpoints": true
     }
   ]
 }

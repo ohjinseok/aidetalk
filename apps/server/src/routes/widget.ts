@@ -16,14 +16,17 @@ import {
   longPollSendRequestSchema,
   profilePatchRequestSchema,
   sessionRequestSchema,
+  widgetHandoffRequestSchema,
   type CreateConversationRequest,
   type LongPollSendRequest,
   type ProfilePatchRequest,
   type SessionRequest,
+  type WidgetHandoffRequest,
 } from "../http/schemas";
 import type { HonoEnv } from "../http/types";
 import { decodeCursor, encodeCursor } from "../lib/cursor";
 import { serializeConversation, serializeMessage } from "../lib/serialize";
+import { performHandoff } from "../services/handoff";
 import { signVisitorToken, verifyVisitorToken } from "../lib/visitor-token";
 import {
   evaluateWidgetSettings,
@@ -178,6 +181,32 @@ export function createWidgetRoutes(): Hono<HonoEnv> {
       text: body.text,
     });
     return c.json({ message }, 201);
+  });
+
+  // ---------- 손님 "상담원 연결" 요청 ----------
+  app.post("/handoff", validateJson(widgetHandoffRequestSchema), async (c) => {
+    const ctx = c.get("ctx");
+    const visitor = c.get("visitor")!;
+    const body = validated<WidgetHandoffRequest>(c);
+
+    const conv = await ctx.repos.conversation.getById(visitor.workspaceId, body.conversationId);
+    if (!conv || conv.visitorId !== visitor.visitorId) {
+      throw AppError.of("not_found", "대화를 찾을 수 없다.");
+    }
+
+    // 이미 human이면 멱등(중복 이벤트 방지).
+    if (conv.mode !== "human") {
+      await performHandoff(ctx, {
+        workspaceId: visitor.workspaceId,
+        conversation: serializeConversation(conv),
+        eventType: "handoff_requested",
+        reason: t("server.handoffRequestedReason"),
+        summary: null,
+        messageToVisitor: null,
+        actor: `visitor:${visitor.visitorId}`,
+      });
+    }
+    return c.json({ ok: true });
   });
 
   // ---------- 프로필 점진 수집 ----------

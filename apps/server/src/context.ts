@@ -8,7 +8,7 @@ import { createRepos, type Database, type Repos } from "@aidetalk/db";
 import { NoopPlanEnforcer, type PlanEnforcer } from "@aidetalk/shared";
 
 import { createBroadcaster, type Broadcaster } from "./broadcaster";
-import { NoopAgentDispatcher, type AgentDispatcher } from "./dispatcher";
+import { HttpAgentDispatcher, type AgentDispatcher } from "./dispatcher";
 import type { Env } from "./env";
 import { createLogger, type Logger } from "./logger";
 import type { ClosablePubSub } from "./pubsub";
@@ -42,7 +42,7 @@ export interface CreateContextDeps {
 /** 주입된 어댑터로 AppContext를 조립한다. repos/broadcaster는 여기서 파생. */
 export function createContext(deps: CreateContextDeps): AppContext {
   const logger = deps.logger ?? createLogger(deps.env.LOG_LEVEL);
-  return {
+  const ctx: AppContext = {
     env: deps.env,
     logger,
     db: deps.db,
@@ -53,6 +53,9 @@ export function createContext(deps: CreateContextDeps): AppContext {
     sessionStore: deps.sessionStore,
     // 셀프호스팅/테스트 기본값 — cloud는 index.ts에서 ee의 CloudPlanEnforcer 주입(다음 웨이브).
     planEnforcer: deps.planEnforcer ?? new NoopPlanEnforcer(),
-    dispatcher: deps.dispatcher ?? new NoopAgentDispatcher(),
+    // 주입이 없으면 실제 HTTP 릴레이 dispatcher(ctx 참조 필요 → 조립 후 주입).
+    dispatcher: deps.dispatcher ?? (undefined as unknown as AgentDispatcher),
   };
+  if (!deps.dispatcher) ctx.dispatcher = new HttpAgentDispatcher(ctx);
+  return ctx;
 }

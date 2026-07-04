@@ -3,7 +3,7 @@
 > 해당 영역 구현 시 이 체크리스트를 수용 기준으로 삼는다. M2 "보안 점검" 항목은 이 문서 전체를 감사하는 작업이다.
 
 ## 1. 시크릿 취급
-- Agent shared secret: 생성 시 `adt_` + 32바이트 random. DB에는 sha256 해시만. 원문은 생성/재발급 응답 1회.
+- Agent shared secret: 생성 시 `adt_` + 32바이트 random. 원문은 생성/재발급 응답 1회. DB에는 sha256 해시(비교용) + AES-256-GCM 암호문(`secret_enc`) — 우리가 아웃바운드 HMAC 서명 주체라 원문 재현이 필요하므로, 서명 시에만 복호화한다(키는 SESSION_SECRET 파생, 복호화 결과 로그/응답 노출 금지).
 - 비교는 항상 timing-safe.
 - 로그 마스킹: pino redact 설정으로 `secret`, `password`, `authorization`, `cookie` 경로 자동 마스킹. secret류 출력 필요 시 `adt_ab****` 형식.
 - 서버 시크릿(`VISITOR_TOKEN_SECRET`, `SESSION_SECRET` 등)은 환경변수로만. 코드/레포에 절대 커밋 금지 — `.env.example`에는 placeholder만.

@@ -41,6 +41,9 @@ importers:
       '@aidetalk/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@aidetalk/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       next:
         specifier: ^15.5.20
         version: 15.5.20(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -50,6 +53,9 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.2.7(react@19.2.7)
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
     devDependencies:
       '@types/node':
         specifier: ^22.10.2

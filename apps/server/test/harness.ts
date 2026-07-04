@@ -6,8 +6,10 @@ import { once } from "node:events";
 import type { AddressInfo } from "node:net";
 
 import { serve } from "@hono/node-server";
-import { createDbConnection, type DbConnection } from "@aidetalk/db";
+import { createDbConnection, encryptSecret, type DbConnection } from "@aidetalk/db";
 import { WebSocket } from "ws";
+
+import type { HttpAgentDispatcher } from "../src/dispatcher";
 
 import { createApp } from "../src/app";
 import { createContext } from "../src/context";
@@ -21,16 +23,18 @@ import type { AppContext } from "../src/context";
 import { TEST_DATABASE_URL } from "./pg";
 
 export const TEST_VISITOR_SECRET = "test_visitor_secret_at_least_16_chars";
+export const TEST_SESSION_SECRET = "test_session_secret_at_least_16_chars";
 
-export function testEnv(): Env {
+export function testEnv(overrides: Partial<NodeJS.ProcessEnv> = {}): Env {
   return parseEnv({
     DATABASE_URL: TEST_DATABASE_URL,
     PUBSUB_DRIVER: "memory",
     SERVER_URL: "http://localhost:4000",
     DASHBOARD_URL: "http://localhost:3000",
     VISITOR_TOKEN_SECRET: TEST_VISITOR_SECRET,
-    SESSION_SECRET: "test_session_secret_at_least_16_chars",
+    SESSION_SECRET: TEST_SESSION_SECRET,
     LOG_LEVEL: "silent",
+    ...overrides,
   } as NodeJS.ProcessEnv);
 }
 
@@ -42,8 +46,10 @@ export interface Harness {
   close(): Promise<void>;
 }
 
-export async function createHarness(): Promise<Harness> {
-  const env = testEnv();
+export async function createHarness(
+  envOverrides: Partial<NodeJS.ProcessEnv> = {},
+): Promise<Harness> {
+  const env = testEnv(envOverrides);
   const conn: DbConnection = createDbConnection(TEST_DATABASE_URL);
   const pubsub = createMemoryPubSub();
   const rateLimiter = createMemoryRateLimiter();
@@ -127,6 +133,31 @@ export async function newVisitorSession(
 export async function newConversation(h: Harness, token: string): Promise<string> {
   const res = await http(h, "POST", "/v1/widget/conversations", { token, body: {} });
   return res.json.conversation.id;
+}
+
+/** 알려진 secret으로 워크스페이스에 active 커넥터 등록(dispatch/서명 테스트용). */
+export async function registerMockAgent(
+  h: Harness,
+  workspaceId: string,
+  endpointUrl: string,
+  opts: { secret?: string; timeoutMs?: number; assistEnabled?: boolean } = {},
+): Promise<{ agentId: string; secret: string }> {
+  const secret = opts.secret ?? "adt_test_secret_abcdefghijklmnop";
+  const secretEnc = encryptSecret(secret, TEST_SESSION_SECRET);
+  const agent = await h.ctx.repos.agent.create(workspaceId, {
+    name: "mock-agent",
+    endpointUrl,
+    secret,
+    secretEnc,
+    timeoutMs: opts.timeoutMs ?? 30000,
+    assistEnabled: opts.assistEnabled ?? true,
+  });
+  return { agentId: agent.id, secret };
+}
+
+/** 진행 중 dispatch 완료 대기(결정성). */
+export async function drainDispatch(h: Harness): Promise<void> {
+  await (h.ctx.dispatcher as HttpAgentDispatcher).whenIdle?.();
 }
 
 /** 유저 + 활성 멤버십 + 세션 쿠키 생성. */

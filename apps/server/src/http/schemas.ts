@@ -58,3 +58,67 @@ export const createWorkspaceRequestSchema = z.object({
   segment: z.enum(["s1_site", "s2_no_site"]).default("s1_site"),
 });
 export type CreateWorkspaceRequest = z.infer<typeof createWorkspaceRequestSchema>;
+
+/** PATCH /v1/workspaces/:wsId/settings — owner만(§2). */
+export const updateWorkspaceSettingsRequestSchema = z
+  .object({
+    name: z.string().min(1).optional(),
+    widgetSettings: z.record(z.unknown()).optional(),
+    attributionRule: z.enum(["last_click", "first_click"]).optional(),
+  })
+  .refine((v) => Object.keys(v).length > 0, { message: "변경할 항목이 필요하다." });
+export type UpdateWorkspaceSettingsRequest = z.infer<typeof updateWorkspaceSettingsRequestSchema>;
+
+// ---------- 멤버/초대 (§2) ----------
+export const inviteMemberRequestSchema = z.object({
+  email: z.string().email(),
+  role: z.enum(["owner", "agent_member"]).default("agent_member"),
+});
+export type InviteMemberRequest = z.infer<typeof inviteMemberRequestSchema>;
+
+export const acceptInviteRequestSchema = z.object({
+  inviteToken: z.string().min(1),
+});
+export type AcceptInviteRequest = z.infer<typeof acceptInviteRequestSchema>;
+
+// ---------- Agent 커넥터 (§2) ----------
+export const createAgentRequestSchema = z.object({
+  name: z.string().min(1),
+  endpointUrl: z.string().min(1),
+  timeoutMs: z.number().int().min(1000).max(120000).optional(),
+});
+export type CreateAgentRequest = z.infer<typeof createAgentRequestSchema>;
+
+export const updateAgentRequestSchema = z
+  .object({
+    name: z.string().min(1).optional(),
+    endpointUrl: z.string().min(1).optional(),
+    timeoutMs: z.number().int().min(1000).max(120000).optional(),
+    assistEnabled: z.boolean().optional(),
+    // status는 active|disabled만 사용자 지정 가능(auto_disabled는 시스템 전용).
+    status: z.enum(["active", "disabled"]).optional(),
+  })
+  .refine((v) => Object.keys(v).length > 0, { message: "변경할 항목이 필요하다." });
+export type UpdateAgentRequest = z.infer<typeof updateAgentRequestSchema>;
+
+// ---------- 인박스 (§2) ----------
+export const inboxSendMessageRequestSchema = z.object({
+  text: z.string().min(1).max(4000),
+});
+export type InboxSendMessageRequest = z.infer<typeof inboxSendMessageRequestSchema>;
+
+export const assignConversationRequestSchema = z.object({
+  userId: z.string().min(1).nullable(),
+});
+export type AssignConversationRequest = z.infer<typeof assignConversationRequestSchema>;
+
+export const patchSuggestionRequestSchema = z.object({
+  outcome: z.enum(["accepted", "edited", "ignored"]),
+});
+export type PatchSuggestionRequest = z.infer<typeof patchSuggestionRequestSchema>;
+
+// ---------- 위젯 핸드오프 (§1) ----------
+export const widgetHandoffRequestSchema = z.object({
+  conversationId: z.string().min(1),
+});
+export type WidgetHandoffRequest = z.infer<typeof widgetHandoffRequestSchema>;

@@ -6,9 +6,12 @@ import type {
   Conversation,
   ConversationMode,
   ConversationStatus,
+  Event,
+  EventType,
   Message,
   MessageContent,
   MessageRole,
+  Suggestion,
 } from "@aidetalk/shared";
 
 /** messages row → Message. */
@@ -51,6 +54,100 @@ export function serializeConversation(row: {
     assigneeId: row.assigneeId,
     lastMessageAt: row.lastMessageAt ? toIso(row.lastMessageAt) : null,
     metadata: row.metadata,
+    createdAt: toIso(row.createdAt),
+  };
+}
+
+/** assist_suggestions row → Suggestion(04 §6). ⚠️ 상담원 전용 객체(규칙 9). */
+export function serializeSuggestion(row: {
+  id: string;
+  conversationId: string;
+  triggerMessageId: string;
+  draft: string;
+  rationale: string | null;
+  actions: { label: string; url: string }[] | null;
+  source: string;
+  outcome: string;
+  createdAt: Date | string;
+}): Suggestion {
+  return {
+    id: row.id,
+    conversationId: row.conversationId,
+    triggerMessageId: row.triggerMessageId,
+    draft: row.draft,
+    rationale: row.rationale,
+    actions: row.actions,
+    source: row.source as Suggestion["source"],
+    outcome: row.outcome as Suggestion["outcome"],
+    createdAt: toIso(row.createdAt),
+  };
+}
+
+/** conversation_events row → Event(04 §6). */
+export function serializeEvent(row: {
+  id: string;
+  type: string;
+  actor: string;
+  payload: Record<string, unknown>;
+  createdAt: Date | string;
+}): Event {
+  return {
+    id: row.id,
+    type: row.type as EventType,
+    actor: row.actor,
+    payload: row.payload,
+    createdAt: toIso(row.createdAt),
+  };
+}
+
+/** agents row → 공개 Agent 객체. ⚠️ secretHash/secretEnc는 절대 포함하지 않는다(규칙 5). */
+export function serializeAgent(row: {
+  id: string;
+  workspaceId: string;
+  name: string;
+  endpointUrl: string;
+  status: string;
+  failureCount: number;
+  timeoutMs: number;
+  assistEnabled: boolean;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}) {
+  return {
+    id: row.id,
+    workspaceId: row.workspaceId,
+    name: row.name,
+    endpointUrl: row.endpointUrl,
+    status: row.status,
+    failureCount: row.failureCount,
+    timeoutMs: row.timeoutMs,
+    assistEnabled: row.assistEnabled,
+    createdAt: toIso(row.createdAt),
+    updatedAt: toIso(row.updatedAt),
+  };
+}
+
+/** agent_logs row → 공개 로그 객체(요약만, 시크릿 없음). */
+export function serializeAgentLog(row: {
+  id: string;
+  agentId: string;
+  conversationId: string;
+  messageId: string | null;
+  mode: string;
+  requestSummary: Record<string, unknown>;
+  responseSummary: Record<string, unknown> | null;
+  outcome: string;
+  createdAt: Date | string;
+}) {
+  return {
+    id: row.id,
+    agentId: row.agentId,
+    conversationId: row.conversationId,
+    messageId: row.messageId,
+    mode: row.mode,
+    requestSummary: row.requestSummary,
+    responseSummary: row.responseSummary,
+    outcome: row.outcome,
     createdAt: toIso(row.createdAt),
   };
 }

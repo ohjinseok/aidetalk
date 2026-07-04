@@ -5,7 +5,7 @@
  */
 import { newId } from "@aidetalk/shared";
 import { AppError } from "@aidetalk/shared";
-import { and, eq, ne } from "drizzle-orm";
+import { and, asc, eq, ne } from "drizzle-orm";
 
 import type { Database } from "../client";
 import { hashSecret } from "../crypto";
@@ -15,6 +15,7 @@ export interface CreateAgentInput {
   name: string;
   endpointUrl: string;
   secret: string; // 평문 — repo가 sha256 해시화. 원문은 호출측이 1회 노출 후 폐기.
+  secretEnc: string; // 서명용 원문의 AES-GCM 암호문(호출측이 SESSION_SECRET 파생키로 생성).
   timeoutMs?: number;
   assistEnabled?: boolean;
 }
@@ -54,6 +55,7 @@ export function makeAgentRepo(db: Database) {
           name: input.name,
           endpointUrl: input.endpointUrl,
           secretHash: hashSecret(input.secret),
+          secretEnc: input.secretEnc,
           status: "active",
           timeoutMs: input.timeoutMs ?? 30000,
           assistEnabled: input.assistEnabled ?? true,
@@ -71,11 +73,20 @@ export function makeAgentRepo(db: Database) {
       return row;
     },
 
-    /** secret 재발급 — 새 해시 저장, 평문은 호출측이 1회 노출. */
-    async rotateSecret(workspaceId: string, agentId: string, newSecret: string) {
+    /** secret 재발급 — 새 해시+암호문 저장, 평문은 호출측이 1회 노출. */
+    async rotateSecret(
+      workspaceId: string,
+      agentId: string,
+      newSecret: string,
+      newSecretEnc: string,
+    ) {
       const [row] = await db
         .update(agents)
-        .set({ secretHash: hashSecret(newSecret), updatedAt: new Date() })
+        .set({
+          secretHash: hashSecret(newSecret),
+          secretEnc: newSecretEnc,
+          updatedAt: new Date(),
+        })
         .where(and(eq(agents.workspaceId, workspaceId), eq(agents.id, agentId)))
         .returning();
       return row;
@@ -131,6 +142,15 @@ export function makeAgentRepo(db: Database) {
         .from(agents)
         .where(and(eq(agents.workspaceId, workspaceId), eq(agents.id, agentId)));
       return row;
+    },
+
+    /** 워크스페이스의 모든 커넥터(생성순). GET /v1/workspaces/:wsId/agents. */
+    async list(workspaceId: string) {
+      return db
+        .select()
+        .from(agents)
+        .where(eq(agents.workspaceId, workspaceId))
+        .orderBy(asc(agents.createdAt), asc(agents.id));
     },
   };
 }

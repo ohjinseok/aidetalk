@@ -63,14 +63,16 @@ export async function sendVisitorMessage(
   );
   if (summary) await ctx.broadcaster.inboxUpsert(visitor.workspaceId, summary);
 
-  // mode=ai면 dispatcher 훅(실구현은 다음 웨이브의 Noop).
-  if ((updatedConv ?? conv).mode === "ai") {
-    await ctx.dispatcher.onVisitorMessage({
-      workspaceId: visitor.workspaceId,
-      conversation: serializeConversation(updatedConv ?? conv),
-      message,
-    });
-  }
+  // dispatcher 훅 — mode=ai면 reply, mode=human이면 assist dispatch를 수행한다.
+  // ⚠️ ack를 막지 않도록 fire-and-forget(백그라운드). 실패는 dispatcher 내부에서 로깅.
+  const dispatchCtx = {
+    workspaceId: visitor.workspaceId,
+    conversation: serializeConversation(updatedConv ?? conv),
+    message,
+  };
+  void ctx.dispatcher.onVisitorMessage(dispatchCtx).catch((err) => {
+    ctx.logger.error({ err: (err as Error).message }, "dispatcher.onVisitorMessage 실패");
+  });
 
   return message;
 }

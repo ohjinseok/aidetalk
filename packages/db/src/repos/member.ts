@@ -62,6 +62,15 @@ export function makeMemberRepo(db: Database) {
       return row!;
     },
 
+    /** inviteToken으로 초대 멤버 조회(수락 시 워크스페이스/대상 유저 확인용). 없으면 undefined. */
+    async getByInviteToken(inviteToken: string) {
+      const [row] = await db
+        .select()
+        .from(members)
+        .where(and(eq(members.inviteToken, inviteToken), eq(members.status, "invited")));
+      return row;
+    },
+
     /** 초대 수락: status=active, inviteToken 제거. */
     async acceptInvite(workspaceId: string, inviteToken: string) {
       const [row] = await db

@@ -24,7 +24,9 @@ export const conversations = pgTable(
     status: text("status").notNull().default("open"), // 'open' | 'pending' | 'closed'
     mode: text("mode").notNull().default("ai"), // 'ai' | 'human' — 핸드오프 핵심 상태
     assigneeId: text("assignee_id"), // FK users, mode=human일 때 담당
-    lastMessageAt: timestamp("last_message_at", { withTimezone: true }),
+    // ⚠️ 밀리초 정밀도(precision 3): messages.created_at과 정밀도를 맞춰
+    //   (last_message_at, id) 키셋 커서가 마이크로초 잔차로 중복/누락되지 않게 한다(인박스 목록).
+    lastMessageAt: timestamp("last_message_at", { withTimezone: true, precision: 3 }),
     metadata: jsonb("metadata").$type<ConversationMetadata>().notNull().default({}),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
