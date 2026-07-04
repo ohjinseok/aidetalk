@@ -152,6 +152,36 @@ export function serializeAgentLog(row: {
   };
 }
 
+/** tracked_links row → 대화 트래킹 상세 항목(04 §2). */
+export function serializeTrackedLink(row: {
+  id: string;
+  targetUrl: string;
+  clickedAt: Date | string | null;
+  messageId: string | null;
+}) {
+  return {
+    id: row.id,
+    targetUrl: row.targetUrl,
+    clickedAt: row.clickedAt ? toIso(row.clickedAt) : null,
+    messageId: row.messageId,
+  };
+}
+
+/** conversions row → 대화 트래킹 상세 항목(04 §2). ⚠️ 규칙 10: amount는 "기여 추정" 맥락에서만 노출. */
+export function serializeConversionEvent(row: {
+  id: string;
+  source: string;
+  amount: number | null;
+  occurredAt: Date | string;
+}) {
+  return {
+    id: row.id,
+    source: row.source,
+    amount: row.amount,
+    occurredAt: toIso(row.occurredAt),
+  };
+}
+
 /** 메시지 미리보기 텍스트(인박스 요약용). */
 export function messagePreview(content: MessageContent): string {
   return content.text.slice(0, 140);

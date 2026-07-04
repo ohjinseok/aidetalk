@@ -104,6 +104,35 @@ export function makeConversionRepo(db: Database) {
         .from(conversions)
         .where(and(eq(conversions.workspaceId, workspaceId), isNotNull(conversions.trackedLinkId)));
     },
+
+    /**
+     * 기간 내 트래킹 요약(GET /v1/workspaces/:wsId/tracking/summary, 04 §2).
+     * bySource: click_only/pixel 건수. attributedRevenueKrw: trackedLinkId가 있는(=링크 클릭으로
+     * 귀속된) 전환의 amount 합 — ⚠️ 규칙 10: "상담 기여 매출(추정)"이며 인과 확정이 아니다.
+     */
+    async summarizeAttributed(workspaceId: string, from: Date, to: Date) {
+      const rows = await db
+        .select({
+          source: conversions.source,
+          count: sql<number>`count(*)::int`,
+          attributed: sql<number>`coalesce(sum(${conversions.amount}) filter (where ${conversions.trackedLinkId} is not null), 0)::bigint`,
+        })
+        .from(conversions)
+        .where(
+          and(eq(conversions.workspaceId, workspaceId), between(conversions.occurredAt, from, to)),
+        )
+        .groupBy(conversions.source);
+
+      const bySource = { click_only: 0, pixel: 0 };
+      let attributedRevenueKrw = 0;
+      for (const row of rows) {
+        if (row.source === "click_only" || row.source === "pixel") {
+          bySource[row.source] = row.count;
+        }
+        attributedRevenueKrw += Number(row.attributed);
+      }
+      return { attributedRevenueKrw, bySource };
+    },
   };
 }
 

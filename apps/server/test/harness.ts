@@ -92,9 +92,14 @@ export async function http(
   h: Harness,
   method: string,
   path: string,
-  opts: { token?: string; cookie?: string; body?: unknown } = {},
+  opts: {
+    token?: string;
+    cookie?: string;
+    body?: unknown;
+    headers?: Record<string, string>;
+  } = {},
 ): Promise<HttpResult> {
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = { ...opts.headers };
   if (opts.body !== undefined) headers["content-type"] = "application/json";
   if (opts.token) headers["authorization"] = `Bearer ${opts.token}`;
   if (opts.cookie) headers["cookie"] = opts.cookie;

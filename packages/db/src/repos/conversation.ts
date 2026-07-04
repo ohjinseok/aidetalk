@@ -2,7 +2,7 @@
  * conversationRepo — 03_DATA_MODEL.md §3.
  */
 import { newId } from "@aidetalk/shared";
-import { and, desc, eq, lt, or, sql } from "drizzle-orm";
+import { and, between, desc, eq, lt, or, sql } from "drizzle-orm";
 
 import type { Database } from "../client";
 import { conversations, type ConversationMetadata } from "../schema/conversations";
@@ -148,6 +148,17 @@ export function makeConversationRepo(db: Database) {
         )
         .returning();
       return row;
+    },
+
+    /** 기간 내 생성된 대화 수 — 트래킹 요약 카드 "총 대화"(04 §2). */
+    async countCreatedInPeriod(workspaceId: string, from: Date, to: Date) {
+      const [row] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(conversations)
+        .where(
+          and(eq(conversations.workspaceId, workspaceId), between(conversations.createdAt, from, to)),
+        );
+      return row?.count ?? 0;
     },
 
     async touchLastMessage(workspaceId: string, conversationId: string, at: Date = new Date()) {

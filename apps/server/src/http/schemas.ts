@@ -122,3 +122,20 @@ export const widgetHandoffRequestSchema = z.object({
   conversationId: z.string().min(1),
 });
 export type WidgetHandoffRequest = z.infer<typeof widgetHandoffRequestSchema>;
+
+// ---------- 트래킹 엔드포인트 (§3, 무인증) ----------
+// ⚠️ /t/*는 검증 실패도 204로 감춘다(라우트에서 safeParse로 처리, validateJson 미들웨어 미사용).
+export const trackClickRequestSchema = z.object({
+  token: z.string().min(1),
+});
+export type TrackClickRequest = z.infer<typeof trackClickRequestSchema>;
+
+export const trackConversionRequestSchema = z.object({
+  workspaceId: z.string().min(1),
+  externalRef: z.string().min(1).optional(),
+  amount: z.number().finite().optional(),
+  currency: z.string().min(1).optional(),
+  occurredAt: z.string().optional(),
+  visitorToken: z.string().optional(),
+});
+export type TrackConversionRequest = z.infer<typeof trackConversionRequestSchema>;
