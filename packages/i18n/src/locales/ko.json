@@ -5,6 +5,33 @@
     "welcome": "AideTalk에 오신 것을 환영합니다"
   },
   "widget": {
-    "launcherLabel": "채팅 시작하기"
+    "launcherLabel": "채팅 시작하기",
+    "launcherAriaOpen": "채팅 열기",
+    "launcherAriaClose": "채팅 닫기",
+    "headerTitle": "고객 상담",
+    "headerClose": "닫기",
+    "headerMenu": "메뉴",
+    "connectAgent": "상담원 연결",
+    "composerPlaceholder": "메시지를 입력하세요",
+    "composerSend": "보내기",
+    "quickRepliesLabel": "빠른 답변",
+    "emailPromptTitle": "답변을 놓치지 않게 이메일을 남겨주세요",
+    "emailPromptPlaceholder": "이메일 주소",
+    "emailPromptSubmit": "저장",
+    "emailPromptSkip": "건너뛰기",
+    "typingAi": "입력 중...",
+    "typingHuman": "상담원이 입력 중...",
+    "statusConnecting": "연결 중...",
+    "statusReconnecting": "다시 연결 중...",
+    "statusPolling": "연결 상태 확인 중...",
+    "statusOffline": "오프라인",
+    "messagePending": "전송 중",
+    "messageFailed": "전송 실패",
+    "messageRetry": "다시 시도",
+    "dateToday": "오늘",
+    "dateYesterday": "어제",
+    "offHoursDefault": "지금은 상담 운영 시간이 아닙니다. 메시지를 남겨주시면 확인 후 답변드리겠습니다.",
+    "errorGeneric": "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    "systemLabel": "안내"
   }
 }

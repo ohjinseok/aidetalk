@@ -5,6 +5,33 @@
     "welcome": "Welcome to AideTalk"
   },
   "widget": {
-    "launcherLabel": "Start chat"
+    "launcherLabel": "Start chat",
+    "launcherAriaOpen": "Open chat",
+    "launcherAriaClose": "Close chat",
+    "headerTitle": "Support",
+    "headerClose": "Close",
+    "headerMenu": "Menu",
+    "connectAgent": "Talk to a person",
+    "composerPlaceholder": "Type a message",
+    "composerSend": "Send",
+    "quickRepliesLabel": "Quick replies",
+    "emailPromptTitle": "Leave your email so you don't miss a reply",
+    "emailPromptPlaceholder": "Email address",
+    "emailPromptSubmit": "Save",
+    "emailPromptSkip": "Skip",
+    "typingAi": "Typing...",
+    "typingHuman": "Agent is typing...",
+    "statusConnecting": "Connecting...",
+    "statusReconnecting": "Reconnecting...",
+    "statusPolling": "Checking connection...",
+    "statusOffline": "Offline",
+    "messagePending": "Sending",
+    "messageFailed": "Failed to send",
+    "messageRetry": "Retry",
+    "dateToday": "Today",
+    "dateYesterday": "Yesterday",
+    "offHoursDefault": "We're currently outside support hours. Leave a message and we'll get back to you.",
+    "errorGeneric": "Something went wrong. Please try again in a moment.",
+    "systemLabel": "Notice"
   }
 }

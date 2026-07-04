@@ -4,10 +4,52 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AideTalk Widget Demo</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        max-width: 720px;
+        margin: 40px auto;
+        padding: 0 20px;
+        color: #1f2430;
+        line-height: 1.6;
+      }
+      code {
+        background: #f3f4f6;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 90%;
+      }
+      .hint {
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 14px;
+      }
+    </style>
   </head>
   <body>
     <h1>AideTalk 위젯 데모</h1>
-    <p>아래 런처 버튼은 Shadow DOM 안에서 렌더링되어 호스트 페이지 스타일과 격리됩니다.</p>
+    <p>
+      우하단 런처는 Shadow DOM 안에서 렌더링되어 호스트 페이지 스타일과 격리됩니다. 아래
+      본문은 스크롤/전환 트래킹 테스트를 위한 더미 콘텐츠입니다.
+    </p>
+    <div class="hint">
+      <p>기본값: workspaceId=<code>ws_demo</code>, server=<code>http://localhost:4000</code></p>
+      <p>
+        쿼리로 변경 가능:
+        <code>?ws=ws_xxx&amp;server=http://localhost:4000</code>
+      </p>
+      <p>
+        트래킹 클릭 테스트: URL에 <code>?at_l=tlk_test</code> 를 붙이면 로더가
+        <code>POST /t/click</code> 를 발사하고 파라미터를 제거합니다. (데모 진입점은 로더를
+        쓰지 않으므로 트래킹은 실제 로더 빌드에서 확인)
+      </p>
+    </div>
+    <p>
+      데모는 로더(widget.js)를 거치지 않고 본체를 직접 마운트합니다. 로더/본체 분리 빌드는
+      <code>pnpm --filter @aidetalk/widget build</code> 산출물을 참고하세요.
+    </p>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

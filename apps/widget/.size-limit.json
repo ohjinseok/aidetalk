@@ -1,0 +1,14 @@
+[
+  {
+    "name": "app.js (본체, ≤50KB gzip)",
+    "path": "dist/app.js",
+    "limit": "50 KB",
+    "gzip": true
+  },
+  {
+    "name": "widget.js (로더, ≤2KB gzip)",
+    "path": "dist/widget.js",
+    "limit": "2 KB",
+    "gzip": true
+  }
+]
