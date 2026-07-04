@@ -47,3 +47,8 @@ jobs:
 
       - name: Vitest
         run: pnpm test
+
+      # 위젯 번들 예산 게이트 (CLAUDE.md 규칙 3: 본체 50KB / 로더 2KB gzipped).
+      # 초과 시 size-limit이 비정상 종료해 머지가 차단된다.
+      - name: 위젯 빌드 + 번들 예산(size-limit)
+        run: pnpm --filter @aidetalk/widget build && pnpm --filter @aidetalk/widget size

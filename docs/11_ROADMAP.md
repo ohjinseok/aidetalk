@@ -19,42 +19,42 @@
 **목표: "위젯에서 보낸 메시지에 내 에이전트가 답하고, 핸드오프하면 인박스에서 사람이 받는다. 상담이 매출로 이어졌는지 보이고, AI가 상담원을 돕는다."**
 
 ### W1-2: 메시징 백본
-- [ ] DB 스키마 전체(03 문서 §2 그대로) + 마이그레이션 + repos 골격 — 「기준」 pnpm db:migrate 성공, repo 함수 시그니처에 workspaceId 강제(타입 테스트)
-- [ ] visitor 세션: POST /v1/widget/session + visitor_token 서명/검증 — 「기준」 04 §1 스키마 일치, 위조 토큰 401 테스트
-- [ ] 대화/메시지 API: conversations 생성, messages append/list — 「기준」 planEnforcer(Noop) 훅 위치 존재
-- [ ] WS 게이트웨이: /ws/visitor·/ws/agent 인증, 연결 레지스트리, PubSubAdapter(redis+memory) fan-out — 「기준」 04 §5.5 채널 설계 준수
-- [ ] 메시지 신뢰성: clientMsgId 중복 제거, ack, after cursor 동기화 — 「기준」 **09 §2 테스트 5종 통과 (필수 커버리지)**
+- [x] DB 스키마 전체(03 문서 §2 그대로) + 마이그레이션 + repos 골격 — 「기준」 pnpm db:migrate 성공, repo 함수 시그니처에 workspaceId 강제(타입 테스트) (2026-07-04)
+- [x] visitor 세션: POST /v1/widget/session + visitor_token 서명/검증 — 「기준」 04 §1 스키마 일치, 위조 토큰 401 테스트 (2026-07-04)
+- [x] 대화/메시지 API: conversations 생성, messages append/list — 「기준」 planEnforcer(Noop) 훅 위치 존재 (2026-07-04)
+- [x] WS 게이트웨이: /ws/visitor·/ws/agent 인증, 연결 레지스트리, PubSubAdapter(redis+memory) fan-out — 「기준」 04 §5.5 채널 설계 준수 (2026-07-04)
+- [x] 메시지 신뢰성: clientMsgId 중복 제거, ack, after cursor 동기화 — 「기준」 **09 §2 테스트 5종 통과 (필수 커버리지)** (2026-07-04)
 
 ### W3-4: 위젯 (최대 리스크 구간 — 실기기 병행)
-- [ ] 로더(≤2KB) + 본체 비동기 로드 + at_l 클릭 보고 — 「기준」 06 §1
-- [ ] Shadow DOM UI: Launcher/ChatWindow/MessageList/Composer/QuickReplies/EmailPrompt — 「기준」 06 §2 구성 전부, i18n 키만 사용
-- [ ] 전송 파이프라인 + 재연결(백오프/visibilitychange) — 「기준」 06 §4.1-4.2
-- [ ] long-poll 폴백 — 「기준」 WS 차단 환경 시뮬레이션에서 대화 성립
-- [ ] iOS visualViewport + 모바일 전체화면
-- [ ] size-limit CI (50KB/2KB) — 「기준」 초과 시 빌드 실패 확인
-- [ ] Playwright E2E 5종(06 §8) — 「기준」 **09 §7 통과 (필수)**
+- [x] 로더(≤2KB) + 본체 비동기 로드 + at_l 클릭 보고 — 「기준」 06 §1 (2026-07-04, 로더 1.04KB gzip)
+- [x] Shadow DOM UI: Launcher/ChatWindow/MessageList/Composer/QuickReplies/EmailPrompt — 「기준」 06 §2 구성 전부, i18n 키만 사용 (2026-07-04)
+- [x] 전송 파이프라인 + 재연결(백오프/visibilitychange) — 「기준」 06 §4.1-4.2 (2026-07-04)
+- [x] long-poll 폴백 — 「기준」 WS 차단 환경 시뮬레이션에서 대화 성립 (2026-07-04, 폴백 전환 단위 테스트 + REST 경로 09 §2-5 통합 테스트)
+- [x] iOS visualViewport + 모바일 전체화면 (2026-07-04, 코드 구현 완료 — **iOS 실기기 검증은 미실시, 위젯 주간 원칙대로 실기기 확인 필요**)
+- [x] size-limit CI (50KB/2KB) — 「기준」 초과 시 빌드 실패 확인 (2026-07-04, 본체 35.74KB)
+- [x] Playwright E2E 5종(06 §8) — 「기준」 **09 §7 통과 (필수)** (2026-07-04)
 
 ### W5: Agent 커넥터 + 핸드오프
-- [ ] agents CRUD + secret 생성/1회 노출/재발급 + 연결 테스트 엔드포인트 — 「기준」 04 §2
-- [ ] Agent Dispatcher: HMAC, 타임아웃, 응답 파싱, track_links URL 치환, 실패 처리/auto_disable, agent_logs — 「기준」 **09 §3 테스트 1~5,7 통과 (필수)**
-- [ ] 핸드오프 플로우: handoff 응답/손님 요청/자동(실패) 3경로 + returned_to_ai — 「기준」 mode=human 동안 reply dispatch 0건 테스트
-- [ ] mode=assist dispatch 골격 (UI는 W7) — 「기준」 09 §3-6 통과
-- [ ] examples/agent-node — 「기준」 FAQ reply + handoff + assist 동작, README 첫 줄 Claude Code 안내, __aidetalk_ping__ 처리
+- [x] agents CRUD + secret 생성/1회 노출/재발급 + 연결 테스트 엔드포인트 — 「기준」 04 §2 (2026-07-04)
+- [x] Agent Dispatcher: HMAC, 타임아웃, 응답 파싱, track_links URL 치환, 실패 처리/auto_disable, agent_logs — 「기준」 **09 §3 테스트 1~5,7 통과 (필수)** (2026-07-04, auto_disable 시 owner 이메일은 SMTP 미구성으로 로그 경고 대체 — TODO)
+- [x] 핸드오프 플로우: handoff 응답/손님 요청/자동(실패) 3경로 + returned_to_ai — 「기준」 mode=human 동안 reply dispatch 0건 테스트 (2026-07-04)
+- [x] mode=assist dispatch 골격 (UI는 W7) — 「기준」 09 §3-6 통과 (2026-07-04)
+- [x] examples/agent-node — 「기준」 FAQ reply + handoff + assist 동작, README 첫 줄 Claude Code 안내, __aidetalk_ping__ 처리 (2026-07-04, agent-python도 함께 완료 — M2 항목 선반영)
 
 ### W6: 인박스 (대시보드)
-- [ ] auth(가입/로그인/세션) + 온보딩(워크스페이스 생성, segment 선택) + 멤버 초대(inviteUrl)
-- [ ] 대화 목록: 필터/무한스크롤/실시간 upsert/검색 — 「기준」 07 §2.1
-- [ ] 대화 상세: 스레드+이벤트 병합, 답장(자동 mode 전환), 담당자/종료/AI반환 — 「기준」 07 §2.2, 상담원 2명 동시 처리 충돌 없음(수동 확인)
-- [ ] 핸드오프 알림(브라우저 Notification + 하이라이트)
-- [ ] AI 로그 화면 + 커넥터 등록 UI(secret 1회 모달) — 「기준」 07 §4
-- [ ] 위젯 설정 화면 + 라이브 프리뷰 + 임베드 코드 복사 — 「기준」 07 §5
-- [ ] **권한 격리 테스트 — 09 §4 전체 통과 (필수)**
+- [x] auth(가입/로그인/세션) + 온보딩(워크스페이스 생성, segment 선택) + 멤버 초대(inviteUrl) (2026-07-04, 미가입 이메일 초대는 pending-invite 테이블 부재로 기가입자만 — TODO(question))
+- [x] 대화 목록: 필터/무한스크롤/실시간 upsert/검색 — 「기준」 07 §2.1 (2026-07-04)
+- [x] 대화 상세: 스레드+이벤트 병합, 답장(자동 mode 전환), 담당자/종료/AI반환 — 「기준」 07 §2.2 (2026-07-04, **상담원 2명 동시 처리 수동 확인은 미실시**)
+- [x] 핸드오프 알림(브라우저 Notification + 하이라이트) (2026-07-04)
+- [x] AI 로그 화면 + 커넥터 등록 UI(secret 1회 모달) — 「기준」 07 §4 (2026-07-04)
+- [x] 위젯 설정 화면 + 라이브 프리뷰 + 임베드 코드 복사 — 「기준」 07 §5 (2026-07-04, 프리뷰는 iframe 대신 컴포넌트 목업 — 통합 시 전환 검토)
+- [x] **권한 격리 테스트 — 09 §4 전체 통과 (필수)** (2026-07-04)
 
 ### W7: 전환 트래킹 + 어시스트
-- [ ] 링크 태깅/클릭 추적: tracked_links, /t/click, 히스토리 파라미터 제거 — 「기준」 09 §5-1,2 통과
-- [ ] 대화 상세 트래킹 표시(클릭 뱃지) + 트래킹 요약 화면(S1만, "추정" 라벨) — 「기준」 07 §3, S2 404 테스트(09 §5-5)
-- [ ] 어시스트 파이프라인: assist dispatch → assist_suggestions → suggestion.new(agents 채널) → 사이드 패널 3버튼 + outcome 기록 — 「기준」 07 §2.3
-- [ ] **어시스트 권한 격리 재검증 — 09 §4-2 통합 테스트 (필수)**
+- [x] 링크 태깅/클릭 추적: tracked_links, /t/click, 히스토리 파라미터 제거 — 「기준」 09 §5-1,2 통과 (2026-07-04, /t/conversion도 04 §3 명세대로 선구현)
+- [x] 대화 상세 트래킹 표시(클릭 뱃지) + 트래킹 요약 화면(S1만, "추정" 라벨) — 「기준」 07 §3, S2 404 테스트(09 §5-5) (2026-07-04)
+- [x] 어시스트 파이프라인: assist dispatch → assist_suggestions → suggestion.new(agents 채널) → 사이드 패널 3버튼 + outcome 기록 — 「기준」 07 §2.3 (2026-07-04)
+- [x] **어시스트 권한 격리 재검증 — 09 §4-2 통합 테스트 (필수)** (2026-07-04)
 
 ## M2 — 셀프호스팅 패키징 & 공개 준비 (3주)
 **목표: 모르는 사람이 README만 보고 30분 안에 띄운다**

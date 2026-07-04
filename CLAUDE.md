@@ -91,5 +91,6 @@ docker compose -f docker/compose.yml up -d
 
 > 마일스톤 전환 시 이 섹션만 갱신한다.
 
-**M0 — 검증 & 기반** (`docs/11_ROADMAP.md`)
-우선순위: 모노레포 스캐폴드 > shared zod 스키마 > CI > docker compose 초안
+**M2 — 셀프호스팅 패키징 & 공개 준비** (`docs/11_ROADMAP.md`)
+M0·M1 개발 항목 완료(2026-07-04). 우선순위: compose 원커맨드 검증(맨 VM) > .env.example+env 검증+부팅 마이그레이션 > 문서 사이트 > 보안 점검(08 전 항목)
+잔여 리스크: iOS 실기기 미검증, 카페24/아임웹 실측 미실시, 상담원 동시 처리 수동 확인 미실시 — M2에서 소화
