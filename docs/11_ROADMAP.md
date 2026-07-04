@@ -10,10 +10,10 @@
 - [x] 제품명 확정: **AideTalk** (문서 전체 반영 완료, 2026-07-02)
 - [ ] 네이밍 선점: `aidetalk` GitHub org·npm 스코프, 도메인(aidetalk.io/.chat + 오타 방어 aidtalk.io), 키프리스 상표 확인 — README §브랜드 표 기준
 - [ ] 라이선스 확정 — 기본안(AGPL+ee) 유지 여부. n8n/Cal.com/Chatwoot 구조 비교 메모 남기기
-- [ ] 모노레포 스캐폴드 — 「기준」 CLAUDE.md 레포 구조 그대로 생성, `pnpm dev`로 3개 앱 빈 화면 기동, `pnpm lint/typecheck/test` 통과
-- [ ] `packages/shared` v1 — 「기준」 id 유틸(newId), plans.ts, AppError, 에러 코드 상수(04 §7), Agent Protocol zod(05와 1:1), WS 봉투/타입 union(04 §5), adapters 인터페이스(02 §1-1)
-- [ ] CI — 「기준」 lint+typecheck+vitest가 PR에서 돌고 실패 시 머지 차단
-- [ ] docker/compose.yml 초안 — 「기준」 postgres+redis+server(healthz 200)+dashboard 기동
+- [x] 모노레포 스캐폴드 — 「기준」 CLAUDE.md 레포 구조 그대로 생성, `pnpm dev`로 3개 앱 빈 화면 기동, `pnpm lint/typecheck/test` 통과 (2026-07-03)
+- [x] `packages/shared` v1 — 「기준」 id 유틸(newId), plans.ts, AppError, 에러 코드 상수(04 §7), Agent Protocol zod(05와 1:1), WS 봉투/타입 union(04 §5), adapters 인터페이스(02 §1-1) (2026-07-03)
+- [x] CI — 「기준」 lint+typecheck+vitest가 PR에서 돌고 실패 시 머지 차단 (2026-07-03, 머지 차단은 GitHub branch protection 설정 필요 — docs/12 §4)
+- [x] docker/compose.yml 초안 — 「기준」 postgres+redis+server(healthz 200)+dashboard 기동 (2026-07-04)
 
 ## M1 — 코어 빌드 (7주)
 **목표: "위젯에서 보낸 메시지에 내 에이전트가 답하고, 핸드오프하면 인박스에서 사람이 받는다. 상담이 매출로 이어졌는지 보이고, AI가 상담원을 돕는다."**
