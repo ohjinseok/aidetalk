@@ -1,10 +1,13 @@
 /**
- * packages/db — placeholder
- *
- * 실제 구현(예정, 다른 세션 담당, 03_DATA_MODEL.md §2 기준):
- * - Drizzle 스키마 전체 + drizzle-kit 마이그레이션
- * - repos/ 하위 repository 함수 (모든 함수는 workspaceId를 첫 번째 필수 인자로 받는다 — CLAUDE.md 절대 규칙 11)
- *
- * 지금은 워크스페이스 배선 확인용 placeholder export만 둔다.
+ * @aidetalk/db — Drizzle 스키마 + 마이그레이션 + repository 계층.
+ * 03_DATA_MODEL.md가 단일 출처. 모든 repo 함수는 workspaceId를 첫 인자로 받는다(규칙 11,
+ * users 등 워크스페이스 밖 리소스는 03 §3 예외).
  */
 export const DB_PACKAGE_NAME = "@aidetalk/db" as const;
+
+export * as schema from "./schema";
+export * from "./schema";
+export * from "./client";
+export * from "./crypto";
+export * from "./repos";
+export { runMigrations } from "./migrate";

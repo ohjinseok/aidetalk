@@ -2,7 +2,7 @@
   "name": "@aidetalk/db",
   "version": "0.0.0",
   "private": true,
-  "description": "Drizzle 스키마 + 마이그레이션 + repos — 실제 구현은 이후 세션에서 채운다 (placeholder)",
+  "description": "Drizzle 스키마 + 마이그레이션 + repository 계층 (03_DATA_MODEL.md 단일 출처)",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
@@ -13,11 +13,20 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "db:generate": "echo \"TODO(question): drizzle-kit 설정 후 마이그레이션 생성 스크립트로 교체\"",
-    "db:migrate": "echo \"TODO(question): drizzle-kit migrate 스크립트로 교체\""
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/migrate.ts"
+  },
+  "dependencies": {
+    "@aidetalk/shared": "workspace:*",
+    "drizzle-orm": "^0.38.4",
+    "hash-wasm": "^4.12.0",
+    "nanoid": "^3.3.11",
+    "postgres": "^3.4.5"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
+    "drizzle-kit": "^0.30.6",
+    "tsx": "^4.19.2",
     "typescript": "^5.9.3",
     "vitest": "^2.1.9"
   }
