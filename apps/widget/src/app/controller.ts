@@ -53,6 +53,7 @@ export class WidgetController {
   private phase: WidgetPhase = "idle";
   private open = false;
   private settings: WidgetSettings | null = null;
+  private workspaceName: string | null = null;
   private visitor: Visitor | null = null;
   private token: string | null = null;
   private conversationId: string | null = null;
@@ -66,6 +67,8 @@ export class WidgetController {
   private error: string | null = null;
   private localSystemLines: string[] = [];
   private firstMessageSent = false;
+  /** 진행 중인 boot(세션 발급) — 전송이 부팅보다 앞서면 이걸 기다려 토큰 준비를 보장. */
+  private bootPromise: Promise<void> | null = null;
 
   private store = new MessageStore();
   private conn: ConnectionManager | null = null;
@@ -101,8 +104,7 @@ export class WidgetController {
     const primaryColor =
       (typeof this.settings?.primaryColor === "string" && this.settings.primaryColor) ||
       DEFAULT_PRIMARY;
-    const workspaceName =
-      (typeof this.settings?.workspaceName === "string" && this.settings.workspaceName) || null;
+    const workspaceName = this.workspaceName;
     return {
       phase: this.phase,
       open: this.open,
@@ -134,7 +136,7 @@ export class WidgetController {
     this.unread = 0;
     this.persistOpen(true);
     if (this.phase === "idle") {
-      void this.boot();
+      this.bootPromise = this.boot();
     } else {
       this.markReadIfPossible();
     }
@@ -162,6 +164,7 @@ export class WidgetController {
       this.token = session.visitorToken;
       this.writeToken(session.visitorToken);
       this.visitor = session.visitor;
+      this.workspaceName = session.workspaceName;
       this.settings = session.widgetSettings;
       this.emailCaptured = Boolean(session.visitor.email);
 
@@ -178,6 +181,8 @@ export class WidgetController {
 
       if (session.openConversationId) {
         this.conversationId = session.openConversationId;
+        // 기존 열린 대화 복원 — 새 메시지를 보내지 않아도 상대 메시지를 실시간 수신해야 한다.
+        this.subscribeConversation();
         await this.syncMessages();
       }
       this.phase = "ready";
@@ -221,17 +226,41 @@ export class WidgetController {
     this.emit();
   }
 
-  /** 재연결(online) 시 — 큐 재전송 + 누락 동기화(§4.1). */
+  /** 재연결(online) 시 — 대화 구독 + 누락 동기화 + 큐 재전송(§4.1). */
   private async onReconnected(): Promise<void> {
     this.stopPolling();
+    // 구독을 먼저 걸어 이후 도착하는 상대 메시지를 놓치지 않게 한다(sync가 그 이전분을 덮는다).
+    this.subscribeConversation();
     await this.syncMessages();
     this.resendPending();
+  }
+
+  /**
+   * 손님 소켓을 현재 대화의 conv:all 채널에 명시 구독시킨다(WS online일 때만 유효).
+   * message.send만으로도 서버가 암묵 구독하지만, 기존 대화 복원/REST 우선 전송 시 누락을 막는다.
+   */
+  private subscribeConversation(): void {
+    if (!this.conversationId) return;
+    this.conn?.send({
+      type: "conversation.subscribe",
+      payload: { conversationId: this.conversationId },
+    });
   }
 
   // ---------- 전송 파이프라인 §4.1 ----------
   async sendText(text: string): Promise<void> {
     const trimmed = text.trim();
     if (!trimmed || this.phase === "idle") return;
+
+    // 부팅(세션 발급)이 아직 진행 중이면 완료를 기다린다 — 토큰 준비 전 전송으로 인한 401 방지.
+    if (this.bootPromise) {
+      try {
+        await this.bootPromise;
+      } catch {
+        /* boot 실패는 아래 token 체크에서 걸러진다 */
+      }
+    }
+    if (!this.token) return; // 부팅 실패 등으로 세션이 없으면 전송 불가.
 
     // 대화 없으면 첫 전송 시점에 생성(§3).
     if (!this.conversationId) {
@@ -243,6 +272,8 @@ export class WidgetController {
         );
         this.conversationId = created.conversation.id;
         this.localSystemLines = [];
+        // 대화 생성 직후 구독 — 첫 메시지가 REST로 나가도 AI 응답을 실시간 수신.
+        this.subscribeConversation();
         // 서버가 인사말을 system 메시지로 삽입 → 초기 동기화.
         await this.syncMessages();
       } catch (e) {
@@ -263,7 +294,13 @@ export class WidgetController {
     this.emit();
   }
 
-  /** WS 전송 시도, 실패(폴백/미연결)면 REST. ack 타임아웃 예약. */
+  /**
+   * WS 전송 시도. ack 타임아웃 예약.
+   * WS로 못 보냈을 때 REST는 **폴백(polling) 모드에서만** 쓴다(§4.2).
+   * WS가 아직 연결 중/재연결 중이면 REST로 조급하게 보내지 않고 pending으로 둔다 —
+   * 그래야 서버가 message.send 시점에 conv:all을 구독한 뒤 dispatch해 AI 응답을 놓치지 않는다.
+   * pending은 onReconnected(resendPending) 또는 ack 타임아웃 재전송으로 WS 연결 후 flush된다.
+   */
   private dispatchSend(clientMsgId: string, text: string): void {
     if (!this.conversationId) return;
     const envelope = {
@@ -271,7 +308,7 @@ export class WidgetController {
       payload: { conversationId: this.conversationId, clientMsgId, text },
     };
     const sentViaWs = this.conn?.send(envelope) ?? false;
-    if (!sentViaWs) {
+    if (!sentViaWs && this.mode === "polling") {
       void this.sendViaRest(clientMsgId, text);
     }
     this.armAckTimeout(clientMsgId, text);

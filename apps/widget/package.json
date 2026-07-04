@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "size": "pnpm run build && size-limit"
   },
   "dependencies": {
@@ -19,6 +20,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.1",
     "@preact/preset-vite": "^2.10.5",
     "@size-limit/file": "^11.1.6",
     "@types/node": "^22.10.2",

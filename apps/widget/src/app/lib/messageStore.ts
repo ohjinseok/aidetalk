@@ -10,6 +10,7 @@
  */
 import type { DisplayItem, PendingMessage } from "../types";
 import type { Message } from "../shared";
+import { encodeCursor } from "./cursor";
 
 export class MessageStore {
   private confirmed = new Map<string, Message>();
@@ -60,15 +61,14 @@ export class MessageStore {
   }
 
   /**
-   * 마지막 확정 메시지의 동기화 커서(id).
-   * 재연결 시 GET messages?after={cursor}로 누락분을 받는다.
-   * TODO(question): 04 §1의 after 파라미터가 message.id인지 base64 정렬 커서인지 미확정 —
-   *   서버 구현 확정 후 조정. 현재는 마지막 확정 메시지 id를 전달.
+   * 마지막 확정 메시지의 동기화 커서 — 04 §0 형식(base64url of {createdAt, id}).
+   * 재연결/폴백 시 GET messages?after={cursor}로 누락분만 받는다.
+   * 서버(decodeCursor)가 정본이라 그 인코딩과 1:1로 맞춘다(lib/cursor.ts).
    */
   lastConfirmedCursor(): string | null {
     const sorted = this.sortedConfirmed();
     const last = sorted[sorted.length - 1];
-    return last ? last.id : null;
+    return last ? encodeCursor(last.createdAt, last.id) : null;
   }
 
   /** 마지막 확정 메시지(quickReplies 추출 등). */

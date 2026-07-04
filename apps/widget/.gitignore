@@ -1,0 +1,5 @@
+# Playwright E2E 산출물/런타임(커밋 금지)
+test-results/
+playwright-report/
+e2e/.runtime.json
+e2e/.tmp-files/

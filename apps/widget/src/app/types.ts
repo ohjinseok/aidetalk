@@ -1,40 +1,19 @@
 /**
- * 위젯 로컬 타입 + widgetSettings 스키마.
+ * 위젯 로컬 타입.
  *
- * TODO(question): widgetSettings의 정본 zod 스키마는 03_DATA_MODEL.md §2 주석상
- * `packages/shared/widget-settings.ts`에 두기로 되어 있으나 아직 미존재.
- * 서버 확정 전까지 위젯 로컬 스키마로 느슨히(passthrough) 파싱한다.
- * shared에 스키마가 생기면 이 파일을 제거하고 그쪽을 import 할 것.
+ * widgetSettings 정본 zod는 packages/shared(widget-settings.ts)로 승격됨 — 여기서는 재노출만 한다.
+ * 세션 응답(POST /session)의 widgetSettings는 서버가 isOfficeHours를 덧붙인 evaluated 형태다(04 §1).
  */
-import { z } from "zod";
+import {
+  evaluatedWidgetSettingsSchema,
+  type EvaluatedWidgetSettings,
+} from "@aidetalk/shared";
 
 import type { Message, Visitor } from "./shared";
 
-/** 운영시간 규칙 — 서버가 isOfficeHours로 평가하지만 원본도 통과시킨다. */
-const officeHoursSchema = z
-  .object({
-    enabled: z.boolean().optional(),
-    tz: z.string().optional(),
-    rules: z.array(z.unknown()).optional(),
-  })
-  .passthrough();
-
-export const widgetSettingsSchema = z
-  .object({
-    primaryColor: z.string().optional(),
-    greeting: z.string().optional(),
-    tone: z.enum(["formal", "casual"]).optional(),
-    launcherPosition: z.enum(["right", "left"]).optional(),
-    officeHours: officeHoursSchema.optional(),
-    offHoursMessage: z.string().optional(),
-    /** 서버가 세션 응답에 주입하는 운영시간 평가 결과(04 §1). */
-    isOfficeHours: z.boolean().optional(),
-    /** 헤더 표기용 워크스페이스 이름(있으면 사용). */
-    workspaceName: z.string().optional(),
-  })
-  .passthrough();
-
-export type WidgetSettings = z.infer<typeof widgetSettingsSchema>;
+/** 세션 응답에 실리는 widgetSettings(평가 결과 isOfficeHours 포함). shared 정본 재노출. */
+export const widgetSettingsSchema = evaluatedWidgetSettingsSchema;
+export type WidgetSettings = EvaluatedWidgetSettings;
 
 /** 위젯 초기화 설정 — 로더가 window.AideTalk로 넘긴다. */
 export interface WidgetConfig {

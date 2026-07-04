@@ -38,6 +38,8 @@ interface Conn {
   userId?: string;
   subscriptions: Set<string>;
   missedPings: number;
+  /** 인바운드 처리 직렬화 큐 — 같은 소켓의 메시지를 도착 순서대로 처리해 저장 순서를 보장(09 §2). */
+  tail: Promise<void>;
 }
 
 /** WS 종료 코드 — 인증 실패(04 §5). */
@@ -206,6 +208,7 @@ export function createGateway(ctx: AppContext): Gateway {
       userId: extra.userId,
       subscriptions: new Set(),
       missedPings: 0,
+      tail: Promise.resolve(),
     };
   }
 
@@ -215,7 +218,9 @@ export function createGateway(ctx: AppContext): Gateway {
       conn.missedPings = 0;
     });
     conn.ws.on("message", (data) => {
-      void handleMessage(conn, data.toString());
+      // 같은 소켓의 메시지를 순차 처리 — 연속 message.send의 저장 순서(createdAt) 역전 방지.
+      const raw = data.toString();
+      conn.tail = conn.tail.then(() => handleMessage(conn, raw)).catch(() => undefined);
     });
     conn.ws.on("close", () => {
       void cleanup(conn);
@@ -285,6 +290,12 @@ export function createGateway(ctx: AppContext): Gateway {
         });
         // 저장 확정 ack(중복이면 기존 메시지로 ack — 멱등).
         sendEnvelope(conn, "message.ack", { clientMsgId: msg.payload.clientMsgId, message });
+        return;
+      }
+      case "conversation.subscribe": {
+        // 소유 검증 후 conv:all만 구독(어시스트 채널은 절대 구독하지 않음 — 규칙 9).
+        await assertVisitorOwns(visitor, msg.payload.conversationId);
+        await subscribe(conn, channels.convAll(msg.payload.conversationId));
         return;
       }
       case "typing.set": {

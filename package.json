@@ -15,6 +15,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "test:e2e": "turbo run test:e2e",
+    "size": "turbo run size --filter=@aidetalk/widget",
     "db:generate": "pnpm --filter @aidetalk/db db:generate",
     "db:migrate": "pnpm --filter @aidetalk/db db:migrate",
     "format": "prettier --write .",

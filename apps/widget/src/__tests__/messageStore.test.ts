@@ -62,12 +62,17 @@ describe("app/lib/messageStore — 전송 파이프라인 (06 §4.1)", () => {
     ]);
   });
 
-  it("lastConfirmedCursor는 마지막 확정 메시지 id", () => {
+  it("lastConfirmedCursor는 마지막 확정 메시지의 base64url {createdAt,id} 커서(04 §0)", () => {
     const s = new MessageStore();
     expect(s.lastConfirmedCursor()).toBeNull();
     s.upsert(msg("msg_a", "a", "2026-07-03T00:00:01.000Z"));
     s.upsert(msg("msg_b", "b", "2026-07-03T00:00:03.000Z"));
-    expect(s.lastConfirmedCursor()).toBe("msg_b");
+    const cursor = s.lastConfirmedCursor()!;
+    // 서버 decodeCursor와 동일하게 base64url → JSON { createdAt, id } 복원되어야 한다.
+    const decoded = JSON.parse(
+      Buffer.from(cursor, "base64url").toString("utf8"),
+    ) as { createdAt: string; id: string };
+    expect(decoded).toEqual({ createdAt: "2026-07-03T00:00:03.000Z", id: "msg_b" });
   });
 
   it("markFailed 후 pendingIds로 재전송 대상 유지", () => {

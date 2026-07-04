@@ -31,6 +31,8 @@ export type Visitor = z.infer<typeof visitorSchema>;
 export const sessionResponseSchema = z.object({
   visitorToken: z.string(),
   visitor: visitorSchema,
+  /** 헤더 표기용 워크스페이스 이름. */
+  workspaceName: z.string(),
   widgetSettings: widgetSettingsSchema,
   openConversationId: z.string().nullable(),
 });

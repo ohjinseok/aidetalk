@@ -38,6 +38,7 @@
   "pageUrl": "https://shop.com/p/1", "referrer": "https://instagram.com/..." }
 // res 200
 { "visitorToken": "vt...", "visitor": { "id": "vis_...", "email": null, "name": null },
+  "workspaceName": "우리가게",   // 위젯 헤더 표기용
   "widgetSettings": { /* workspaces.widgetSettings + officeHours 평가 결과 isOfficeHours: bool */ },
   "openConversationId": "conv_..." | null }  // 이 visitor의 가장 최근 open 대화
 ```
@@ -170,7 +171,8 @@ GET /healthz              → 200 { ok, version }
 ### 5.1 위젯 → 서버
 | type | payload | 설명 |
 |---|---|---|
-| `message.send` | `{ conversationId, clientMsgId, text }` | text 1~4000자. 중복 clientMsgId면 기존 메시지로 ack |
+| `message.send` | `{ conversationId, clientMsgId, text }` | text 1~4000자. 중복 clientMsgId면 기존 메시지로 ack. 이 대화의 `conv:{id}:all` 자동 구독 |
+| `conversation.subscribe` | `{ conversationId }` | 손님 소켓을 `conv:{id}:all`에 명시 구독(상대 메시지 실시간 수신). 기존 대화 복원/REST 우선 전송 시 누락 방지. `conv:{id}:agents`는 절대 구독 안 함(규칙 9) |
 | `typing.set` | `{ conversationId, isTyping }` | 손님 타이핑 상태 (상담원 화면 표시용) |
 | `read.mark` | `{ conversationId, lastMessageId }` | 읽음 처리 |
 

@@ -4,6 +4,7 @@
 import { AppError } from "@aidetalk/shared";
 import { t } from "@aidetalk/i18n";
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 
 import { getClientIp } from "../http/client-ip";
 import {
@@ -47,6 +48,17 @@ const SESSION_WINDOW_SEC = 60;
 export function createWidgetRoutes(): Hono<HonoEnv> {
   const app = new Hono<HonoEnv>();
 
+  // 위젯은 손님 사이트(임의 origin)에 임베드되어 크로스오리진으로 호출한다 — CORS 전면 허용.
+  // 인증은 Authorization Bearer(visitor_token)라 쿠키 credentials가 필요 없다(origin "*" 안전).
+  app.use(
+    "*",
+    cors({
+      origin: "*",
+      allowMethods: ["GET", "POST", "PATCH", "OPTIONS"],
+      allowHeaders: ["authorization", "content-type"],
+    }),
+  );
+
   // ---------- 세션 발급/복원 (인증 불필요) ----------
   app.post("/session", validateJson(sessionRequestSchema), async (c) => {
     const ctx = c.get("ctx");
@@ -85,6 +97,7 @@ export function createWidgetRoutes(): Hono<HonoEnv> {
     return c.json({
       visitorToken,
       visitor: { id: visitor.id, email: visitor.email, name: visitor.name },
+      workspaceName: workspace.name, // 위젯 헤더 표기용(04 §1)
       widgetSettings: evaluateWidgetSettings(workspace.widgetSettings),
       openConversationId: openConv?.id ?? null,
     });

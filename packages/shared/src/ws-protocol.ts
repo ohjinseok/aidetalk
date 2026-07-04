@@ -37,6 +37,15 @@ export const widgetToServerMessageSchema = z.discriminatedUnion("type", [
     }),
   }),
   z.object({
+    // 손님 소켓을 이 대화의 conv:all 채널에 구독시킨다(상대 메시지 실시간 수신).
+    // message.send로도 암묵 구독되지만, 기존 대화 복원/REST 전송 시엔 이 명시 구독이 필요하다.
+    // ⚠️ conv:agents(어시스트)는 절대 구독하지 않는다(규칙 9).
+    type: z.literal("conversation.subscribe"),
+    payload: z.object({
+      conversationId: z.string(),
+    }),
+  }),
+  z.object({
     type: z.literal("typing.set"),
     payload: z.object({
       conversationId: z.string(),

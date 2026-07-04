@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AideTalk E2E Host</title>
+  </head>
+  <body>
+    <h1 id="page-title">AideTalk E2E 정적 호스트</h1>
+    <p id="route-label">route: /</p>
+    <p>
+      이 페이지는 프로덕션 임베드 방식(§1)을 모사한다. 인라인 로더가 Shadow DOM을 만들고
+      본체(app.js)를 로드한다. workspaceId·serverUrl은 쿼리스트링으로 주입한다.
+    </p>
+    <script>
+      (function () {
+        var p = new URLSearchParams(location.search);
+        var ws = p.get("ws");
+        var server = p.get("server");
+        // 프로덕션 로더 대체: shadow 준비 후 본체 스크립트 로드(06 §1.1).
+        window.AideTalk = { workspaceId: ws, _serverUrl: server };
+        var host = document.createElement("div");
+        host.setAttribute("data-aidetalk-host", "");
+        var shadow = host.attachShadow({ mode: "open" });
+        document.body.appendChild(host);
+        window.AideTalk._shadow = shadow;
+        var s = document.createElement("script");
+        s.src = "/app.js";
+        document.head.appendChild(s);
+      })();
+
+      // SPA 클라이언트 라우팅 시뮬레이션(시나리오 2) — 위젯은 언마운트되지 않아야 한다.
+      window.__spaNavigate = function (path) {
+        history.pushState({ path: path }, "", path);
+        var el = document.getElementById("route-label");
+        if (el) el.textContent = "route: " + path;
+      };
+    </script>
+  </body>
+</html>

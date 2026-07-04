@@ -17,6 +17,15 @@ import {
   conversationSummarySchema,
   eventSchema,
   messageSchema,
+  // widgetSettings 정본은 shared로 승격됨(widget-settings.ts) — 대시보드는 이를 재사용한다.
+  launcherPositionSchema,
+  officeHoursRuleSchema,
+  officeHoursSchema,
+  widgetSettingsSchema,
+  widgetToneSchema,
+  type LauncherPosition,
+  type OfficeHoursRule,
+  type WidgetSettings,
 } from "@aidetalk/shared";
 import { z } from "zod";
 
@@ -59,37 +68,14 @@ export const authResponseSchema = z.object({ user: userSchema });
 export const segmentSchema = z.enum(["s1_site", "s2_no_site"]);
 export type Segment = z.infer<typeof segmentSchema>;
 
-export const toneSchema = z.enum(["formal", "casual"]);
-export type Tone = z.infer<typeof toneSchema>;
-export const launcherPositionSchema = z.enum(["right", "left"]);
-export type LauncherPosition = z.infer<typeof launcherPositionSchema>;
 export const attributionRuleSchema = z.enum(["last_click", "first_click"]);
 export type AttributionRule = z.infer<typeof attributionRuleSchema>;
 
-/** 운영시간 규칙 — days: 1(월)~7(일), open/close "HH:mm". */
-export const officeHoursRuleSchema = z.object({
-  days: z.array(z.number().int().min(1).max(7)),
-  open: z.string(),
-  close: z.string(),
-});
-export type OfficeHoursRule = z.infer<typeof officeHoursRuleSchema>;
-
-export const officeHoursSchema = z.object({
-  enabled: z.boolean(),
-  tz: z.string(),
-  rules: z.array(officeHoursRuleSchema),
-});
-
-/** widgetSettings — 03_DATA_MODEL §2 workspaces.widgetSettings 형태. 모두 optional(기본 {}). */
-export const widgetSettingsSchema = z.object({
-  primaryColor: z.string().optional(),
-  greeting: z.string().optional(),
-  tone: toneSchema.optional(),
-  launcherPosition: launcherPositionSchema.optional(),
-  officeHours: officeHoursSchema.optional(),
-  offHoursMessage: z.string().optional(),
-});
-export type WidgetSettings = z.infer<typeof widgetSettingsSchema>;
+// widgetSettings 계약(tone/launcherPosition/officeHours/widgetSettings)은 shared 정본을 재노출한다.
+export const toneSchema = widgetToneSchema;
+export type Tone = z.infer<typeof toneSchema>;
+export { launcherPositionSchema, officeHoursRuleSchema, officeHoursSchema, widgetSettingsSchema };
+export type { LauncherPosition, OfficeHoursRule, WidgetSettings };
 
 export const workspaceSchema = z.object({
   id: z.string(),
