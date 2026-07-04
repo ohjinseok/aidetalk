@@ -13,9 +13,11 @@
   },
   "dependencies": {
     "@aidetalk/i18n": "workspace:*",
+    "@aidetalk/shared": "workspace:*",
     "next": "^15.5.20",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

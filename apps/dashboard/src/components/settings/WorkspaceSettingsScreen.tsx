@@ -1,0 +1,92 @@
+"use client";
+
+import { useState } from "react";
+
+import { workspaceApi } from "../../lib/api/endpoints";
+import { td } from "../../lib/i18n";
+import type { AttributionRule } from "../../lib/api/schemas";
+import { useToast } from "../providers/ToastProvider";
+import { useWorkspace } from "../providers/WorkspaceProvider";
+import { Button } from "../ui/Button";
+import { FormRow, Input, Select } from "../ui/Field";
+
+/** EDITION 플래그 — 클라우드에서만 결제 탭 노출(07 §5). 코어는 ee/를 import하지 않음(규칙 8). */
+const IS_CLOUD = process.env.NEXT_PUBLIC_EDITION === "cloud";
+
+export function WorkspaceSettingsScreen() {
+  const { workspace, isOwner, refreshWorkspace } = useWorkspace();
+  const toast = useToast();
+  const [name, setName] = useState(workspace.name);
+  const [rule, setRule] = useState<AttributionRule>(workspace.attributionRule);
+  const [saving, setSaving] = useState(false);
+
+  const isS1 = workspace.segment === "s1_site";
+
+  async function onSave() {
+    setSaving(true);
+    try {
+      await workspaceApi.updateSettings(workspace.id, { name, attributionRule: rule });
+      await refreshWorkspace();
+      toast.success();
+    } catch (err) {
+      toast.error(err);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl p-6">
+      <h1 className="mb-4 text-lg font-semibold">{td("dashboard.workspace.title")}</h1>
+
+      <FormRow label={td("dashboard.workspace.name")} htmlFor="wsName">
+        <Input
+          id="wsName"
+          value={name}
+          disabled={!isOwner}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </FormRow>
+
+      {/* 귀속 규칙 — 전환 트래킹(S1)에서만 의미(규칙 10). */}
+      {isS1 ? (
+        <FormRow label={td("dashboard.workspace.attributionRule")} htmlFor="attr">
+          <Select
+            id="attr"
+            value={rule}
+            disabled={!isOwner}
+            onChange={(e) => setRule(e.target.value as AttributionRule)}
+          >
+            <option value="last_click">{td("dashboard.workspace.lastClick")}</option>
+            <option value="first_click">{td("dashboard.workspace.firstClick")}</option>
+          </Select>
+        </FormRow>
+      ) : null}
+
+      <Button variant="primary" disabled={saving || !isOwner} onClick={() => void onSave()}>
+        {td("dashboard.common.save")}
+      </Button>
+
+      {/* 결제 탭(클라우드 전용) — ee의 BillingPanel 주입 지점.
+          CLAUDE.md 규칙 8: 코어는 ee/를 import하지 않는다 → 여기서는 존재/플래그만 확인. */}
+      {IS_CLOUD ? (
+        <section className="mt-8 rounded-lg border border-gray-200 bg-white p-4">
+          <h2 className="mb-2 text-sm font-semibold">{td("dashboard.workspace.billingTab")}</h2>
+          <p className="text-xs text-gray-400">{td("dashboard.workspace.billingCloudOnly")}</p>
+        </section>
+      ) : null}
+
+      {/* 위험 구역 */}
+      <section className="mt-8 rounded-lg border border-red-200 bg-red-50 p-4">
+        <h2 className="mb-1 text-sm font-semibold text-red-700">
+          {td("dashboard.workspace.dangerZone")}
+        </h2>
+        <p className="mb-2 text-xs text-red-600">{td("dashboard.workspace.exportHint")}</p>
+        {/* TODO(question): 대화 CSV export 엔드포인트가 04 §2에 없음(Could). API 확정 후 연결. */}
+        <Button variant="secondary" size="sm" disabled title="TODO: export endpoint">
+          {td("dashboard.workspace.exportCsv")}
+        </Button>
+      </section>
+    </div>
+  );
+}
