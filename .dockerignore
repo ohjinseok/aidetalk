@@ -1,0 +1,31 @@
+# Docker 빌드 컨텍스트 최소화 (docker/*.Dockerfile이 context: .. 로 모노레포 루트를 씀).
+# 호스트의 node_modules(플랫폼별 네이티브 바이너리 포함)와 빌드 산출물을 컨텍스트에서 제외해
+# 컨테이너 내부에서 pnpm install로 새로 설치하게 한다 — .gitignore와 대체로 동일한 목록.
+
+node_modules/
+**/node_modules/
+
+dist/
+build/
+.next/
+**/.next/
+out/
+.turbo/
+**/.turbo/
+*.tsbuildinfo
+
+.env
+.env.*
+!.env.example
+
+.git/
+.github/
+
+*.log
+coverage/
+playwright-report/
+test-results/
+
+.DS_Store
+.vscode/
+.idea/
