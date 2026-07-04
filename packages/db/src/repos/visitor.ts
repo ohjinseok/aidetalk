@@ -48,6 +48,15 @@ export function makeVisitorRepo(db: Database) {
       return row!;
     },
 
+    /** 단건 조회(워크스페이스 격리). 없으면 undefined. */
+    async getById(workspaceId: string, visitorId: string) {
+      const [row] = await db
+        .select()
+        .from(visitors)
+        .where(and(eq(visitors.workspaceId, workspaceId), eq(visitors.id, visitorId)));
+      return row;
+    },
+
     async updateProfile(
       workspaceId: string,
       visitorId: string,

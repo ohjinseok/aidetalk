@@ -8,6 +8,13 @@
       "when": 1783137694127,
       "tag": "0000_perfect_giant_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783139331009,
+      "tag": "0001_parallel_firebird",
+      "breakpoints": true
     }
   ]
 }

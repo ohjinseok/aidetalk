@@ -13,9 +13,15 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@aidetalk/db": "workspace:*",
+    "@aidetalk/i18n": "workspace:*",
+    "@aidetalk/shared": "workspace:*",
     "@hono/node-server": "^2.0.8",
     "hono": "^4.12.27",
-    "ws": "^8.21.0"
+    "ioredis": "^5.4.2",
+    "pino": "^9.5.0",
+    "ws": "^8.21.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

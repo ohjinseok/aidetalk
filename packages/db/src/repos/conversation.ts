@@ -76,6 +76,26 @@ export function makeConversationRepo(db: Database) {
         .limit(limit);
     },
 
+    /**
+     * 이 방문자의 가장 최근 open 대화(세션 복원 시 openConversationId 계산용).
+     * 없으면 undefined. 04 §1 POST /v1/widget/session.
+     */
+    async getLatestOpenByVisitor(workspaceId: string, visitorId: string) {
+      const [row] = await db
+        .select()
+        .from(conversations)
+        .where(
+          and(
+            eq(conversations.workspaceId, workspaceId),
+            eq(conversations.visitorId, visitorId),
+            eq(conversations.status, "open"),
+          ),
+        )
+        .orderBy(desc(conversations.lastMessageAt), desc(conversations.id))
+        .limit(1);
+      return row;
+    },
+
     /** mode 전환(핸드오프). assigneeId는 human 전환 시 담당자. */
     async setMode(
       workspaceId: string,

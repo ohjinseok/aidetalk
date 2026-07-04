@@ -1,30 +1,81 @@
-import { serve } from "@hono/node-server";
-import { WebSocketServer } from "ws";
-
-import { app } from "./app.js";
-
-const port = Number(process.env.PORT ?? 4000);
-
-const server = serve({ fetch: app.fetch, port }, (info) => {
-  console.log(`[server] http listening on :${info.port}`);
-});
-
 /**
- * WS 게이트웨이 골격.
- * TODO: /ws/visitor, /ws/agent 인증 + 연결 레지스트리 + PubSubAdapter fan-out
- * (M1 W1-2, docs/04_API_SPEC.md §5.5 / docs/02_ARCHITECTURE.md §1-1)
+ * 서버 부팅 엔트리 — env 검증 → DB 연결(+옵션 마이그레이션) → 어댑터 조립 → HTTP+WS 기동.
+ * 10_DEPLOYMENT.md §1/§2. 시크릿 값은 로그에 남기지 않는다(CLAUDE.md 규칙 5).
  */
-const wss = new WebSocketServer({ noServer: true });
+import { serve } from "@hono/node-server";
+import { createDbConnection, createRepos, runMigrations } from "@aidetalk/db";
 
-server.on("upgrade", (request, socket, head) => {
-  wss.handleUpgrade(request, socket, head, (ws) => {
-    wss.emit("connection", ws, request);
-  });
-});
+import { createApp } from "./app.js";
+import { createContext } from "./context.js";
+import { parseEnv } from "./env.js";
+import { createLogger } from "./logger.js";
+import { createPubSub } from "./pubsub/index.js";
+import { createRateLimiter } from "./ratelimit/index.js";
+import { createSessionStore } from "./session/store.js";
+import { createGateway } from "./ws/gateway.js";
 
-wss.on("connection", (ws) => {
-  console.log("[server] ws connection opened (placeholder handler)");
-  ws.on("close", () => {
-    console.log("[server] ws connection closed");
+async function main(): Promise<void> {
+  // 1) env 검증 — 실패 시 사유 출력 후 종료(값은 출력하지 않음).
+  let env;
+  try {
+    env = parseEnv();
+  } catch (err) {
+    console.error((err as Error).message);
+    process.exit(1);
+  }
+
+  const logger = createLogger(env.LOG_LEVEL);
+
+  // 2) DB 연결.
+  const conn = createDbConnection(env.DATABASE_URL);
+
+  // 3) (옵션) 부팅 시 마이그레이션.
+  if (env.RUN_MIGRATIONS_ON_BOOT) {
+    logger.info("마이그레이션 실행 중...");
+    await runMigrations(env.DATABASE_URL);
+    logger.info("마이그레이션 완료");
+  }
+
+  // 4) 연결 확인(가벼운 조회 — 없는 id 조회는 undefined 반환하며 연결만 검증).
+  try {
+    await createRepos(conn.db).workspace.getById("__boot_ping__");
+    logger.info("DB 연결 확인");
+  } catch (err) {
+    logger.error({ err: (err as Error).message }, "DB 연결 실패");
+    process.exit(1);
+  }
+
+  // 5) 어댑터 조립.
+  const pubsub = createPubSub(env);
+  const rateLimiter = createRateLimiter(env.REDIS_URL);
+  const sessionStore = createSessionStore(env.REDIS_URL);
+  const ctx = createContext({ env, db: conn.db, pubsub, rateLimiter, sessionStore, logger });
+
+  // 6) HTTP + WS 기동.
+  const app = createApp(ctx);
+  const gateway = createGateway(ctx);
+
+  const server = serve({ fetch: app.fetch, port: env.PORT }, (info) => {
+    logger.info({ port: info.port }, "[server] http listening");
   });
-});
+
+  server.on("upgrade", (req, socket, head) => {
+    gateway.handleUpgrade(req, socket, head);
+  });
+
+  // 7) graceful shutdown.
+  const shutdown = async () => {
+    logger.info("종료 중...");
+    await gateway.close();
+    await pubsub.close();
+    await rateLimiter.close();
+    await sessionStore.close();
+    await conn.close();
+    server.close();
+    process.exit(0);
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+}
+
+void main();

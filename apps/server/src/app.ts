@@ -1,12 +1,43 @@
+/**
+ * Hono 앱 구성. createApp(ctx)가 미들웨어·라우트를 조립한다.
+ * 계약은 packages/shared의 zod 스키마가 단일 출처(CLAUDE.md 코딩 컨벤션).
+ *
+ * `app`(healthz 전용)은 초기 스캐폴드 테스트 하위호환용으로 남긴다.
+ */
 import { Hono } from "hono";
 
-/**
- * Hono 앱 인스턴스. 실제 HTTP 서버 부팅(src/index.ts)과 분리해서
- * `app.request()`로 테스트할 수 있게 한다.
- *
- * 라우트 확장 시 packages/shared의 zod 스키마를 단일 계약으로 사용한다
- * (CLAUDE.md 코딩 컨벤션). 지금은 M0 스캐폴드 단계라 /healthz만 존재.
- */
-export const app = new Hono();
+import type { AppContext } from "./context";
+import {
+  errorHandler,
+  injectContext,
+  requestIdMiddleware,
+} from "./http/middleware";
+import type { HonoEnv } from "./http/types";
+import { createAuthRoutes, createMeRoute } from "./routes/auth";
+import { createWidgetRoutes } from "./routes/widget";
+import { createWorkspaceRoutes } from "./routes/workspaces";
 
+/** 모노레포 단일 버전(10 §5). healthz에 노출. */
+export const SERVER_VERSION = "0.0.0";
+
+/** AppContext를 주입해 전체 앱을 조립한다. */
+export function createApp(ctx: AppContext): Hono<HonoEnv> {
+  const app = new Hono<HonoEnv>();
+
+  app.onError(errorHandler);
+  app.use("*", requestIdMiddleware);
+  app.use("*", injectContext(ctx));
+
+  app.get("/healthz", (c) => c.json({ ok: true, version: SERVER_VERSION }));
+
+  app.route("/v1/widget", createWidgetRoutes());
+  app.route("/v1/auth", createAuthRoutes());
+  app.route("/v1", createMeRoute()); // GET /v1/me
+  app.route("/v1/workspaces", createWorkspaceRoutes());
+
+  return app;
+}
+
+/** 하위호환: healthz만 있는 최소 앱(초기 스캐폴드 테스트용). */
+export const app = new Hono();
 app.get("/healthz", (c) => c.json({ ok: true }));

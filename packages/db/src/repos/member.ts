@@ -6,6 +6,7 @@ import { and, eq } from "drizzle-orm";
 
 import type { Database } from "../client";
 import { members, users } from "../schema/auth";
+import { workspaces } from "../schema/workspaces";
 
 export interface InviteMemberInput {
   userId: string;
@@ -15,6 +16,36 @@ export interface InviteMemberInput {
 
 export function makeMemberRepo(db: Database) {
   return {
+    /** 워크스페이스 생성자(owner)를 즉시 active 멤버로 등록. 04 §2 POST /v1/workspaces. */
+    async addActive(workspaceId: string, userId: string, role: "owner" | "agent_member") {
+      const [row] = await db
+        .insert(members)
+        .values({
+          id: newId("mbr"),
+          workspaceId,
+          userId,
+          role,
+          status: "active",
+          inviteToken: null,
+        })
+        .returning();
+      return row!;
+    },
+
+    /** 사용자가 속한 모든 워크스페이스 멤버십(GET /v1/me). 워크스페이스명 조인. */
+    async listByUser(userId: string) {
+      return db
+        .select({
+          workspaceId: members.workspaceId,
+          workspaceName: workspaces.name,
+          role: members.role,
+          status: members.status,
+        })
+        .from(members)
+        .innerJoin(workspaces, eq(members.workspaceId, workspaces.id))
+        .where(eq(members.userId, userId));
+    },
+
     /** 멤버 초대(status=invited, inviteToken 발급). */
     async invite(workspaceId: string, input: InviteMemberInput) {
       const [row] = await db
