@@ -27,6 +27,7 @@ import {
   VISITOR_MSG_LIMIT,
   VISITOR_MSG_WINDOW_SEC,
 } from "../services/messaging";
+import { getVisitorConversationOr404 } from "../services/conversation-access";
 import { SESSION_COOKIE } from "../http/middleware";
 
 interface Conn {
@@ -343,20 +344,20 @@ export function createGateway(ctx: AppContext): Gateway {
       }
       case "conversation.subscribe": {
         // 소유 검증 후 conv:all만 구독(어시스트 채널은 절대 구독하지 않음 — 규칙 9).
-        await assertVisitorOwns(visitor, msg.payload.conversationId);
+        await getVisitorConversationOr404(ctx, visitor, msg.payload.conversationId);
         await subscribe(conn, channels.convAll(msg.payload.conversationId));
         return;
       }
       case "typing.set": {
         // 손님 타이핑 → conv:all에 by="visitor" 브로드캐스트(상담원 화면 "입력 중…").
         // 위젯 소켓에는 되돌려보내지 않는다(shouldDeliver에서 visitor typing 필터).
-        await assertVisitorOwns(visitor, msg.payload.conversationId);
+        await getVisitorConversationOr404(ctx, visitor, msg.payload.conversationId);
         await ctx.broadcaster.typing(msg.payload.conversationId, "visitor", msg.payload.isTyping);
         return;
       }
       case "read.mark": {
         // 손님 읽음 처리 저장 + read.update(by="visitor") 브로드캐스트(상담원 "읽음" 표시).
-        await assertVisitorOwns(visitor, msg.payload.conversationId);
+        await getVisitorConversationOr404(ctx, visitor, msg.payload.conversationId);
         await ctx.repos.conversation.setReadMarker(
           visitor.workspaceId,
           msg.payload.conversationId,
@@ -370,16 +371,6 @@ export function createGateway(ctx: AppContext): Gateway {
         );
         return;
       }
-    }
-  }
-
-  async function assertVisitorOwns(
-    visitor: { visitorId: string; workspaceId: string },
-    conversationId: string,
-  ): Promise<void> {
-    const conv = await ctx.repos.conversation.getById(visitor.workspaceId, conversationId);
-    if (!conv || conv.visitorId !== visitor.visitorId) {
-      throw AppError.of("not_found", "대화를 찾을 수 없다.");
     }
   }
 

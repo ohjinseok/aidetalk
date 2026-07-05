@@ -12,6 +12,13 @@ export function encodeCursor(row: { createdAt: Date | string; id: string }): str
   return Buffer.from(JSON.stringify({ createdAt, id: row.id }), "utf8").toString("base64url");
 }
 
+/** 페이지 크기 정규화 — 04 §0. 미지정/비정상은 fallback, max 상한 적용. */
+export function clampLimit(raw: string | undefined, fallback: number, max: number): number {
+  const n = raw ? Number(raw) : fallback;
+  if (!Number.isFinite(n) || n <= 0) return fallback;
+  return Math.min(Math.floor(n), max);
+}
+
 /** 커서 문자열 → Cursor. 형식 오류면 undefined(처음부터 조회). */
 export function decodeCursor(cursor?: string | null): Cursor | undefined {
   if (!cursor) return undefined;

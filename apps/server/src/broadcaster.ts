@@ -33,7 +33,6 @@ export interface Broadcaster {
     reason: string,
     handoffSummary: string | null,
   ): Promise<void>;
-  presence(conversationId: string, visitorOnline: boolean): Promise<void>;
   /** ⚠️ agents 채널 전용. */
   suggestionNew(conversationId: string, suggestion: Suggestion): Promise<void>;
 }
@@ -79,12 +78,6 @@ export function createBroadcaster(pubsub: PubSubAdapter): Broadcaster {
           reason,
           summary: handoffSummary,
         }),
-      );
-    },
-    async presence(conversationId, visitorOnline) {
-      await pubsub.publish(
-        channels.convAll(conversationId),
-        envelope("presence.update", { conversationId, visitorOnline }),
       );
     },
     async suggestionNew(conversationId, suggestion) {

@@ -25,8 +25,9 @@ import {
   type WidgetHandoffRequest,
 } from "../http/schemas";
 import type { HonoEnv } from "../http/types";
-import { decodeCursor, encodeCursor } from "../lib/cursor";
+import { clampLimit, decodeCursor, encodeCursor } from "../lib/cursor";
 import { serializeConversation, serializeMessage } from "../lib/serialize";
+import { getVisitorConversationOr404 } from "../services/conversation-access";
 import { performHandoff } from "../services/handoff";
 import { signVisitorToken, verifyVisitorToken } from "../lib/visitor-token";
 import {
@@ -157,7 +158,7 @@ export function createWidgetRoutes(): Hono<HonoEnv> {
     const ctx = c.get("ctx");
     const visitor = c.get("visitor")!;
     const conversationId = c.req.param("id");
-    await assertVisitorOwnsConversation(ctx, visitor, conversationId);
+    await getVisitorConversationOr404(ctx, visitor, conversationId);
 
     const after = decodeCursor(c.req.query("after"));
     const limit = clampLimit(c.req.query("limit"), 50, 100);
@@ -202,10 +203,7 @@ export function createWidgetRoutes(): Hono<HonoEnv> {
     const visitor = c.get("visitor")!;
     const body = validated<WidgetHandoffRequest>(c);
 
-    const conv = await ctx.repos.conversation.getById(visitor.workspaceId, body.conversationId);
-    if (!conv || conv.visitorId !== visitor.visitorId) {
-      throw AppError.of("not_found", "대화를 찾을 수 없다.");
-    }
+    const conv = await getVisitorConversationOr404(ctx, visitor, body.conversationId);
 
     // 이미 human이면 멱등(중복 이벤트 방지).
     if (conv.mode !== "human") {
@@ -258,22 +256,4 @@ export function createWidgetRoutes(): Hono<HonoEnv> {
   });
 
   return app;
-}
-
-/** 대화가 방문자 소유인지 검증. 아니면 not_found로 격리. */
-async function assertVisitorOwnsConversation(
-  ctx: HonoEnv["Variables"]["ctx"],
-  visitor: NonNullable<HonoEnv["Variables"]["visitor"]>,
-  conversationId: string,
-): Promise<void> {
-  const conv = await ctx.repos.conversation.getById(visitor.workspaceId, conversationId);
-  if (!conv || conv.visitorId !== visitor.visitorId) {
-    throw AppError.of("not_found", "대화를 찾을 수 없다.");
-  }
-}
-
-function clampLimit(raw: string | undefined, fallback: number, max: number): number {
-  const n = raw ? Number(raw) : fallback;
-  if (!Number.isFinite(n) || n <= 0) return fallback;
-  return Math.min(Math.floor(n), max);
 }

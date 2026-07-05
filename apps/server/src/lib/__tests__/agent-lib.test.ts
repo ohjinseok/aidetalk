@@ -1,10 +1,9 @@
 /**
- * Agent 관련 순수 유틸 단위 테스트 — SSRF 가드, track_links 치환, secret 마스킹.
+ * Agent 관련 순수 유틸 단위 테스트 — SSRF 가드, track_links 치환.
  * DB 불필요(순수 함수).
  */
 import { describe, expect, it } from "vitest";
 
-import { maskAgentSecret } from "../agent-secret";
 import { isPrivateIp, validateAgentEndpoint } from "../agent-endpoint";
 import { appendTrackingToken, extractUrls, replaceUrls } from "../track-links";
 
@@ -62,11 +61,5 @@ describe("track_links — URL 추출/치환", () => {
   it("기존 쿼리 유무에 따라 ?/& 선택", () => {
     expect(appendTrackingToken("https://a.com/x", "T")).toBe("https://a.com/x?at_l=T");
     expect(appendTrackingToken("https://a.com/x?a=1", "T")).toBe("https://a.com/x?a=1&at_l=T");
-  });
-});
-
-describe("secret 마스킹", () => {
-  it("adt_ab**** 형식", () => {
-    expect(maskAgentSecret("adt_abcdef123456")).toBe("adt_ab****");
   });
 });

@@ -205,6 +205,94 @@ export function serializeWebhook(row: {
   };
 }
 
+/** visitors row → 상담원 인박스용 공개 방문자 객체(04 §6). */
+export function publicVisitor(v: {
+  id: string;
+  email: string | null;
+  name: string | null;
+  attributes: Record<string, unknown>;
+  firstPageUrl: string | null;
+  firstReferrer: string | null;
+}) {
+  return {
+    id: v.id,
+    email: v.email,
+    name: v.name,
+    attributes: v.attributes,
+    firstPageUrl: v.firstPageUrl,
+    firstReferrer: v.firstReferrer,
+  };
+}
+
+/** users row → 공개 사용자 객체. ⚠️ passwordHash는 절대 포함하지 않는다(규칙 5). */
+export function publicUser(user: { id: string; email: string; name: string }) {
+  return { id: user.id, email: user.email, name: user.name };
+}
+
+/** members row → 공개 멤버 객체. */
+export function serializeMember(row: {
+  id: string;
+  userId: string;
+  role: string;
+  status: string;
+  email?: string;
+  name?: string;
+  createdAt?: Date | string;
+}) {
+  return {
+    id: row.id,
+    userId: row.userId,
+    role: row.role,
+    status: row.status,
+    email: row.email ?? null,
+    name: row.name ?? null,
+    createdAt: row.createdAt != null ? toIso(row.createdAt) : null,
+  };
+}
+
+/** invites row → 공개 초대 객체(token_hash는 절대 노출 금지, 규칙 5). */
+export function serializeInvite(row: {
+  id: string;
+  workspaceId: string;
+  email: string;
+  role: string;
+  expiresAt: Date | string;
+  acceptedAt: Date | string | null;
+  createdAt: Date | string;
+}) {
+  return {
+    id: row.id,
+    workspaceId: row.workspaceId,
+    email: row.email,
+    role: row.role,
+    status: "invited" as const,
+    expiresAt: toIso(row.expiresAt),
+    acceptedAt: row.acceptedAt ? toIso(row.acceptedAt) : null,
+    createdAt: toIso(row.createdAt),
+  };
+}
+
+/** workspaces row → 공개 워크스페이스 객체. */
+export function serializeWorkspace(row: {
+  id: string;
+  name: string;
+  segment: string;
+  plan: string;
+  widgetSettings: Record<string, unknown>;
+  attributionRule: string;
+  createdAt: Date | string;
+}) {
+  return {
+    id: row.id,
+    name: row.name,
+    segment: row.segment,
+    plan: row.plan,
+    widgetSettings: row.widgetSettings,
+    attributionRule: row.attributionRule,
+    createdAt: toIso(row.createdAt),
+  };
+}
+
 /** 메시지 미리보기 텍스트(인박스 요약용). */
 export function messagePreview(content: MessageContent): string {
   return content.text.slice(0, 140);

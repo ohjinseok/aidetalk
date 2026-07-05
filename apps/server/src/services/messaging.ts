@@ -5,10 +5,10 @@
  */
 import type { AppContext } from "../context";
 import type { ConversationSummary, Message } from "@aidetalk/shared";
-import { AppError } from "@aidetalk/shared";
 
 import { messagePreview, serializeConversation, serializeMessage } from "../lib/serialize";
 import type { VisitorAuth } from "../http/types";
+import { getVisitorConversationOr404 } from "./conversation-access";
 
 /** 방문자 메시지 전송 한도 — 04 §0.2 (10 msg/min/visitor). */
 export const VISITOR_MSG_LIMIT = 10;
@@ -31,10 +31,7 @@ export async function sendVisitorMessage(
   input: SendVisitorMessageInput,
 ): Promise<Message> {
   const { visitor, conversationId, clientMsgId, text } = input;
-  const conv = await ctx.repos.conversation.getById(visitor.workspaceId, conversationId);
-  if (!conv || conv.visitorId !== visitor.visitorId) {
-    throw AppError.of("not_found", "대화를 찾을 수 없다.");
-  }
+  const conv = await getVisitorConversationOr404(ctx, visitor, conversationId);
 
   const row = await ctx.repos.message.append(visitor.workspaceId, conversationId, {
     role: "visitor",

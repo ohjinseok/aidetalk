@@ -92,13 +92,6 @@ export class KeyedSemaphore {
   }
 }
 
-/** 셀프호스팅/테스트 기본 구현 — 아무 동작도 하지 않는다. */
-export class NoopAgentDispatcher implements AgentDispatcher {
-  async onVisitorMessage(_ctx: VisitorMessageContext): Promise<void> {
-    // 릴레이 없음.
-  }
-}
-
 /** 실제 HTTP 릴레이 구현. */
 export class HttpAgentDispatcher implements AgentDispatcher {
   private inflight = new Set<Promise<void>>();

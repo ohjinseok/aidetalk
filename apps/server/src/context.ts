@@ -11,6 +11,7 @@ import { createBroadcaster, type Broadcaster } from "./broadcaster";
 import { HttpAgentDispatcher, type AgentDispatcher } from "./dispatcher";
 import type { Env } from "./env";
 import { warnIfSecretEncKeyMissing } from "./lib/secret-enc-key";
+import { readServerVersion } from "./lib/version";
 import { createLogger, type Logger } from "./logger";
 import type { ClosablePubSub } from "./pubsub";
 import type { RateLimiter } from "./ratelimit";
@@ -19,6 +20,8 @@ import { HttpWebhookDispatcher, type WebhookDispatcher } from "./services/webhoo
 
 export interface AppContext {
   env: Env;
+  /** 서버 버전(package.json 단일 출처) — healthz·텔레메트리 공용. */
+  version: string;
   logger: Logger;
   db: Database;
   repos: Repos;
@@ -50,6 +53,7 @@ export function createContext(deps: CreateContextDeps): AppContext {
   warnIfSecretEncKeyMissing(deps.env, logger);
   const ctx: AppContext = {
     env: deps.env,
+    version: readServerVersion(),
     logger,
     db: deps.db,
     repos: createRepos(deps.db),
@@ -57,7 +61,7 @@ export function createContext(deps: CreateContextDeps): AppContext {
     broadcaster: createBroadcaster(deps.pubsub),
     rateLimiter: deps.rateLimiter,
     sessionStore: deps.sessionStore,
-    // 셀프호스팅/테스트 기본값 — cloud는 index.ts에서 ee의 CloudPlanEnforcer 주입(다음 웨이브).
+    // 셀프호스팅/테스트 기본값 — cloud는 index.ts에서 ee의 CloudPlanEnforcer를 주입한다(규칙 8 주입 지점).
     planEnforcer: deps.planEnforcer ?? new NoopPlanEnforcer(),
     // 주입이 없으면 실제 HTTP 릴레이 dispatcher(ctx 참조 필요 → 조립 후 주입).
     dispatcher: deps.dispatcher ?? (undefined as unknown as AgentDispatcher),

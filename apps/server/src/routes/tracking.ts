@@ -9,6 +9,7 @@ import { getCookie } from "hono/cookie";
 import { cors } from "hono/cors";
 
 import { getClientIp } from "../http/client-ip";
+import { VISITOR_COOKIE } from "../http/middleware";
 import {
   trackClickRequestSchema,
   trackConversionRequestSchema,
@@ -79,7 +80,7 @@ async function recordConversion(c: Context<HonoEnv>, body: TrackConversionReques
   if (!workspace) return;
 
   // 방문자 식별 — body.visitorToken(localStorage) 우선, 없으면 od_visitor 쿠키(04 §3).
-  const rawToken = body.visitorToken ?? getCookie(c, "od_visitor");
+  const rawToken = body.visitorToken ?? getCookie(c, VISITOR_COOKIE);
   const payload = rawToken ? verifyVisitorToken(rawToken, ctx.env.VISITOR_TOKEN_SECRET) : null;
   if (!payload || payload.ws !== body.workspaceId) return;
 

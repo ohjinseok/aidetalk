@@ -13,6 +13,9 @@ import type { HonoEnv } from "./types";
 
 export const SESSION_COOKIE = "od_session";
 
+/** 방문자 식별 쿠키(전환 트래킹 폴백, 04 §3). localStorage 토큰이 없을 때만 사용. */
+export const VISITOR_COOKIE = "od_visitor";
+
 /** x-request-id를 받거나 생성해 응답 헤더로 되돌리고 c.var에 보관. */
 export const requestIdMiddleware: MiddlewareHandler<HonoEnv> = async (c, next) => {
   const incoming = c.req.header("x-request-id");

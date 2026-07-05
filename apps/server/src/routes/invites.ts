@@ -4,7 +4,7 @@
  *
  * 두 종류의 토큰을 모두 수락한다:
  *  1) invites 행(미가입 이메일 초대) — token_hash 조회. 만료/중복 수락 거부 + 대상 이메일 일치 검증.
- *  2) members 행(기가입 계정 초대) — inviteToken(raw) 조회. 기존 흐름 유지.
+ *  2) members 행(기가입 계정 초대) — inviteToken(raw) 조회. 대상 사용자 일치 검증.
  */
 import { hashSecret } from "@aidetalk/db";
 import { AppError } from "@aidetalk/shared";

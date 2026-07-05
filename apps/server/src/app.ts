@@ -1,8 +1,6 @@
 /**
  * Hono 앱 구성. createApp(ctx)가 미들웨어·라우트를 조립한다.
  * 계약은 packages/shared의 zod 스키마가 단일 출처(CLAUDE.md 코딩 컨벤션).
- *
- * `app`(healthz 전용)은 초기 스캐폴드 테스트 하위호환용으로 남긴다.
  */
 import { Hono } from "hono";
 
@@ -21,9 +19,6 @@ import { createWebhookRoutes } from "./routes/webhooks";
 import { createWidgetRoutes } from "./routes/widget";
 import { createWorkspaceRoutes } from "./routes/workspaces";
 
-/** 모노레포 단일 버전(10 §5). healthz에 노출. */
-export const SERVER_VERSION = "0.0.0";
-
 /** AppContext를 주입해 전체 앱을 조립한다. */
 export function createApp(ctx: AppContext): Hono<HonoEnv> {
   const app = new Hono<HonoEnv>();
@@ -32,7 +27,7 @@ export function createApp(ctx: AppContext): Hono<HonoEnv> {
   app.use("*", requestIdMiddleware);
   app.use("*", injectContext(ctx));
 
-  app.get("/healthz", (c) => c.json({ ok: true, version: SERVER_VERSION }));
+  app.get("/healthz", (c) => c.json({ ok: true, version: ctx.version }));
 
   // 쿠키 인증(od_session) 경로는 CSRF Origin 화이트리스트 검증(08 §3). 위젯/트래킹은 Bearer/무인증이라 제외.
   app.use("/v1/auth/*", csrfOriginGuard);
@@ -49,7 +44,3 @@ export function createApp(ctx: AppContext): Hono<HonoEnv> {
 
   return app;
 }
-
-/** 하위호환: healthz만 있는 최소 앱(초기 스캐폴드 테스트용). */
-export const app = new Hono();
-app.get("/healthz", (c) => c.json({ ok: true }));

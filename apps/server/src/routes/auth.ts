@@ -19,6 +19,7 @@ import {
   type SignupRequest,
 } from "../http/schemas";
 import type { HonoEnv } from "../http/types";
+import { publicUser } from "../lib/serialize";
 import { SESSION_TTL_SEC } from "../session/store";
 
 /** 로그인 시도 한도 — 04 §0.2 (10/min/IP). */
@@ -97,8 +98,4 @@ async function startSession(c: Context<HonoEnv>, userId: string): Promise<void> 
     path: "/",
     maxAge: SESSION_TTL_SEC,
   });
-}
-
-function publicUser(user: { id: string; email: string; name: string }) {
-  return { id: user.id, email: user.email, name: user.name };
 }

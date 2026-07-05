@@ -47,13 +47,6 @@ export interface WebhookDispatcher {
   whenIdle?(): Promise<void>;
 }
 
-/** 셀프호스팅/테스트 기본값 — 아무 것도 하지 않는다. */
-export class NoopWebhookDispatcher implements WebhookDispatcher {
-  dispatch(): void {
-    // 발송 없음.
-  }
-}
-
 export interface HttpWebhookDispatcherOptions {
   /** 재시도 지연(ms) 오버라이드 — 테스트에서 실제 시간 없이 스케줄을 검증할 때만 사용. */
   retryDelaysMs?: readonly number[];

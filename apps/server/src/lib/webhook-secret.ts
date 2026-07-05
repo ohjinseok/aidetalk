@@ -9,9 +9,3 @@ import { randomBytes } from "node:crypto";
 export function generateWebhookSecret(): string {
   return `whsec_${randomBytes(32).toString("base64url")}`;
 }
-
-/** 로그/에러에 secret을 남겨야 할 때의 마스킹 — `whsec_ab****`(CLAUDE.md 규칙 5). */
-export function maskWebhookSecret(secret: string): string {
-  const body = secret.startsWith("whsec_") ? secret.slice(6) : secret;
-  return `whsec_${body.slice(0, 2)}****`;
-}
