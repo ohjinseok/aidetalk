@@ -11,12 +11,12 @@
  * - 응답 본문/시크릿은 로그에 남기지 않는다(CLAUDE.md 규칙 5).
  */
 import { decryptSecret } from "@aidetalk/db";
+import type { WebhookEventName } from "@aidetalk/shared";
 
 import type { AppContext } from "../context";
 import { signBody } from "../dispatch/http";
 import { assertResolvesToPublicIp } from "../lib/agent-endpoint";
 import { resolveSecretEncKeyMaterial } from "../lib/secret-enc-key";
-import type { WebhookEventName } from "../http/schemas";
 
 export type { WebhookEventName };
 

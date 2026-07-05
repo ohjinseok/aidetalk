@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { agentApi } from "@/lib/api/endpoints";
 import { td, tf } from "@/lib/i18n";
-import type { Agent, AgentStatus, AgentTestResult } from "@/lib/api/schemas";
+import type { Agent, AgentStatus, AgentTestResult } from "@aidetalk/shared";
 import { useResource } from "@/hooks/useResource";
 import { useAgentStatus } from "@/components/providers/AgentStatusProvider";
 import { useToast } from "@/components/providers/ToastProvider";

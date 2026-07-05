@@ -2,18 +2,18 @@
  * 인박스 API — 04_API_SPEC.md §2. 대화 목록/상세/메시지, 상담원 전송, 배정/반환/종료,
  * 상담 어시스트 제안(상담원 전용, 규칙 9).
  */
-import { AppError } from "@aidetalk/shared";
-import { Hono, type Context } from "hono";
-
-import { validateJson, validated } from "../../http/middleware";
 import {
+  AppError,
   assignConversationRequestSchema,
   inboxSendMessageRequestSchema,
   patchSuggestionRequestSchema,
   type AssignConversationRequest,
   type InboxSendMessageRequest,
   type PatchSuggestionRequest,
-} from "../../http/schemas";
+} from "@aidetalk/shared";
+import { Hono, type Context } from "hono";
+
+import { validateJson, validated } from "../../http/middleware";
 import type { HonoEnv } from "../../http/types";
 import { clampLimit, decodeCursor, encodeCursor } from "../../lib/cursor";
 import {

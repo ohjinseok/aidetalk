@@ -3,18 +3,18 @@
  * ⚠️ 손님 페이지에 영향을 주면 안 된다 — 검증 실패/레이트리밋 초과/내부 오류 등
  *   *어떤 실패도* 204로 응답한다(에러 상세는 로그에만 남긴다).
  */
-import { AppError } from "@aidetalk/shared";
+import {
+  AppError,
+  trackClickRequestSchema,
+  trackConversionRequestSchema,
+  type TrackConversionRequest,
+} from "@aidetalk/shared";
 import { Hono, type Context } from "hono";
 import { getCookie } from "hono/cookie";
 import { cors } from "hono/cors";
 
 import { getClientIp } from "../http/client-ip";
 import { VISITOR_COOKIE } from "../http/middleware";
-import {
-  trackClickRequestSchema,
-  trackConversionRequestSchema,
-  type TrackConversionRequest,
-} from "../http/schemas";
 import type { HonoEnv } from "../http/types";
 import { verifyVisitorToken } from "../lib/visitor-token";
 import { findAttributionCandidate } from "../services/tracking";

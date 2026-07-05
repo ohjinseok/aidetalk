@@ -1,7 +1,13 @@
 /**
  * 인증/계정 API — 04_API_SPEC.md §2. argon2id(비번) + Redis/메모리 세션 쿠키(od_session).
  */
-import { AppError } from "@aidetalk/shared";
+import {
+  AppError,
+  loginRequestSchema,
+  signupRequestSchema,
+  type LoginRequest,
+  type SignupRequest,
+} from "@aidetalk/shared";
 import { Hono, type Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 
@@ -12,12 +18,6 @@ import {
   validateJson,
   validated,
 } from "../http/middleware";
-import {
-  loginRequestSchema,
-  signupRequestSchema,
-  type LoginRequest,
-  type SignupRequest,
-} from "../http/schemas";
 import type { HonoEnv } from "../http/types";
 import { publicUser } from "../lib/serialize";
 import { SESSION_TTL_SEC } from "../session/store";

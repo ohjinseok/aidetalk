@@ -6,7 +6,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { ApiError } from "@/lib/api/client";
 import { authApi, workspaceApi } from "@/lib/api/endpoints";
 import { td } from "@/lib/i18n";
-import type { Me, Membership, Workspace } from "@/lib/api/schemas";
+import type { Me, Membership, Workspace } from "@aidetalk/shared";
 import { Spinner } from "@/components/ui/spinner";
 
 interface WorkspaceCtx {

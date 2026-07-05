@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { trackingApi } from "@/lib/api/endpoints";
 import { formatKrw } from "@/lib/format";
 import { td } from "@/lib/i18n";
-import type { TrackingSummary } from "@/lib/api/schemas";
+import type { TrackingSummary } from "@aidetalk/shared";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";

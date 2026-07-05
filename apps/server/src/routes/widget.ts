@@ -1,18 +1,8 @@
 /**
  * 위젯 API — 04_API_SPEC.md §1 (`/v1/widget/*`). visitor_token 인증(세션 발급은 무인증).
  */
-import { AppError } from "@aidetalk/shared";
-import { t } from "@aidetalk/i18n";
-import { Hono } from "hono";
-import { cors } from "hono/cors";
-
-import { getClientIp } from "../http/client-ip";
 import {
-  requireVisitor,
-  validateJson,
-  validated,
-} from "../http/middleware";
-import {
+  AppError,
   createConversationRequestSchema,
   longPollSendRequestSchema,
   profilePatchRequestSchema,
@@ -23,7 +13,17 @@ import {
   type ProfilePatchRequest,
   type SessionRequest,
   type WidgetHandoffRequest,
-} from "../http/schemas";
+} from "@aidetalk/shared";
+import { t } from "@aidetalk/i18n";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+
+import { getClientIp } from "../http/client-ip";
+import {
+  requireVisitor,
+  validateJson,
+  validated,
+} from "../http/middleware";
 import type { HonoEnv } from "../http/types";
 import { clampLimit, decodeCursor, encodeCursor } from "../lib/cursor";
 import { serializeConversation, serializeMessage } from "../lib/serialize";

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { visitorApi } from "@/lib/api/endpoints";
 import { formatKrw } from "@/lib/format";
 import { td } from "@/lib/i18n";
-import type { Conversation, ConversationTracking, VisitorDetail } from "@/lib/api/schemas";
+import type { Conversation, ConversationTracking, VisitorDetail } from "@aidetalk/shared";
 import { useToast } from "@/components/providers/ToastProvider";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Button } from "@/components/ui/button";

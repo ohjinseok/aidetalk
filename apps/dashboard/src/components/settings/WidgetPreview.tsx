@@ -2,7 +2,7 @@
 
 import { MessageCircle } from "lucide-react";
 
-import type { WidgetSettings } from "@/lib/api/schemas";
+import type { WidgetSettings } from "@aidetalk/shared";
 import { td } from "@/lib/i18n";
 
 /**

@@ -4,16 +4,16 @@
  * 트래킹/멤버/방문자)는 관심사별 서브라우터로 마운트한다. 라우트 경로는 전부 이 접두사 아래.
  * DB 접근은 전부 repos 경유(라우트 직접 쿼리 금지). 에러 코드는 04 §7만.
  */
-import { AppError } from "@aidetalk/shared";
-import { Hono } from "hono";
-
-import { requireMembership, requireUser, validateJson, validated } from "../../http/middleware";
 import {
+  AppError,
   createWorkspaceRequestSchema,
   updateWorkspaceSettingsRequestSchema,
   type CreateWorkspaceRequest,
   type UpdateWorkspaceSettingsRequest,
-} from "../../http/schemas";
+} from "@aidetalk/shared";
+import { Hono } from "hono";
+
+import { requireMembership, requireUser, validateJson, validated } from "../../http/middleware";
 import type { HonoEnv } from "../../http/types";
 import { serializeWorkspace } from "../../lib/serialize";
 import { createAgentRoutes } from "./agents";

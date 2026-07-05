@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { InboxItem } from "../api/schemas";
+import type { InboxItem } from "@aidetalk/shared";
 import { patchInboxConversation, removeInbox, upsertInbox } from "../ws/reducer";
 
 function item(

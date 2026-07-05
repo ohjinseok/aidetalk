@@ -3,17 +3,17 @@
  * secret 원문은 생성·재발급 응답 1회만 노출(sha256 해시 + AES-GCM 암호문만 저장, 규칙 5).
  */
 import { encryptSecret } from "@aidetalk/db";
-import { AppError } from "@aidetalk/shared";
-import { Hono } from "hono";
-
-import { testAgentConnection } from "../../dispatch/test";
-import { validateJson, validated } from "../../http/middleware";
 import {
+  AppError,
   createAgentRequestSchema,
   updateAgentRequestSchema,
   type CreateAgentRequest,
   type UpdateAgentRequest,
-} from "../../http/schemas";
+} from "@aidetalk/shared";
+import { Hono } from "hono";
+
+import { testAgentConnection } from "../../dispatch/test";
+import { validateJson, validated } from "../../http/middleware";
 import type { HonoEnv } from "../../http/types";
 import { generateAgentSecret } from "../../lib/agent-secret";
 import { endpointPolicy, validateAgentEndpoint } from "../../lib/agent-endpoint";

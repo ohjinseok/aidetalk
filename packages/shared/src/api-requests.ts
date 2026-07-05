@@ -1,11 +1,18 @@
 /**
- * REST 요청 본문 zod 스키마 — 04_API_SPEC.md §1, §2.
+ * REST 요청 본문 계약 zod 스키마 — 04_API_SPEC.md §1, §2, §3.
+ * 서버(요청 검증)·위젯/대시보드(요청 조립)가 모두 이 스키마를 단일 출처로 import한다.
+ * (CLAUDE.md 코딩 컨벤션: API 계약은 packages/shared의 zod가 단일 출처)
  *
- * NOTE(decision): §6 공유 객체(응답 형태)는 packages/shared가 단일 출처지만,
- *   요청 본문 스키마는 아직 shared에 없다. 위젯/대시보드가 병렬 작업 중이라
- *   이번 웨이브에서는 서버 로컬에 두고, 계약이 안정되면 packages/shared로 승격한다.
+ * 도메인 enum(segment/role/attributionRule/웹훅 이벤트)은 api-responses.ts 정본을 재사용한다.
  */
 import { z } from "zod";
+
+import {
+  attributionRuleSchema,
+  roleSchema,
+  segmentSchema,
+  webhookEventNameSchema,
+} from "./api-responses";
 
 // ---------- 위젯 API (§1) ----------
 export const sessionRequestSchema = z.object({
@@ -55,7 +62,7 @@ export type LoginRequest = z.infer<typeof loginRequestSchema>;
 // ---------- 워크스페이스 (§2) ----------
 export const createWorkspaceRequestSchema = z.object({
   name: z.string().min(1),
-  segment: z.enum(["s1_site", "s2_no_site"]).default("s1_site"),
+  segment: segmentSchema.default("s1_site"),
 });
 export type CreateWorkspaceRequest = z.infer<typeof createWorkspaceRequestSchema>;
 
@@ -64,7 +71,7 @@ export const updateWorkspaceSettingsRequestSchema = z
   .object({
     name: z.string().min(1).optional(),
     widgetSettings: z.record(z.unknown()).optional(),
-    attributionRule: z.enum(["last_click", "first_click"]).optional(),
+    attributionRule: attributionRuleSchema.optional(),
   })
   .refine((v) => Object.keys(v).length > 0, { message: "변경할 항목이 필요하다." });
 export type UpdateWorkspaceSettingsRequest = z.infer<typeof updateWorkspaceSettingsRequestSchema>;
@@ -72,7 +79,7 @@ export type UpdateWorkspaceSettingsRequest = z.infer<typeof updateWorkspaceSetti
 // ---------- 멤버/초대 (§2) ----------
 export const inviteMemberRequestSchema = z.object({
   email: z.string().email(),
-  role: z.enum(["owner", "agent_member"]).default("agent_member"),
+  role: roleSchema.default("agent_member"),
 });
 export type InviteMemberRequest = z.infer<typeof inviteMemberRequestSchema>;
 
@@ -124,13 +131,9 @@ export const widgetHandoffRequestSchema = z.object({
 export type WidgetHandoffRequest = z.infer<typeof widgetHandoffRequestSchema>;
 
 // ---------- 웹훅 (§2 웹훅 섹션, Should) ----------
-/** 04 §2 웹훅 이벤트 목록. 새 이벤트 추가 시 여기와 04 문서를 함께 갱신한다. */
-export const webhookEventNames = ["agent.auto_disabled", "conversation.handoff"] as const;
-export type WebhookEventName = (typeof webhookEventNames)[number];
-
 export const createWebhookRequestSchema = z.object({
   url: z.string().min(1),
-  events: z.array(z.enum(webhookEventNames)).min(1),
+  events: z.array(webhookEventNameSchema).min(1),
 });
 export type CreateWebhookRequest = z.infer<typeof createWebhookRequestSchema>;
 

@@ -3,7 +3,7 @@
  * messages(말풍선) + conversation_events(회색 시스템 라인)를 시간순으로 병합한다.
  * 순서 규칙(03 §messages): ORDER BY created_at, id. id는 보조키.
  */
-import type { Event, Message } from "./api/schemas";
+import type { Event, Message } from "@aidetalk/shared";
 
 export type TimelineItem =
   | { kind: "message"; id: string; createdAt: string; message: Message }

@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { workspaceApi } from "@/lib/api/endpoints";
 import { td } from "@/lib/i18n";
-import type { AttributionRule } from "@/lib/api/schemas";
+import type { AttributionRule } from "@aidetalk/shared";
 import { useToast } from "@/components/providers/ToastProvider";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Button } from "@/components/ui/button";

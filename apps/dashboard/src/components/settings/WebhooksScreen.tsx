@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { webhookApi } from "@/lib/api/endpoints";
 import { td, type TranslationKey } from "@/lib/i18n";
-import type { Webhook, WebhookEventName } from "@/lib/api/schemas";
+import type { Webhook, WebhookEventName } from "@aidetalk/shared";
 import { useResource } from "@/hooks/useResource";
 import { SecretModal } from "@/components/agents/SecretModal";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -18,7 +18,7 @@ import { FormRow } from "@/components/ui/form-row";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 
-/** 04 §2 웹훅 이벤트 카탈로그 — 새 이벤트 추가 시 서버 http/schemas.ts와 함께 갱신. */
+/** 04 §2 웹훅 이벤트 카탈로그 — 새 이벤트 추가 시 shared api-responses.ts와 함께 갱신. */
 const EVENT_OPTIONS: { value: WebhookEventName; labelKey: TranslationKey }[] = [
   { value: "agent.auto_disabled", labelKey: "dashboard.webhooks.eventAutoDisabled" },
   { value: "conversation.handoff", labelKey: "dashboard.webhooks.eventHandoff" },

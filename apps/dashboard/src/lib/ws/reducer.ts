@@ -2,9 +2,7 @@
  * 인박스 실시간 리듀서 — 04 §5.4 inbox.upsert 처리.
  * 순수 함수로 분리(단위 테스트 대상, 09 문서 메시징 신뢰성).
  */
-import type { ConversationStatus } from "@aidetalk/shared";
-
-import type { InboxItem } from "../api/schemas";
+import type { ConversationStatus, InboxItem } from "@aidetalk/shared";
 
 /** lastMessageAt desc 정렬 키. null은 최하단. */
 function sortKey(item: InboxItem): number {

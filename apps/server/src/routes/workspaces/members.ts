@@ -8,11 +8,10 @@
 import { randomBytes } from "node:crypto";
 
 import { hashSecret } from "@aidetalk/db";
-import { AppError } from "@aidetalk/shared";
+import { AppError, inviteMemberRequestSchema, type InviteMemberRequest } from "@aidetalk/shared";
 import { Hono } from "hono";
 
 import { validateJson, validated } from "../../http/middleware";
-import { inviteMemberRequestSchema, type InviteMemberRequest } from "../../http/schemas";
 import type { HonoEnv } from "../../http/types";
 import { serializeInvite, serializeMember } from "../../lib/serialize";
 import { assertOwner } from "./shared";

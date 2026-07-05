@@ -2,10 +2,6 @@
  * 타입 세이프 엔드포인트 함수 — 04_API_SPEC.md §2 계약과 1:1.
  * 라우트/컴포넌트는 fetch를 직접 부르지 않고 이 함수만 사용한다.
  */
-import { messageSchema, suggestionSchema, type Suggestion } from "@aidetalk/shared";
-import { z } from "zod";
-
-import { apiFetch, type ApiFetchOptions } from "./client";
 import {
   agentLogSchema,
   agentSchema,
@@ -21,7 +17,9 @@ import {
   meSchema,
   memberSchema,
   messageResponseSchema,
+  messageSchema,
   secretOnlySchema,
+  suggestionSchema,
   trackingSummarySchema,
   webhookSchema,
   webhookWithSecretSchema,
@@ -37,12 +35,16 @@ import {
   type Message,
   type Role,
   type Segment,
+  type Suggestion,
   type TrackingSummary,
   type Webhook,
   type WebhookEventName,
   type WidgetSettings,
   type Workspace,
-} from "./schemas";
+} from "@aidetalk/shared";
+import { z } from "zod";
+
+import { apiFetch, type ApiFetchOptions } from "./client";
 
 /**
  * 쿼리스트링 빌드 헬퍼 — undefined/null/빈 문자열 값은 생략한다.

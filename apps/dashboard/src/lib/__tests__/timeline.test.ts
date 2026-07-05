@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Event, Message } from "../api/schemas";
+import type { Event, Message } from "@aidetalk/shared";
 import { mergeTimeline, upsertMessage } from "../timeline";
 
 function msg(id: string, createdAt: string): Message {

@@ -4,11 +4,10 @@
  * secret 원문은 등록 응답 1회만 노출 — agents와 동일 패턴(sha256 해시 + AES-GCM 암호문).
  */
 import { encryptSecret } from "@aidetalk/db";
-import { AppError } from "@aidetalk/shared";
+import { AppError, createWebhookRequestSchema, type CreateWebhookRequest } from "@aidetalk/shared";
 import { Hono } from "hono";
 
 import { requireMembership, requireUser, validateJson, validated } from "../http/middleware";
-import { createWebhookRequestSchema, type CreateWebhookRequest } from "../http/schemas";
 import type { HonoEnv } from "../http/types";
 import { endpointPolicy, validateAgentEndpoint } from "../lib/agent-endpoint";
 import { resolveSecretEncKeyMaterial } from "../lib/secret-enc-key";

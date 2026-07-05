@@ -4,7 +4,12 @@ import { useMemo, useState } from "react";
 
 import { workspaceApi } from "@/lib/api/endpoints";
 import { td, type TranslationKey } from "@/lib/i18n";
-import type { LauncherPosition, OfficeHoursRule, Tone, WidgetSettings } from "@/lib/api/schemas";
+import type {
+  LauncherPosition,
+  OfficeHoursRule,
+  WidgetSettings,
+  WidgetTone,
+} from "@aidetalk/shared";
 import { useToast } from "@/components/providers/ToastProvider";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Button } from "@/components/ui/button";
@@ -158,7 +163,7 @@ export function WidgetSettingsScreen() {
             <FormRow label={td("dashboard.widget.tone")} htmlFor="tone">
               <Select
                 value={form.tone}
-                onValueChange={(v) => setForm((f) => ({ ...f, tone: v as Tone }))}
+                onValueChange={(v) => setForm((f) => ({ ...f, tone: v as WidgetTone }))}
               >
                 <SelectTrigger id="tone" className="w-full">
                   <SelectValue />

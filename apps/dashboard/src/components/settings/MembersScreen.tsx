@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { memberApi } from "@/lib/api/endpoints";
 import { td } from "@/lib/i18n";
-import type { Member, Role } from "@/lib/api/schemas";
+import type { Member, Role } from "@aidetalk/shared";
 import { useResource } from "@/hooks/useResource";
 import { useToast } from "@/components/providers/ToastProvider";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";

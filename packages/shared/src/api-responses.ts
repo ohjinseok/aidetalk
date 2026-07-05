@@ -1,33 +1,22 @@
 /**
- * 대시보드 API 응답 스키마 — 04_API_SPEC.md §2 계약 기준.
+ * REST 응답 계약 zod 스키마 — 04_API_SPEC.md §2 (대시보드 API) 기준.
+ * 서버(응답 직렬화)·대시보드(응답 파싱)가 모두 이 스키마를 단일 출처로 import한다.
+ * (CLAUDE.md 코딩 컨벤션: API 계약은 packages/shared의 zod가 단일 출처)
  *
- * 원칙: packages/shared에 있는 계약(Message/Conversation/ConversationSummary/Suggestion/Event)은
- * 그대로 재사용한다. shared에 아직 없는 대시보드 전용 응답 형태(워크스페이스/멤버/에이전트/로그/트래킹)만
- * 여기서 로컬로 정의한다.
- *
- * TODO(question): 워크스페이스/에이전트/멤버 zod 스키마는 원래 packages/shared가 단일 출처여야 한다
- * (widget-settings.ts 등). 인박스·agents API를 병렬 구현 중인 에이전트와의 충돌을 피하려고
- * 지금은 대시보드 로컬에 두었다. 통합 웨이브에서 shared로 승격 필요.
- *
- * 서버가 추가 필드를 보내더라도 zod 기본 동작(미지정 키 제거)으로 무시되므로, 여기서는 화면이
- * 필요로 하는 최소 필드만 정의하고 불확실한 필드는 optional/nullable로 둔다.
+ * §6 공유 객체(Message/Conversation/ConversationSummary/Suggestion/Event)와 widgetSettings는
+ * 각각 entities.ts / widget-settings.ts가 정본이므로 여기서는 재사용만 한다.
+ * 서버가 추가 필드를 보내더라도 zod 기본 동작(미지정 키 제거)으로 무시되므로, 화면이 필요로 하는
+ * 최소 필드만 정의하고 불확실한 필드는 optional/nullable로 둔다.
  */
+import { z } from "zod";
+
 import {
   conversationSchema,
   conversationSummarySchema,
   eventSchema,
   messageSchema,
-  // widgetSettings 정본은 shared로 승격됨(widget-settings.ts) — 대시보드는 이를 재사용한다.
-  launcherPositionSchema,
-  officeHoursRuleSchema,
-  officeHoursSchema,
-  widgetSettingsSchema,
-  widgetToneSchema,
-  type LauncherPosition,
-  type OfficeHoursRule,
-  type WidgetSettings,
-} from "@aidetalk/shared";
-import { z } from "zod";
+} from "./entities";
+import { widgetSettingsSchema } from "./widget-settings";
 
 // ---------- 리스트 봉투 (04 §0) ----------
 export function listEnvelope<T extends z.ZodTypeAny>(item: T) {
@@ -70,12 +59,6 @@ export type Segment = z.infer<typeof segmentSchema>;
 
 export const attributionRuleSchema = z.enum(["last_click", "first_click"]);
 export type AttributionRule = z.infer<typeof attributionRuleSchema>;
-
-// widgetSettings 계약(tone/launcherPosition/officeHours/widgetSettings)은 shared 정본을 재노출한다.
-export const toneSchema = widgetToneSchema;
-export type Tone = z.infer<typeof toneSchema>;
-export { launcherPositionSchema, officeHoursRuleSchema, officeHoursSchema, widgetSettingsSchema };
-export type { LauncherPosition, OfficeHoursRule, WidgetSettings };
 
 export const workspaceSchema = z.object({
   id: z.string(),
@@ -251,7 +234,9 @@ export const conversationTrackingSchema = z.object({
 export type ConversationTracking = z.infer<typeof conversationTrackingSchema>;
 
 // ---------- 웹훅(Should, 04 §2 웹훅 섹션) ----------
-export const webhookEventNameSchema = z.enum(["agent.auto_disabled", "conversation.handoff"]);
+/** 04 §2 웹훅 이벤트 목록. 새 이벤트 추가 시 여기와 04 문서를 함께 갱신한다. */
+export const webhookEventNames = ["agent.auto_disabled", "conversation.handoff"] as const;
+export const webhookEventNameSchema = z.enum(webhookEventNames);
 export type WebhookEventName = z.infer<typeof webhookEventNameSchema>;
 
 export const webhookSchema = z.object({
@@ -269,13 +254,3 @@ export const webhookWithSecretSchema = z.object({
   webhook: webhookSchema,
   secret: z.string(),
 });
-
-// re-export 자주 쓰는 shared 타입
-export { messageSchema, conversationSchema, eventSchema, conversationSummarySchema };
-export type {
-  Message,
-  Conversation,
-  Event,
-  ConversationSummary,
-  Suggestion,
-} from "@aidetalk/shared";

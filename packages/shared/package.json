@@ -4,6 +4,7 @@
   "private": true,
   "description": "API 계약 단일 출처(zod 스키마) + 공유 타입 — 서버/위젯/대시보드가 계약을 여기서 import",
   "type": "module",
+  "sideEffects": false,
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {

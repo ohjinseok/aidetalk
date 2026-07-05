@@ -8,5 +8,7 @@ export * from "./errors";
 export * from "./agent-protocol";
 export * from "./entities";
 export * from "./widget-settings";
+export * from "./api-requests";
+export * from "./api-responses";
 export * from "./ws-protocol";
 export * from "./adapters";

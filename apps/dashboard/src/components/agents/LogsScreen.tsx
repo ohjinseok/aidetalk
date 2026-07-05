@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { agentApi } from "@/lib/api/endpoints";
 import { formatMessageTime } from "@/lib/format";
 import { td, type TranslationKey } from "@/lib/i18n";
-import type { AgentLog, AgentLogOutcome } from "@/lib/api/schemas";
+import type { AgentLog, AgentLogOutcome } from "@aidetalk/shared";
 import { useToast } from "@/components/providers/ToastProvider";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Button } from "@/components/ui/button";

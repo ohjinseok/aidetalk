@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { workspaceApi } from "@/lib/api/endpoints";
 import { td } from "@/lib/i18n";
-import type { Segment } from "@/lib/api/schemas";
+import type { Segment } from "@aidetalk/shared";
 
 export default function OnboardingPage() {
   const router = useRouter();

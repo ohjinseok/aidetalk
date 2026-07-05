@@ -2,12 +2,18 @@
 
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 
-import type { Conversation, Message, Suggestion } from "@aidetalk/shared";
+import type {
+  Conversation,
+  ConversationDetail,
+  ConversationTracking,
+  Member,
+  Message,
+  Suggestion,
+} from "@aidetalk/shared";
 
 import { useSocket, useSocketEvent } from "@/components/providers/SocketProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { assistApi, inboxApi, memberApi, trackingApi } from "@/lib/api/endpoints";
-import type { ConversationDetail, ConversationTracking, Member } from "@/lib/api/schemas";
 import { upsertMessage } from "@/lib/timeline";
 
 /** useConversation이 소유하는 대화 데이터 상태 + 액션이 갱신할 수 있는 setter들. */

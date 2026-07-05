@@ -4,14 +4,13 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { ConversationStatus } from "@aidetalk/shared";
+import type { ConversationStatus, InboxItem } from "@aidetalk/shared";
 
 import { Search } from "lucide-react";
 
 import { inboxApi } from "@/lib/api/endpoints";
 import { formatRelativeTime } from "@/lib/format";
 import { td, tf, type TranslationKey } from "@/lib/i18n";
-import type { InboxItem } from "@/lib/api/schemas";
 import { patchInboxConversation, upsertInbox } from "@/lib/ws/reducer";
 import { useSocketEvent } from "@/components/providers/SocketProvider";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";

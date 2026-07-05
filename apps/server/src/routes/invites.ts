@@ -7,11 +7,10 @@
  *  2) members 행(기가입 계정 초대) — inviteToken(raw) 조회. 대상 사용자 일치 검증.
  */
 import { hashSecret } from "@aidetalk/db";
-import { AppError } from "@aidetalk/shared";
+import { AppError, acceptInviteRequestSchema, type AcceptInviteRequest } from "@aidetalk/shared";
 import { Hono } from "hono";
 
 import { requireUser, validateJson, validated } from "../http/middleware";
-import { acceptInviteRequestSchema, type AcceptInviteRequest } from "../http/schemas";
 import type { HonoEnv } from "../http/types";
 
 export function createInviteRoutes(): Hono<HonoEnv> {
