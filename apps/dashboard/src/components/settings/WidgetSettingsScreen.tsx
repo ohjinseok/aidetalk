@@ -7,9 +7,25 @@ import { td, type TranslationKey } from "../../lib/i18n";
 import type { LauncherPosition, OfficeHoursRule, Tone, WidgetSettings } from "../../lib/api/schemas";
 import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
-import { Button } from "../ui/Button";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { CopyButton } from "../ui/CopyButton";
-import { FormRow, Input, Select, Textarea } from "../ui/Field";
+import { FormRow } from "@/components/ui/form-row";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { WidgetPreview } from "./WidgetPreview";
 
 const DAY_KEYS: TranslationKey[] = [
@@ -111,174 +127,198 @@ export function WidgetSettingsScreen() {
   return (
     <div className="grid gap-6 p-6 lg:grid-cols-2">
       {/* 폼 */}
-      <div>
-        <h1 className="mb-4 text-lg font-semibold">{td("dashboard.widget.title")}</h1>
+      <div className="space-y-6">
+        <h1 className="text-lg font-semibold tracking-tight text-foreground">
+          {td("dashboard.widget.title")}
+        </h1>
 
-        <FormRow label={td("dashboard.widget.primaryColor")} htmlFor="primaryColor">
-          <div className="flex items-center gap-2">
-            <input
-              id="primaryColor"
-              type="color"
-              value={form.primaryColor}
-              onChange={(e) => setForm((f) => ({ ...f, primaryColor: e.target.value }))}
-              className="h-9 w-12 rounded border border-gray-300"
-            />
-            <Input
-              value={form.primaryColor}
-              onChange={(e) => setForm((f) => ({ ...f, primaryColor: e.target.value }))}
-              className="w-32"
-            />
-          </div>
-        </FormRow>
+        <Card>
+          <CardContent>
+            <FormRow label={td("dashboard.widget.primaryColor")} htmlFor="primaryColor">
+              <div className="flex items-center gap-2">
+                <input
+                  id="primaryColor"
+                  type="color"
+                  value={form.primaryColor}
+                  onChange={(e) => setForm((f) => ({ ...f, primaryColor: e.target.value }))}
+                  className="h-9 w-12 rounded-md border border-input bg-transparent"
+                />
+                <Input
+                  value={form.primaryColor}
+                  onChange={(e) => setForm((f) => ({ ...f, primaryColor: e.target.value }))}
+                  className="w-32"
+                />
+              </div>
+            </FormRow>
 
-        <FormRow label={td("dashboard.widget.greeting")} htmlFor="greeting">
-          <Textarea
-            id="greeting"
-            rows={2}
-            value={form.greeting}
-            onChange={(e) => setForm((f) => ({ ...f, greeting: e.target.value }))}
-          />
-        </FormRow>
+            <FormRow label={td("dashboard.widget.greeting")} htmlFor="greeting">
+              <Textarea
+                id="greeting"
+                rows={2}
+                value={form.greeting}
+                onChange={(e) => setForm((f) => ({ ...f, greeting: e.target.value }))}
+              />
+            </FormRow>
 
-        <FormRow label={td("dashboard.widget.tone")} htmlFor="tone">
-          <Select
-            id="tone"
-            value={form.tone}
-            onChange={(e) => setForm((f) => ({ ...f, tone: e.target.value as Tone }))}
-          >
-            <option value="formal">{td("dashboard.widget.toneFormal")}</option>
-            <option value="casual">{td("dashboard.widget.toneCasual")}</option>
-          </Select>
-        </FormRow>
+            <FormRow label={td("dashboard.widget.tone")} htmlFor="tone">
+              <Select
+                value={form.tone}
+                onValueChange={(v) => setForm((f) => ({ ...f, tone: v as Tone }))}
+              >
+                <SelectTrigger id="tone" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="formal">{td("dashboard.widget.toneFormal")}</SelectItem>
+                  <SelectItem value="casual">{td("dashboard.widget.toneCasual")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormRow>
 
-        <FormRow label={td("dashboard.widget.launcherPosition")} htmlFor="pos">
-          <Select
-            id="pos"
-            value={form.launcherPosition}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, launcherPosition: e.target.value as LauncherPosition }))
-            }
-          >
-            <option value="right">{td("dashboard.widget.positionRight")}</option>
-            <option value="left">{td("dashboard.widget.positionLeft")}</option>
-          </Select>
-        </FormRow>
+            <FormRow label={td("dashboard.widget.launcherPosition")} htmlFor="pos">
+              <Select
+                value={form.launcherPosition}
+                onValueChange={(v) =>
+                  setForm((f) => ({ ...f, launcherPosition: v as LauncherPosition }))
+                }
+              >
+                <SelectTrigger id="pos" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="right">{td("dashboard.widget.positionRight")}</SelectItem>
+                  <SelectItem value="left">{td("dashboard.widget.positionLeft")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormRow>
+          </CardContent>
+        </Card>
 
         {/* 운영시간 */}
-        <fieldset className="mb-4 rounded-lg border border-gray-200 p-3">
-          <legend className="px-1 text-sm font-medium text-gray-700">
-            {td("dashboard.widget.officeHours")}
-          </legend>
-          <label className="mb-2 flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={form.officeHours.enabled}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  officeHours: { ...f.officeHours, enabled: e.target.checked },
-                }))
-              }
-            />
-            {td("dashboard.widget.officeHoursEnabled")}
-          </label>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">
+              {td("dashboard.widget.officeHours")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Label className="mb-4 flex items-center gap-2 text-sm font-normal">
+              <input
+                type="checkbox"
+                checked={form.officeHours.enabled}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    officeHours: { ...f.officeHours, enabled: e.target.checked },
+                  }))
+                }
+              />
+              {td("dashboard.widget.officeHoursEnabled")}
+            </Label>
 
-          <FormRow label={td("dashboard.widget.timezone")} htmlFor="tz">
-            <Input
-              id="tz"
-              value={form.officeHours.tz}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, officeHours: { ...f.officeHours, tz: e.target.value } }))
-              }
-            />
-          </FormRow>
+            <FormRow label={td("dashboard.widget.timezone")} htmlFor="tz">
+              <Input
+                id="tz"
+                value={form.officeHours.tz}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, officeHours: { ...f.officeHours, tz: e.target.value } }))
+                }
+              />
+            </FormRow>
 
-          {form.officeHours.rules.map((rule, i) => (
-            <div key={i} className="mb-2 rounded border border-gray-100 p-2">
-              <div className="mb-1 flex flex-wrap gap-1">
-                {DAY_KEYS.map((dk, di) => {
-                  const day = di + 1;
-                  const on = rule.days.includes(day);
-                  return (
-                    <button
-                      key={day}
-                      type="button"
-                      onClick={() => toggleDay(i, day)}
-                      className={`h-7 w-7 rounded text-xs ${
-                        on ? "bg-brand text-white" : "bg-gray-100 text-gray-500"
-                      }`}
-                    >
-                      {td(dk)}
-                    </button>
-                  );
-                })}
+            {form.officeHours.rules.map((rule, i) => (
+              <div key={i} className="mb-2 rounded-md border border-border p-2">
+                <div className="mb-1 flex flex-wrap gap-1">
+                  {DAY_KEYS.map((dk, di) => {
+                    const day = di + 1;
+                    const on = rule.days.includes(day);
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => toggleDay(i, day)}
+                        className={`h-7 w-7 rounded-md text-xs ${
+                          on
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {td(dk)}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="time"
+                    value={rule.open}
+                    onChange={(e) => updateRule(i, { open: e.target.value })}
+                    className="w-28"
+                    aria-label={td("dashboard.widget.open")}
+                  />
+                  <span className="text-muted-foreground">–</span>
+                  <Input
+                    type="time"
+                    value={rule.close}
+                    onChange={(e) => updateRule(i, { close: e.target.value })}
+                    className="w-28"
+                    aria-label={td("dashboard.widget.close")}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setForm((f) => ({
+                        ...f,
+                        officeHours: {
+                          ...f.officeHours,
+                          rules: f.officeHours.rules.filter((_, idx) => idx !== i),
+                        },
+                      }))
+                    }
+                  >
+                    {td("dashboard.widget.removeRule")}
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="time"
-                  value={rule.open}
-                  onChange={(e) => updateRule(i, { open: e.target.value })}
-                  className="w-28"
-                  aria-label={td("dashboard.widget.open")}
+            ))}
+            <Button type="button" variant="outline" size="sm" onClick={addRule}>
+              {td("dashboard.widget.addRule")}
+            </Button>
+
+            <div className="mt-4">
+              <FormRow label={td("dashboard.widget.offHoursMessage")} htmlFor="offHours">
+                <Textarea
+                  id="offHours"
+                  rows={2}
+                  value={form.offHoursMessage}
+                  onChange={(e) => setForm((f) => ({ ...f, offHoursMessage: e.target.value }))}
                 />
-                <span>–</span>
-                <Input
-                  type="time"
-                  value={rule.close}
-                  onChange={(e) => updateRule(i, { close: e.target.value })}
-                  className="w-28"
-                  aria-label={td("dashboard.widget.close")}
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    setForm((f) => ({
-                      ...f,
-                      officeHours: {
-                        ...f.officeHours,
-                        rules: f.officeHours.rules.filter((_, idx) => idx !== i),
-                      },
-                    }))
-                  }
-                >
-                  {td("dashboard.widget.removeRule")}
-                </Button>
-              </div>
+              </FormRow>
             </div>
-          ))}
-          <Button type="button" variant="secondary" size="sm" onClick={addRule}>
-            {td("dashboard.widget.addRule")}
+          </CardContent>
+        </Card>
+
+        <div>
+          <Button disabled={saving || !isOwner} onClick={() => void onSave()}>
+            {td("dashboard.common.save")}
           </Button>
-        </fieldset>
-
-        <FormRow label={td("dashboard.widget.offHoursMessage")} htmlFor="offHours">
-          <Textarea
-            id="offHours"
-            rows={2}
-            value={form.offHoursMessage}
-            onChange={(e) => setForm((f) => ({ ...f, offHoursMessage: e.target.value }))}
-          />
-        </FormRow>
-
-        <Button variant="primary" disabled={saving || !isOwner} onClick={() => void onSave()}>
-          {td("dashboard.common.save")}
-        </Button>
-        {!isOwner ? (
-          <p className="mt-2 text-xs text-gray-400">{td("dashboard.members.ownerOnly")}</p>
-        ) : null}
+          {!isOwner ? (
+            <p className="mt-2 text-xs text-muted-foreground">{td("dashboard.members.ownerOnly")}</p>
+          ) : null}
+        </div>
       </div>
 
       {/* 프리뷰 + 임베드 */}
       <div>
-        <h2 className="mb-2 text-sm font-medium text-gray-700">{td("dashboard.widget.preview")}</h2>
+        <h2 className="mb-2 text-sm font-medium text-foreground">{td("dashboard.widget.preview")}</h2>
         <WidgetPreview settings={form} />
 
-        <h2 className="mb-2 mt-6 text-sm font-medium text-gray-700">
+        <h2 className="mb-2 mt-6 text-sm font-medium text-foreground">
           {td("dashboard.widget.embedCode")}
         </h2>
-        <p className="mb-2 text-xs text-gray-500">{td("dashboard.widget.embedCodeHint")}</p>
-        <pre className="overflow-x-auto rounded bg-gray-900 p-3 text-xs text-gray-100">
+        <p className="mb-2 text-xs text-muted-foreground">{td("dashboard.widget.embedCodeHint")}</p>
+        <pre className="overflow-x-auto rounded-md border bg-muted p-3 font-mono text-xs text-foreground">
           <code>{embedCode}</code>
         </pre>
         <div className="mt-2">

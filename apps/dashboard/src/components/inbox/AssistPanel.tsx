@@ -3,8 +3,9 @@
 import type { Suggestion } from "@aidetalk/shared";
 
 import { td, tf } from "../../lib/i18n";
-import { Button } from "../ui/Button";
-import { EmptyState } from "../ui/EmptyState";
+import { Button } from "@/components/ui/button";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { AiChip } from "./AiChip";
 
 /**
  * 어시스트 사이드 패널(우 컬럼, mode=human 전용) — 07 §2.3.
@@ -33,17 +34,21 @@ export function AssistPanel({
     acceptRate == null ? "—" : `${Math.round(acceptRate * 100)}%`;
 
   return (
-    <aside className="flex w-80 shrink-0 flex-col border-l border-gray-200 bg-gray-50">
-      <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-2.5">
-        <h3 className="text-sm font-semibold">{td("dashboard.assist.panelTitle")}</h3>
-        <span className="text-xs text-gray-500">
+    <aside className="flex w-80 shrink-0 flex-col border-l border-border bg-background">
+      <div className="flex items-center justify-between border-b border-border bg-card px-4 py-2.5">
+        <h3 className="text-sm font-medium">{td("dashboard.assist.panelTitle")}</h3>
+        <span className="text-xs text-muted-foreground">
           {tf("dashboard.assist.acceptRate", { rate: rateLabel })}
         </span>
       </div>
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
         {suggestions.length === 0 ? (
-          <EmptyState title={td("dashboard.assist.empty")} />
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>{td("dashboard.assist.empty")}</EmptyTitle>
+            </EmptyHeader>
+          </Empty>
         ) : (
           suggestions.map((s) => {
             const isPending = s.outcome === "pending";
@@ -51,13 +56,18 @@ export function AssistPanel({
             return (
               <div
                 key={s.id}
-                className={`rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-opacity ${
+                className={`rounded-lg border border-border bg-card p-3 shadow-xs transition-opacity ${
                   isDim ? "opacity-50" : ""
                 }`}
               >
-                <p className="whitespace-pre-wrap text-sm text-gray-800">{s.draft}</p>
+                {/* 화자 문법 잔향 — 이 제안이 AI에게서 왔음을 "AI" 모노그램 칩으로 표시. */}
+                <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+                  <AiChip />
+                  <span>{td("dashboard.inbox.suggestionLabel")}</span>
+                </div>
+                <p className="whitespace-pre-wrap text-sm text-foreground">{s.draft}</p>
                 {s.rationale ? (
-                  <p className="mt-1.5 text-xs italic text-gray-400">{s.rationale}</p>
+                  <p className="mt-1.5 text-xs italic text-muted-foreground">{s.rationale}</p>
                 ) : null}
 
                 {s.actions && s.actions.length > 0 ? (
@@ -65,7 +75,7 @@ export function AssistPanel({
                     {s.actions.map((a, i) => (
                       <Button
                         key={i}
-                        variant="secondary"
+                        variant="outline"
                         size="sm"
                         onClick={() => onInsertLink(a.url)}
                       >
@@ -77,10 +87,10 @@ export function AssistPanel({
 
                 {isPending ? (
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    <Button variant="primary" size="sm" onClick={() => onAccept(s)}>
+                    <Button size="sm" onClick={() => onAccept(s)}>
                       {td("dashboard.assist.sendAsIs")}
                     </Button>
-                    <Button variant="secondary" size="sm" onClick={() => onEdit(s)}>
+                    <Button variant="outline" size="sm" onClick={() => onEdit(s)}>
                       {td("dashboard.assist.editAndSend")}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => onIgnore(s)}>
@@ -88,7 +98,7 @@ export function AssistPanel({
                     </Button>
                   </div>
                 ) : (
-                  <p className="mt-2 text-xs text-gray-400">
+                  <p className="mt-2 text-xs text-muted-foreground">
                     {s.outcome === "ignored"
                       ? td("dashboard.assist.ignored")
                       : td(s.outcome === "accepted" ? "dashboard.assist.sendAsIs" : "dashboard.assist.editAndSend")}

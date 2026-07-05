@@ -1,5 +1,6 @@
 "use client";
 
+import { TriangleAlert } from "lucide-react";
 import Link from "next/link";
 
 import { td } from "../lib/i18n";
@@ -20,15 +21,15 @@ export function AutoDisabledBanner() {
   return (
     <div
       role="alert"
-      className="flex shrink-0 items-center justify-between gap-3 border-b border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700"
+      className="flex shrink-0 items-center justify-between gap-3 border-b border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-destructive"
     >
-      <span>
-        <span aria-hidden>⚠️ </span>
+      <span className="inline-flex items-center gap-1.5">
+        <TriangleAlert className="size-4 shrink-0" aria-hidden />
         {td("dashboard.agents.autoDisabledBanner")}
       </span>
       <Link
         href={`/w/${workspace.id}/agents`}
-        className="shrink-0 font-medium text-red-700 underline hover:text-red-900"
+        className="shrink-0 font-medium text-destructive underline hover:opacity-80"
       >
         {td("dashboard.agents.autoDisabledBannerLink")}
       </Link>

@@ -33,7 +33,9 @@
     "dateYesterday": "Yesterday",
     "offHoursDefault": "We're currently outside support hours. Leave a message and we'll get back to you.",
     "errorGeneric": "Something went wrong. Please try again in a moment.",
-    "systemLabel": "Notice"
+    "systemLabel": "Notice",
+    "headerSubtitle": "We usually reply within a few minutes",
+    "aiLabel": "AI"
   },
   "dashboard": {
     "common": {
@@ -58,6 +60,10 @@
       "saved": "Saved",
       "errorGeneric": "Something went wrong. Please try again in a moment.",
       "emptyGeneric": "Nothing to show"
+    },
+    "datePicker": {
+      "placeholder": "Pick a date",
+      "rangePlaceholder": "Pick a date range"
     },
     "auth": {
       "loginTitle": "Log in",
@@ -108,6 +114,12 @@
       "switchWorkspace": "Switch workspace",
       "logout": "Log out"
     },
+    "theme": {
+      "toggle": "Toggle theme",
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
     "inbox": {
       "filterOpen": "Open",
       "filterPending": "Pending",
@@ -119,6 +131,8 @@
       "modeAi": "AI",
       "modeHuman": "Human",
       "unread": "Unread",
+      "aiSuggestion": "AI suggestion",
+      "suggestionLabel": "Suggestion",
       "newHandoffTitle": "Handoff requested",
       "selectConversation": "Select a conversation on the left"
     },
@@ -225,6 +239,7 @@
       "title": "AI logs",
       "time": "Time",
       "mode": "Mode",
+      "modeAssist": "Assist",
       "outcome": "Outcome",
       "latency": "Latency",
       "preview": "Preview",

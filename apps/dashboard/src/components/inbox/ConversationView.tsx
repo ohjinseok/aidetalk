@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { PanelRight } from "lucide-react";
+
 import type { Conversation, Message, Suggestion } from "@aidetalk/shared";
 
 import { assistApi, inboxApi, memberApi, trackingApi } from "../../lib/api/endpoints";
@@ -13,10 +15,21 @@ import { upsertMessage } from "../../lib/timeline";
 import { useSocketEvent, useSocket } from "../providers/SocketProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
 import { useToast } from "../providers/ToastProvider";
-import { Badge } from "../ui/Badge";
-import { Button } from "../ui/Button";
-import { Select } from "../ui/Field";
-import { Spinner } from "../ui/Spinner";
+import { AvatarVisitor } from "@/components/ui/avatar-visitor";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+
+// Radix Select는 빈 문자열 value를 허용하지 않아 "담당자 미지정"에 센티넬 값을 쓴다.
+const UNASSIGNED = "__unassigned__";
+import { AiChip } from "./AiChip";
 import { AssistPanel } from "./AssistPanel";
 import { Composer } from "./Composer";
 import { Timeline, type TrackedMap } from "./Timeline";
@@ -294,55 +307,66 @@ export function ConversationView({ convId }: { convId: string }) {
       {/* 중앙 컬럼 */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* 헤더 */}
-        <header className="flex items-center justify-between gap-2 border-b border-gray-200 bg-white px-4 py-2">
+        <header className="flex h-13 items-center justify-between gap-2 border-b border-border bg-card px-4">
           <div className="flex min-w-0 items-center gap-2">
+            <AvatarVisitor
+              seed={convId}
+              label={detail.visitor.name || detail.visitor.email || undefined}
+              size="sm"
+            />
             <span className="truncate text-sm font-semibold">
               {detail.visitor.name || detail.visitor.email || convId.slice(-6)}
             </span>
-            <Badge tone={modeHuman ? "green" : "indigo"}>
-              {modeHuman
-                ? td("dashboard.conversation.modeBadgeHuman")
-                : td("dashboard.conversation.modeBadgeAi")}
-            </Badge>
-            <Badge tone={conversation.status === "closed" ? "gray" : "yellow"}>{td(statusKey)}</Badge>
+            <Badge variant={conversation.status === "closed" ? "secondary" : "warning"}>{td(statusKey)}</Badge>
+            {/* AI 응대 중 — 지금 기계가 응대함을 "AI" 모노그램 칩으로. */}
+            {!modeHuman ? <AiChip /> : null}
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <Select
-              aria-label={td("dashboard.conversation.assign")}
-              value={conversation.assigneeId ?? ""}
-              onChange={(e) => void onAssign(e.target.value || null)}
-              className="w-40"
+              value={conversation.assigneeId ?? UNASSIGNED}
+              onValueChange={(v) => void onAssign(v === UNASSIGNED ? null : v)}
             >
-              <option value="">{td("dashboard.conversation.assignPlaceholder")}</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.userId}>
-                  {m.name || m.email || m.userId}
-                </option>
-              ))}
+              <SelectTrigger
+                className="h-8 w-36 text-[13px]"
+                aria-label={td("dashboard.conversation.assign")}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={UNASSIGNED}>
+                  {td("dashboard.conversation.assignPlaceholder")}
+                </SelectItem>
+                {members.map((m) => (
+                  <SelectItem key={m.id} value={m.userId}>
+                    {m.name || m.email || m.userId}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
             {modeHuman ? (
-              <Button variant="secondary" size="sm" onClick={() => void onReturnToAi()}>
+              <Button variant="outline" size="sm" onClick={() => void onReturnToAi()}>
                 {td("dashboard.conversation.returnToAi")}
               </Button>
             ) : null}
-            <Button variant="secondary" size="sm" onClick={() => void onToggleClose()}>
+            <Button variant="outline" size="sm" onClick={() => void onToggleClose()}>
               {conversation.status === "closed"
                 ? td("dashboard.conversation.reopen")
                 : td("dashboard.conversation.close")}
             </Button>
             <Button
               variant="ghost"
-              size="sm"
+              size="icon-sm"
               aria-label={td("dashboard.conversation.togglePanel")}
+              aria-pressed={showInfo}
               onClick={() => setShowInfo((v) => !v)}
             >
-              ℹ️
+              <PanelRight className="size-4" aria-hidden />
             </Button>
           </div>
         </header>
 
-        {/* 스레드 */}
-        <div className="min-h-0 flex-1 overflow-y-auto bg-gray-50">
+        {/* 스레드 — 순백 표면 위에서 버블이 산다. */}
+        <div className="min-h-0 flex-1 overflow-y-auto bg-card">
           <Timeline
             items={timeline}
             wsId={wsId}
@@ -353,7 +377,7 @@ export function ConversationView({ convId }: { convId: string }) {
 
         {/* 손님 입력 중 표시 */}
         {visitorTyping ? (
-          <div className="px-4 py-1 text-xs text-gray-400">
+          <div className="px-4 py-1 text-xs text-muted-foreground">
             {td("dashboard.conversation.visitorTyping")}
           </div>
         ) : null}

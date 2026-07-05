@@ -6,6 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ConversationStatus } from "@aidetalk/shared";
 
+import { Search } from "lucide-react";
+
 import { inboxApi } from "../../lib/api/endpoints";
 import { formatRelativeTime } from "../../lib/format";
 import { td, tf, type TranslationKey } from "../../lib/i18n";
@@ -13,11 +15,13 @@ import type { InboxItem } from "../../lib/api/schemas";
 import { patchInboxConversation, upsertInbox } from "../../lib/ws/reducer";
 import { useSocketEvent } from "../providers/SocketProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
-import { Badge } from "../ui/Badge";
-import { Button } from "../ui/Button";
-import { EmptyState } from "../ui/EmptyState";
-import { Input } from "../ui/Field";
-import { Spinner } from "../ui/Spinner";
+import { AiChip } from "./AiChip";
+import { AvatarVisitor } from "@/components/ui/avatar-visitor";
+import { Button } from "@/components/ui/button";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TABS: { status: ConversationStatus; labelKey: TranslationKey }[] = [
   { status: "open", labelKey: "dashboard.inbox.filterOpen" },
@@ -132,81 +136,104 @@ export function InboxList() {
 
   return (
     <div
-      className="flex h-full w-80 shrink-0 flex-col border-r border-gray-200 bg-white"
+      className="flex h-full w-80 shrink-0 flex-col border-r border-border bg-background"
       onKeyDown={onKeyDown}
     >
-      {/* 검색 */}
-      <div className="border-b border-gray-100 p-2">
-        <Input
-          type="search"
-          aria-label={td("dashboard.common.search")}
-          placeholder={td("dashboard.inbox.searchPlaceholder")}
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
+      {/* 검색 — 조용한 검색창(뉴트럴 바탕, 포커스 시 표면으로 떠오름). */}
+      <div className="border-b border-border p-2">
+        <div className="relative">
+          <Search
+            className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
+          <Input
+            type="search"
+            aria-label={td("dashboard.common.search")}
+            placeholder={td("dashboard.inbox.searchPlaceholder")}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="h-8 border-transparent bg-muted/50 pl-8 focus-visible:bg-background"
+          />
+        </div>
       </div>
       {/* 필터 탭 */}
-      <div className="flex border-b border-gray-100" role="tablist">
-        {TABS.map((tab) => (
-          <button
-            key={tab.status}
-            role="tab"
-            aria-selected={status === tab.status}
-            onClick={() => setStatus(tab.status)}
-            className={`flex-1 py-2 text-xs font-medium ${
-              status === tab.status
-                ? "border-b-2 border-brand text-brand"
-                : "text-gray-500 hover:text-gray-800"
-            }`}
-          >
-            {td(tab.labelKey)}
-          </button>
-        ))}
+      <div className="border-b border-border px-2 py-2">
+        <Tabs
+          value={status}
+          onValueChange={(v) => setStatus(v as ConversationStatus)}
+        >
+          <TabsList className="w-full">
+            {TABS.map((tab) => (
+              <TabsTrigger key={tab.status} value={tab.status} className="text-xs">
+                {td(tab.labelKey)}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </div>
 
       {/* 목록 */}
       <ul className="min-h-0 flex-1 overflow-y-auto">
         {items.length === 0 && !loading ? (
           <li>
-            <EmptyState
-              title={td("dashboard.inbox.empty")}
-              description={
-                <Link href={`/w/${wsId}/settings/widget`} className="text-brand hover:underline">
-                  {td("dashboard.inbox.emptyHint")}
-                </Link>
-              }
-            />
+            <Empty>
+              <EmptyHeader>
+                <EmptyTitle>{td("dashboard.inbox.empty")}</EmptyTitle>
+                <EmptyDescription>
+                  <Link
+                    href={`/w/${wsId}/settings/widget`}
+                    className="text-primary hover:underline"
+                  >
+                    {td("dashboard.inbox.emptyHint")}
+                  </Link>
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           </li>
         ) : (
           items.map((item) => {
             const conv = item.conversation;
             const active = conv.id === activeConvId;
             const hl = highlight.has(conv.id);
+            const label = visitorLabel(item);
+            const isAi = conv.mode === "ai";
+            const hasUnread = (item.unread ?? 0) > 0;
             return (
               <li key={conv.id}>
                 <Link
                   href={`/w/${wsId}/inbox/${conv.id}`}
                   aria-current={active ? "page" : undefined}
-                  className={`block border-b border-gray-50 px-3 py-2.5 transition-colors ${
-                    hl ? "bg-yellow-100" : active ? "bg-indigo-50" : "hover:bg-gray-50"
+                  className={`flex items-center gap-2.5 border-b border-border px-3 py-2.5 transition-colors ${
+                    hl
+                      ? "bg-yellow-100 dark:bg-yellow-500/15"
+                      : active
+                        ? "bg-accent"
+                        : "hover:bg-accent/50"
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-medium text-gray-800">
-                      {visitorLabel(item)}
-                    </span>
-                    <span className="shrink-0 text-[11px] text-gray-400">
-                      {conv.lastMessageAt ? formatRelativeTime(conv.lastMessageAt) : ""}
-                    </span>
+                  <AvatarVisitor seed={conv.id} label={label} size="md" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate text-[13px] font-medium text-foreground">
+                        {label}
+                      </span>
+                      <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                        {conv.lastMessageAt ? formatRelativeTime(conv.lastMessageAt) : ""}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 flex items-center gap-1.5">
+                      {isAi ? <AiChip /> : null}
+                      <span className="truncate text-[13px] text-muted-foreground">
+                        {item.lastMessage?.textPreview ?? ""}
+                      </span>
+                    </div>
                   </div>
-                  <div className="mt-0.5 flex items-center gap-1.5">
-                    <Badge tone={conv.mode === "ai" ? "indigo" : "green"}>
-                      {conv.mode === "ai" ? td("dashboard.inbox.modeAi") : td("dashboard.inbox.modeHuman")}
-                    </Badge>
-                    <span className="truncate text-xs text-gray-500">
-                      {item.lastMessage?.textPreview ?? ""}
-                    </span>
-                  </div>
+                  {hasUnread ? (
+                    <span
+                      className="size-2 shrink-0 rounded-full bg-primary"
+                      aria-label={td("dashboard.inbox.unread")}
+                    />
+                  ) : null}
                 </Link>
               </li>
             );

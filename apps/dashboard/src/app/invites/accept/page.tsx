@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 import { useToast } from "../../../components/providers/ToastProvider";
-import { Button } from "../../../components/ui/Button";
-import { Spinner } from "../../../components/ui/Spinner";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import { authApi, memberApi } from "../../../lib/api/endpoints";
 import { td } from "../../../lib/i18n";
 
@@ -45,49 +46,61 @@ function AcceptInner() {
 
   if (!token) {
     return (
-      <div className="w-full max-w-sm rounded-lg bg-white p-6 text-center shadow-sm">
-        <h1 className="mb-2 text-xl font-semibold">{td("dashboard.invite.acceptTitle")}</h1>
-        <p className="text-sm text-red-600">{td("dashboard.invite.missingToken")}</p>
-      </div>
+      <Card className="w-full max-w-sm text-center" aria-label={td("dashboard.invite.acceptTitle")}>
+        <CardHeader>
+          <CardTitle className="text-lg tracking-tight">
+            {td("dashboard.invite.acceptTitle")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-destructive">{td("dashboard.invite.missingToken")}</p>
+        </CardContent>
+      </Card>
     );
   }
 
   const tokenQs = `inviteToken=${encodeURIComponent(token)}`;
 
   return (
-    <div className="w-full max-w-sm rounded-lg bg-white p-6 text-center shadow-sm">
-      <h1 className="mb-2 text-xl font-semibold">{td("dashboard.invite.acceptTitle")}</h1>
-      {authState === "checking" ? (
-        <Spinner />
-      ) : authState === "authed" ? (
-        <>
-          <p className="mb-5 text-sm text-gray-500">{td("dashboard.invite.acceptDesc")}</p>
-          <Button variant="primary" className="w-full" disabled={busy} onClick={onAccept}>
-            {td("dashboard.invite.acceptSubmit")}
-          </Button>
-        </>
-      ) : (
-        <>
-          <p className="mb-5 text-sm text-gray-500">{td("dashboard.invite.needAuth")}</p>
-          <Link href={`/signup?${tokenQs}`} className="mb-2 block">
-            <Button variant="primary" className="w-full">
-              {td("dashboard.invite.toSignup")}
+    <Card className="w-full max-w-sm text-center" aria-label={td("dashboard.invite.acceptTitle")}>
+      <CardHeader>
+        <CardTitle className="text-lg tracking-tight">
+          {td("dashboard.invite.acceptTitle")}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {authState === "checking" ? (
+          <Spinner />
+        ) : authState === "authed" ? (
+          <>
+            <p className="mb-5 text-sm text-muted-foreground">
+              {td("dashboard.invite.acceptDesc")}
+            </p>
+            <Button className="w-full" disabled={busy} onClick={onAccept}>
+              {td("dashboard.invite.acceptSubmit")}
             </Button>
-          </Link>
-          <Link href={`/login?${tokenQs}`} className="block">
-            <Button variant="secondary" className="w-full">
-              {td("dashboard.invite.toLogin")}
-            </Button>
-          </Link>
-        </>
-      )}
-    </div>
+          </>
+        ) : (
+          <>
+            <p className="mb-5 text-sm text-muted-foreground">{td("dashboard.invite.needAuth")}</p>
+            <Link href={`/signup?${tokenQs}`} className="mb-2 block">
+              <Button className="w-full">{td("dashboard.invite.toSignup")}</Button>
+            </Link>
+            <Link href={`/login?${tokenQs}`} className="block">
+              <Button variant="outline" className="w-full">
+                {td("dashboard.invite.toLogin")}
+              </Button>
+            </Link>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
 export default function InviteAcceptPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <Suspense fallback={<Spinner />}>
         <AcceptInner />
       </Suspense>

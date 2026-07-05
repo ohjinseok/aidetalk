@@ -19,7 +19,7 @@ export function SettingsTabs() {
   const base = `/w/${params.wsId}/settings`;
 
   return (
-    <nav className="flex gap-1 border-b border-gray-200 bg-white px-6" aria-label={td("dashboard.nav.settings")}>
+    <nav className="flex gap-1 border-b border-border bg-background px-6" aria-label={td("dashboard.nav.settings")}>
       {TABS.map((tab) => {
         const href = `${base}/${tab.seg}`;
         const active = pathname.startsWith(href);
@@ -28,8 +28,10 @@ export function SettingsTabs() {
             key={tab.seg}
             href={href}
             aria-current={active ? "page" : undefined}
-            className={`border-b-2 px-3 py-2.5 text-sm ${
-              active ? "border-brand text-brand" : "border-transparent text-gray-500 hover:text-gray-800"
+            className={`-mb-px border-b-2 px-3 py-2.5 text-sm transition-colors ${
+              active
+                ? "border-primary font-medium text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             {td(tab.labelKey)}

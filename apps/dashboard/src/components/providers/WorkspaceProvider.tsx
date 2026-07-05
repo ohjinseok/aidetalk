@@ -7,7 +7,7 @@ import { ApiError } from "../../lib/api/client";
 import { authApi, workspaceApi } from "../../lib/api/endpoints";
 import { td } from "../../lib/i18n";
 import type { Me, Membership, Workspace } from "../../lib/api/schemas";
-import { Spinner } from "../ui/Spinner";
+import { Spinner } from "@/components/ui/spinner";
 
 interface WorkspaceCtx {
   me: Me;

@@ -1,5 +1,7 @@
 "use client";
 
+import { MessageCircle } from "lucide-react";
+
 import type { WidgetSettings } from "../../lib/api/schemas";
 import { td } from "../../lib/i18n";
 
@@ -14,8 +16,9 @@ export function WidgetPreview({ settings }: { settings: WidgetSettings }) {
   const right = (settings.launcherPosition ?? "right") === "right";
 
   return (
-    <div className="relative h-80 overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="relative h-80 overflow-hidden rounded-xl border bg-muted">
       <div className={`absolute bottom-4 flex w-72 flex-col ${right ? "right-4" : "left-4"}`}>
+        {/* 아래 흰 배경/회색 말풍선은 위젯(라이트 테마 Shadow DOM) 실물 모사 색 — 토큰화 예외. */}
         <div className="overflow-hidden rounded-xl bg-white shadow-lg">
           <div className="px-4 py-3 text-sm font-semibold text-white" style={{ background: color }}>
             {td("widget.headerTitle")}
@@ -31,11 +34,11 @@ export function WidgetPreview({ settings }: { settings: WidgetSettings }) {
         </div>
         <div className={`mt-2 flex ${right ? "justify-end" : "justify-start"}`}>
           <div
-            className="flex h-12 w-12 items-center justify-center rounded-full text-xl shadow-lg"
+            className="flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg"
             style={{ background: color }}
             aria-hidden
           >
-            💬
+            <MessageCircle className="size-5" strokeWidth={2} />
           </div>
         </div>
       </div>

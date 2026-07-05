@@ -5,9 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
 import { useToast } from "../../components/providers/ToastProvider";
-import { Button } from "../../components/ui/Button";
-import { FormRow, Input } from "../../components/ui/Field";
-import { Spinner } from "../../components/ui/Spinner";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormRow } from "@/components/ui/form-row";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { authApi, memberApi } from "../../lib/api/endpoints";
 import { td } from "../../lib/i18n";
 
@@ -51,46 +53,50 @@ function SignupInner() {
     : "/login";
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
-      <form
-        onSubmit={onSubmit}
-        className="w-full max-w-sm rounded-lg bg-white p-6 shadow-sm"
-        aria-label={td("dashboard.auth.signupTitle")}
-      >
-        <h1 className="mb-5 text-xl font-semibold">{td("dashboard.auth.signupTitle")}</h1>
-        <FormRow label={td("dashboard.auth.name")} htmlFor="name">
-          <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} />
-        </FormRow>
-        <FormRow label={td("dashboard.auth.email")} htmlFor="email">
-          <Input
-            id="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </FormRow>
-        <FormRow label={td("dashboard.auth.password")} htmlFor="password">
-          <Input
-            id="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </FormRow>
-        <Button type="submit" variant="primary" className="w-full" disabled={busy}>
-          {td("dashboard.auth.signupSubmit")}
-        </Button>
-        <p className="mt-4 text-center text-sm text-gray-500">
-          <Link href={loginHref} className="text-brand hover:underline">
-            {td("dashboard.auth.toLogin")}
-          </Link>
-        </p>
-      </form>
+    <main className="flex min-h-screen items-center justify-center bg-background px-4">
+      <Card className="w-full max-w-sm" aria-label={td("dashboard.auth.signupTitle")}>
+        <CardHeader>
+          <CardTitle className="text-lg tracking-tight">
+            {td("dashboard.auth.signupTitle")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={onSubmit}>
+            <FormRow label={td("dashboard.auth.name")} htmlFor="name">
+              <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} />
+            </FormRow>
+            <FormRow label={td("dashboard.auth.email")} htmlFor="email">
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </FormRow>
+            <FormRow label={td("dashboard.auth.password")} htmlFor="password">
+              <Input
+                id="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </FormRow>
+            <Button type="submit" className="w-full" disabled={busy}>
+              {td("dashboard.auth.signupSubmit")}
+            </Button>
+            <p className="mt-4 text-center text-sm text-muted-foreground">
+              <Link href={loginHref} className="text-primary hover:underline">
+                {td("dashboard.auth.toLogin")}
+              </Link>
+            </p>
+          </form>
+        </CardContent>
+      </Card>
     </main>
   );
 }

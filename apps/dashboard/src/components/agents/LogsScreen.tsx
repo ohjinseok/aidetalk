@@ -9,11 +9,29 @@ import { td, type TranslationKey } from "../../lib/i18n";
 import type { AgentLog, AgentLogOutcome } from "../../lib/api/schemas";
 import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
-import { Button } from "../ui/Button";
-import { EmptyState } from "../ui/EmptyState";
+import { Button } from "@/components/ui/button";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { AiChip } from "../inbox/AiChip";
 import { Modal } from "../ui/Modal";
-import { Select } from "../ui/Field";
-import { Spinner } from "../ui/Spinner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+// Radix Select는 빈 문자열 value 불가 — "전체" 필터에 센티넬 값을 쓴다.
+const ALL_OUTCOMES = "all";
 
 const OUTCOMES: AgentLogOutcome[] = ["reply", "handoff", "noop", "suggest", "timeout", "error"];
 const OUTCOME_KEY: Record<AgentLogOutcome, TranslationKey> = {
@@ -71,66 +89,94 @@ export function LogsScreen({ agentId }: { agentId: string }) {
   return (
     <div className="mx-auto max-w-4xl overflow-y-auto p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">{td("dashboard.logs.title")}</h1>
-        <Link href={`/w/${wsId}/agents`} className="text-sm text-brand hover:underline">
+        <h1 className="text-lg font-semibold tracking-tight">{td("dashboard.logs.title")}</h1>
+        <Link href={`/w/${wsId}/agents`} className="text-sm text-primary hover:underline">
           ← {td("dashboard.common.back")}
         </Link>
       </div>
 
       <div className="mb-3 flex items-center gap-2">
-        <label className="text-xs text-gray-500">{td("dashboard.logs.filterOutcome")}</label>
+        <span className="text-xs text-muted-foreground">{td("dashboard.logs.filterOutcome")}</span>
         <Select
-          className="w-40"
-          value={outcomeFilter}
-          onChange={(e) => setOutcomeFilter(e.target.value as AgentLogOutcome | "")}
+          value={outcomeFilter || ALL_OUTCOMES}
+          onValueChange={(v) =>
+            setOutcomeFilter(v === ALL_OUTCOMES ? "" : (v as AgentLogOutcome))
+          }
         >
-          <option value="">{td("dashboard.logs.all")}</option>
-          {OUTCOMES.map((o) => (
-            <option key={o} value={o}>
-              {td(OUTCOME_KEY[o])}
-            </option>
-          ))}
+          <SelectTrigger className="w-40" aria-label={td("dashboard.logs.filterOutcome")}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_OUTCOMES}>{td("dashboard.logs.all")}</SelectItem>
+            {OUTCOMES.map((o) => (
+              <SelectItem key={o} value={o}>
+                {td(OUTCOME_KEY[o])}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
       </div>
 
       {loading && logs.length === 0 ? (
         <Spinner />
       ) : visible.length === 0 ? (
-        <EmptyState title={td("dashboard.logs.empty")} />
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>{td("dashboard.logs.empty")}</EmptyTitle>
+          </EmptyHeader>
+        </Empty>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-gray-100 text-xs text-gray-400">
-              <tr>
-                <th className="px-3 py-2">{td("dashboard.logs.time")}</th>
-                <th className="px-3 py-2">{td("dashboard.logs.mode")}</th>
-                <th className="px-3 py-2">{td("dashboard.logs.outcome")}</th>
-                <th className="px-3 py-2">{td("dashboard.logs.latency")}</th>
-                <th className="px-3 py-2">{td("dashboard.logs.preview")}</th>
-              </tr>
-            </thead>
-            <tbody>
+        <div className="rounded-lg border border-border bg-card shadow-xs">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-[11px] font-medium tracking-wide text-muted-foreground">
+                  {td("dashboard.logs.time")}
+                </TableHead>
+                <TableHead className="text-[11px] font-medium tracking-wide text-muted-foreground">
+                  {td("dashboard.logs.mode")}
+                </TableHead>
+                <TableHead className="text-[11px] font-medium tracking-wide text-muted-foreground">
+                  {td("dashboard.logs.outcome")}
+                </TableHead>
+                <TableHead className="text-right text-[11px] font-medium tracking-wide text-muted-foreground">
+                  {td("dashboard.logs.latency")}
+                </TableHead>
+                <TableHead className="text-[11px] font-medium tracking-wide text-muted-foreground">
+                  {td("dashboard.logs.preview")}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {visible.map((log) => {
                 const rs = log.responseSummary as Record<string, unknown> | null | undefined;
                 const latency = rs && typeof rs.latencyMs === "number" ? `${rs.latencyMs}ms` : "";
                 return (
-                  <tr
-                    key={log.id}
-                    className="cursor-pointer border-b border-gray-50 hover:bg-gray-50"
-                    onClick={() => setDetail(log)}
-                  >
-                    <td className="px-3 py-2 text-gray-600">{formatMessageTime(log.createdAt)}</td>
-                    <td className="px-3 py-2">{log.mode}</td>
-                    <td className="px-3 py-2">{td(OUTCOME_KEY[log.outcome])}</td>
-                    <td className="px-3 py-2 text-gray-500">{latency}</td>
-                    <td className="max-w-xs truncate px-3 py-2 text-gray-500">
+                  <TableRow key={log.id} className="cursor-pointer" onClick={() => setDetail(log)}>
+                    <TableCell className="tabular-nums text-muted-foreground">
+                      {formatMessageTime(log.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      {log.mode === "reply" ? (
+                        <AiChip />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          {td("dashboard.logs.modeAssist")}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>{td(OUTCOME_KEY[log.outcome])}</TableCell>
+                    <TableCell className="text-right tabular-nums text-muted-foreground">
+                      {latency}
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate text-muted-foreground">
                       {preview(log.requestSummary)}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
 
@@ -148,20 +194,20 @@ export function LogsScreen({ agentId }: { agentId: string }) {
         title={td("dashboard.logs.detailTitle")}
       >
         {detail ? (
-          <div className="space-y-3 text-sm">
+          <div className="space-y-4 text-sm">
             <div>
-              <p className="mb-1 text-xs font-medium text-gray-500">
+              <p className="mb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground">
                 {td("dashboard.logs.requestSummary")}
               </p>
-              <pre className="overflow-x-auto rounded bg-gray-900 p-3 text-xs text-gray-100">
+              <pre className="overflow-x-auto rounded bg-muted p-3 font-mono text-xs text-foreground">
                 {JSON.stringify(detail.requestSummary, null, 2)}
               </pre>
             </div>
             <div>
-              <p className="mb-1 text-xs font-medium text-gray-500">
+              <p className="mb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground">
                 {td("dashboard.logs.responseSummary")}
               </p>
-              <pre className="overflow-x-auto rounded bg-gray-900 p-3 text-xs text-gray-100">
+              <pre className="overflow-x-auto rounded bg-muted p-3 font-mono text-xs text-foreground">
                 {JSON.stringify(detail.responseSummary ?? null, null, 2)}
               </pre>
             </div>

@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { CheckIcon, CopyIcon } from "lucide-react";
 
 import { td } from "../../lib/i18n";
-import { Button } from "./Button";
+import { Button } from "@/components/ui/button";
 
-/** 클립보드 복사 버튼 — 복사 후 "복사됨" 잠깐 표시. */
+/** 클립보드 복사 버튼 — 복사 후 "복사됨"을 잠깐 표시. 아이콘: Copy → Check. */
 export function CopyButton({
   value,
   label,
@@ -18,8 +19,8 @@ export function CopyButton({
   const [copied, setCopied] = useState(false);
   return (
     <Button
-      variant="secondary"
-      size={size}
+      variant="outline"
+      size={size === "md" ? "default" : "sm"}
       aria-label={label ?? td("dashboard.common.copy")}
       onClick={async () => {
         try {
@@ -31,6 +32,7 @@ export function CopyButton({
         }
       }}
     >
+      {copied ? <CheckIcon /> : <CopyIcon />}
       {copied ? td("dashboard.common.copied") : (label ?? td("dashboard.common.copy"))}
     </Button>
   );

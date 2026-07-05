@@ -9,18 +9,21 @@ import type { Agent, AgentStatus, AgentTestResult } from "../../lib/api/schemas"
 import { useAgentStatus } from "../providers/AgentStatusProvider";
 import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
-import { Badge } from "../ui/Badge";
-import { Button } from "../ui/Button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
-import { EmptyState } from "../ui/EmptyState";
-import { FormRow, Input } from "../ui/Field";
-import { Spinner } from "../ui/Spinner";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { FormRow } from "@/components/ui/form-row";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { SecretModal } from "./SecretModal";
 
 function statusBadge(status: AgentStatus) {
-  if (status === "active") return <Badge tone="green">{td("dashboard.agents.statusActive")}</Badge>;
-  if (status === "disabled") return <Badge tone="gray">{td("dashboard.agents.statusDisabled")}</Badge>;
-  return <Badge tone="red">{td("dashboard.agents.statusAutoDisabled")}</Badge>;
+  if (status === "active") return <Badge variant="success">{td("dashboard.agents.statusActive")}</Badge>;
+  if (status === "disabled") return <Badge variant="secondary">{td("dashboard.agents.statusDisabled")}</Badge>;
+  // auto_disabled는 반드시 destructive(빨강) 유지 — 장애 상태를 눈에 띄게.
+  return <Badge variant="destructive">{td("dashboard.agents.statusAutoDisabled")}</Badge>;
 }
 
 export function AgentsScreen() {
@@ -123,74 +126,89 @@ export function AgentsScreen() {
 
   return (
     <div className="mx-auto max-w-3xl overflow-y-auto p-6">
-      <h1 className="mb-4 text-lg font-semibold">{td("dashboard.agents.title")}</h1>
+      <h1 className="mb-4 text-lg font-semibold tracking-tight">{td("dashboard.agents.title")}</h1>
 
       {/* 등록 폼 (owner) */}
       {isOwner ? (
-        <form onSubmit={onRegister} className="mb-6 rounded-lg border border-gray-200 bg-white p-4">
-          <h2 className="mb-3 text-sm font-semibold">{td("dashboard.agents.registerTitle")}</h2>
-          <FormRow label={td("dashboard.agents.name")} htmlFor="agentName">
-            <Input id="agentName" required value={name} onChange={(e) => setName(e.target.value)} />
-          </FormRow>
-          <FormRow label={td("dashboard.agents.endpointUrl")} htmlFor="endpointUrl">
-            <Input
-              id="endpointUrl"
-              type="url"
-              required
-              placeholder={td("dashboard.agents.endpointPlaceholder")}
-              value={endpointUrl}
-              onChange={(e) => setEndpointUrl(e.target.value)}
-            />
-          </FormRow>
-          <FormRow
-            label={td("dashboard.agents.timeoutMs")}
-            htmlFor="timeoutMs"
-            hint={td("dashboard.agents.timeoutHint")}
-          >
-            <Input
-              id="timeoutMs"
-              type="number"
-              placeholder="30000"
-              value={timeoutMs}
-              onChange={(e) => setTimeoutMs(e.target.value)}
-            />
-          </FormRow>
-          <label className="mb-4 flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={assistEnabled}
-              onChange={(e) => setAssistEnabled(e.target.checked)}
-            />
-            {td("dashboard.agents.assistEnabled")}
-          </label>
-          <Button type="submit" variant="primary" disabled={submitting}>
-            {td("dashboard.agents.register")}
-          </Button>
-        </form>
+        <Card className="mb-6 shadow-xs">
+          <form onSubmit={onRegister}>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">{td("dashboard.agents.registerTitle")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FormRow label={td("dashboard.agents.name")} htmlFor="agentName">
+                <Input id="agentName" required value={name} onChange={(e) => setName(e.target.value)} />
+              </FormRow>
+              <FormRow label={td("dashboard.agents.endpointUrl")} htmlFor="endpointUrl">
+                <Input
+                  id="endpointUrl"
+                  type="url"
+                  required
+                  placeholder={td("dashboard.agents.endpointPlaceholder")}
+                  value={endpointUrl}
+                  onChange={(e) => setEndpointUrl(e.target.value)}
+                />
+              </FormRow>
+              <FormRow
+                label={td("dashboard.agents.timeoutMs")}
+                htmlFor="timeoutMs"
+                hint={td("dashboard.agents.timeoutHint")}
+              >
+                <Input
+                  id="timeoutMs"
+                  type="number"
+                  placeholder="30000"
+                  value={timeoutMs}
+                  onChange={(e) => setTimeoutMs(e.target.value)}
+                />
+              </FormRow>
+              <label className="flex items-center gap-2 text-sm text-foreground">
+                <input
+                  type="checkbox"
+                  className="size-4 rounded border-border accent-primary"
+                  checked={assistEnabled}
+                  onChange={(e) => setAssistEnabled(e.target.checked)}
+                />
+                {td("dashboard.agents.assistEnabled")}
+              </label>
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" disabled={submitting}>
+                {td("dashboard.agents.register")}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
       ) : null}
 
       {/* 목록 */}
       {loading ? (
         <Spinner />
       ) : agents.length === 0 ? (
-        <EmptyState title={td("dashboard.agents.empty")} />
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>{td("dashboard.agents.empty")}</EmptyTitle>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <ul className="space-y-3">
           {agents.map((agent) => {
             const tr = testResult[agent.id];
             return (
-              <li key={agent.id} className="rounded-lg border border-gray-200 bg-white p-4">
+              <li key={agent.id} className="rounded-lg border border-border bg-card p-4 shadow-xs">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{agent.name}</span>
+                      <span className="font-medium text-foreground">{agent.name}</span>
                       {statusBadge(agent.status)}
                     </div>
-                    <p className="mt-0.5 break-all text-xs text-gray-500">{agent.endpointUrl}</p>
+                    <p className="mt-0.5 break-all font-mono text-xs text-muted-foreground">
+                      {agent.endpointUrl}
+                    </p>
                     {agent.status === "auto_disabled" ? (
                       <Link
                         href={`/w/${wsId}/agents/${agent.id}/logs`}
-                        className="mt-1 inline-block text-xs text-red-600 hover:underline"
+                        className="mt-1 inline-block text-xs text-destructive hover:underline"
                       >
                         {td("dashboard.agents.autoDisabledHint")}
                       </Link>
@@ -198,18 +216,20 @@ export function AgentsScreen() {
                   </div>
                   <Link
                     href={`/w/${wsId}/agents/${agent.id}/logs`}
-                    className="shrink-0 text-xs text-brand hover:underline"
+                    className="shrink-0 text-xs text-primary hover:underline"
                   >
                     {td("dashboard.agents.viewLogs")}
                   </Link>
                 </div>
 
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <Button variant="secondary" size="sm" onClick={() => void onTest(agent)}>
+                  <Button variant="outline" size="sm" onClick={() => void onTest(agent)}>
                     {tr === "loading" ? td("dashboard.agents.testing") : td("dashboard.agents.test")}
                   </Button>
                   {tr && tr !== "loading" ? (
-                    <span className={`text-xs ${tr.ok ? "text-green-600" : "text-red-600"}`}>
+                    <span
+                      className={`tabular-nums text-xs ${tr.ok ? "text-green-600 dark:text-green-500" : "text-destructive"}`}
+                    >
                       {tr.ok
                         ? tf("dashboard.agents.testOk", { latency: tr.latencyMs ?? 0 })
                         : `${td("dashboard.agents.testFail")}${tr.error ? `: ${tr.error}` : ""}`}

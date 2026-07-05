@@ -33,7 +33,9 @@
     "dateYesterday": "어제",
     "offHoursDefault": "지금은 상담 운영 시간이 아닙니다. 메시지를 남겨주시면 확인 후 답변드리겠습니다.",
     "errorGeneric": "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-    "systemLabel": "안내"
+    "systemLabel": "안내",
+    "headerSubtitle": "보통 몇 분 이내에 답변드려요",
+    "aiLabel": "AI"
   },
   "dashboard": {
     "common": {
@@ -58,6 +60,10 @@
       "saved": "저장되었습니다",
       "errorGeneric": "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
       "emptyGeneric": "표시할 항목이 없습니다"
+    },
+    "datePicker": {
+      "placeholder": "날짜 선택",
+      "rangePlaceholder": "기간 선택"
     },
     "auth": {
       "loginTitle": "로그인",
@@ -108,6 +114,12 @@
       "switchWorkspace": "워크스페이스 전환",
       "logout": "로그아웃"
     },
+    "theme": {
+      "toggle": "테마 전환",
+      "system": "시스템",
+      "light": "라이트",
+      "dark": "다크"
+    },
     "inbox": {
       "filterOpen": "열림",
       "filterPending": "대기",
@@ -119,6 +131,8 @@
       "modeAi": "AI",
       "modeHuman": "사람",
       "unread": "안읽음",
+      "aiSuggestion": "AI 제안",
+      "suggestionLabel": "제안",
       "newHandoffTitle": "상담원 연결 요청",
       "selectConversation": "왼쪽에서 대화를 선택하세요"
     },
@@ -225,6 +239,7 @@
       "title": "AI 로그",
       "time": "시각",
       "mode": "모드",
+      "modeAssist": "어시스트",
       "outcome": "결과",
       "latency": "지연",
       "preview": "미리보기",

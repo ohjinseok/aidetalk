@@ -7,13 +7,27 @@ import { td } from "../../lib/i18n";
 import type { Member, Role } from "../../lib/api/schemas";
 import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
-import { Badge } from "../ui/Badge";
-import { Button } from "../ui/Button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { CopyButton } from "../ui/CopyButton";
-import { EmptyState } from "../ui/EmptyState";
-import { FormRow, Input, Select } from "../ui/Field";
-import { Spinner } from "../ui/Spinner";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { FormRow } from "@/components/ui/form-row";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 
 export function MembersScreen() {
   const { workspace, isOwner } = useWorkspace();
@@ -66,54 +80,63 @@ export function MembersScreen() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-6">
-      <h1 className="mb-4 text-lg font-semibold">{td("dashboard.members.title")}</h1>
+    <div className="mx-auto max-w-2xl space-y-6 p-6">
+      <h1 className="text-lg font-semibold tracking-tight text-foreground">
+        {td("dashboard.members.title")}
+      </h1>
 
       {isOwner ? (
-        <form onSubmit={onInvite} className="mb-4 rounded-lg border border-gray-200 bg-white p-4">
-          <h2 className="mb-3 text-sm font-semibold">{td("dashboard.members.invite")}</h2>
-          <div className="flex flex-wrap items-end gap-2">
-            <div className="flex-1">
-              <FormRow label={td("dashboard.members.inviteEmail")} htmlFor="inviteEmail">
-                <Input
-                  id="inviteEmail"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </FormRow>
-            </div>
-            <div className="w-32">
-              <FormRow label={td("dashboard.members.inviteRole")} htmlFor="inviteRole">
-                <Select
-                  id="inviteRole"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as Role)}
-                >
-                  <option value="agent_member">{td("dashboard.members.roleAgent")}</option>
-                  <option value="owner">{td("dashboard.members.roleOwner")}</option>
-                </Select>
-              </FormRow>
-            </div>
-            <div className="mb-4">
-              <Button type="submit" variant="primary">
-                {td("dashboard.members.invite")}
-              </Button>
-            </div>
-          </div>
-
-          {inviteUrl ? (
-            <div className="mt-2 rounded bg-indigo-50 p-3">
-              <p className="mb-1 text-xs text-indigo-700">{td("dashboard.members.inviteCreated")}</p>
-              <div className="flex items-center gap-2">
-                <code className="flex-1 break-all rounded bg-white px-2 py-1 text-xs">
-                  {inviteUrl}
-                </code>
-                <CopyButton value={inviteUrl} label={td("dashboard.members.inviteUrlCopy")} />
+        <form onSubmit={onInvite}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">{td("dashboard.members.invite")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="flex-1">
+                  <FormRow label={td("dashboard.members.inviteEmail")} htmlFor="inviteEmail">
+                    <Input
+                      id="inviteEmail"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </FormRow>
+                </div>
+                <div className="w-32">
+                  <FormRow label={td("dashboard.members.inviteRole")} htmlFor="inviteRole">
+                    <Select value={role} onValueChange={(v) => setRole(v as Role)}>
+                      <SelectTrigger id="inviteRole" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="agent_member">{td("dashboard.members.roleAgent")}</SelectItem>
+                        <SelectItem value="owner">{td("dashboard.members.roleOwner")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormRow>
+                </div>
+                <div className="mb-4">
+                  <Button type="submit">
+                    {td("dashboard.members.invite")}
+                  </Button>
+                </div>
               </div>
-            </div>
-          ) : null}
+
+              {inviteUrl ? (
+                <div className="rounded-md bg-primary/5 p-3">
+                  <p className="mb-1.5 text-xs text-primary">{td("dashboard.members.inviteCreated")}</p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 break-all rounded bg-muted px-2 py-1 font-mono text-xs text-foreground">
+                      {inviteUrl}
+                    </code>
+                    <CopyButton value={inviteUrl} label={td("dashboard.members.inviteUrlCopy")} />
+                  </div>
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
         </form>
       ) : null}
 
@@ -121,20 +144,24 @@ export function MembersScreen() {
       {loading ? (
         <Spinner />
       ) : members.length === 0 ? (
-        <EmptyState title={td("dashboard.members.empty")} />
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>{td("dashboard.members.empty")}</EmptyTitle>
+          </EmptyHeader>
+        </Empty>
       ) : (
-        <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
+        <ul className="divide-y divide-border rounded-xl border bg-card shadow-sm">
           {members.map((m) => (
             <li key={m.id} className="flex items-center justify-between gap-2 px-4 py-3">
               <div className="min-w-0">
-                <p className="truncate text-sm text-gray-800">{m.name || m.email || m.userId}</p>
-                {m.email ? <p className="truncate text-xs text-gray-400">{m.email}</p> : null}
+                <p className="truncate text-sm text-foreground">{m.name || m.email || m.userId}</p>
+                {m.email ? <p className="truncate text-xs text-muted-foreground">{m.email}</p> : null}
               </div>
               <div className="flex items-center gap-2">
-                <Badge tone={m.role === "owner" ? "indigo" : "gray"}>
+                <Badge variant={m.role === "owner" ? "default" : "secondary"}>
                   {td(m.role === "owner" ? "dashboard.members.roleOwner" : "dashboard.members.roleAgent")}
                 </Badge>
-                <Badge tone={m.status === "active" ? "green" : "yellow"}>
+                <Badge variant={m.status === "active" ? "success" : "warning"}>
                   {td(m.status === "active" ? "dashboard.members.statusActive" : "dashboard.members.statusInvited")}
                 </Badge>
                 {isOwner ? (

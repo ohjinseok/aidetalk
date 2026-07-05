@@ -8,12 +8,19 @@ import type { Webhook, WebhookEventName } from "../../lib/api/schemas";
 import { SecretModal } from "../agents/SecretModal";
 import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
-import { Badge } from "../ui/Badge";
-import { Button } from "../ui/Button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
-import { EmptyState } from "../ui/EmptyState";
-import { FormRow, Input } from "../ui/Field";
-import { Spinner } from "../ui/Spinner";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { FormRow } from "@/components/ui/form-row";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 
 /** 04 §2 웹훅 이벤트 카탈로그 — 새 이벤트 추가 시 서버 http/schemas.ts와 함께 갱신. */
 const EVENT_OPTIONS: { value: WebhookEventName; labelKey: "dashboard.webhooks.eventAutoDisabled" | "dashboard.webhooks.eventHandoff" }[] = [
@@ -84,68 +91,84 @@ export function WebhooksScreen() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-6">
-      <h1 className="mb-4 text-lg font-semibold">{td("dashboard.webhooks.title")}</h1>
+    <div className="mx-auto max-w-2xl space-y-6 p-6">
+      <h1 className="text-lg font-semibold tracking-tight text-foreground">
+        {td("dashboard.webhooks.title")}
+      </h1>
 
-      <form onSubmit={onRegister} className="mb-6 rounded-lg border border-gray-200 bg-white p-4">
-        <h2 className="mb-3 text-sm font-semibold">{td("dashboard.webhooks.registerTitle")}</h2>
-        <FormRow label={td("dashboard.webhooks.url")} htmlFor="webhookUrl">
-          <Input
-            id="webhookUrl"
-            type="url"
-            required
-            placeholder={td("dashboard.webhooks.urlPlaceholder")}
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-          />
-        </FormRow>
-        <div className="mb-4">
-          <span className="mb-1 block text-sm font-medium text-gray-700">
-            {td("dashboard.webhooks.events")}
-          </span>
-          <div className="flex flex-col gap-1">
-            {EVENT_OPTIONS.map((opt) => (
-              <label key={opt.value} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={events.includes(opt.value)}
-                  onChange={() => toggleEvent(opt.value)}
-                />
-                {td(opt.labelKey)}
-              </label>
-            ))}
-          </div>
-        </div>
-        <Button type="submit" variant="primary" disabled={submitting || events.length === 0}>
-          {td("dashboard.webhooks.register")}
-        </Button>
+      <form onSubmit={onRegister}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">
+              {td("dashboard.webhooks.registerTitle")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FormRow label={td("dashboard.webhooks.url")} htmlFor="webhookUrl">
+              <Input
+                id="webhookUrl"
+                type="url"
+                required
+                placeholder={td("dashboard.webhooks.urlPlaceholder")}
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+              />
+            </FormRow>
+            <div className="mb-4">
+              <span className="mb-1.5 block text-sm font-medium text-foreground">
+                {td("dashboard.webhooks.events")}
+              </span>
+              <div className="flex flex-col gap-1">
+                {EVENT_OPTIONS.map((opt) => (
+                  <label key={opt.value} className="flex items-center gap-2 text-sm text-foreground">
+                    <input
+                      type="checkbox"
+                      checked={events.includes(opt.value)}
+                      onChange={() => toggleEvent(opt.value)}
+                    />
+                    {td(opt.labelKey)}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <Button type="submit" disabled={submitting || events.length === 0}>
+              {td("dashboard.webhooks.register")}
+            </Button>
+          </CardContent>
+        </Card>
       </form>
 
       {loading ? (
         <Spinner />
       ) : webhooks.length === 0 ? (
-        <EmptyState title={td("dashboard.webhooks.empty")} />
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>{td("dashboard.webhooks.empty")}</EmptyTitle>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <ul className="space-y-3">
           {webhooks.map((w) => (
-            <li key={w.id} className="rounded-lg border border-gray-200 bg-white p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="break-all text-sm font-medium">{w.url}</p>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {w.events.map((ev) => (
-                      <Badge key={ev} tone="indigo">
-                        {ev === "agent.auto_disabled"
-                          ? td("dashboard.webhooks.eventAutoDisabled")
-                          : td("dashboard.webhooks.eventHandoff")}
-                      </Badge>
-                    ))}
+            <li key={w.id}>
+              <Card>
+                <CardContent className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="break-all font-mono text-sm text-foreground">{w.url}</p>
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {w.events.map((ev) => (
+                        <Badge key={ev} variant="secondary">
+                          {ev === "agent.auto_disabled"
+                            ? td("dashboard.webhooks.eventAutoDisabled")
+                            : td("dashboard.webhooks.eventHandoff")}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => setRemoveTarget(w)}>
-                  {td("dashboard.common.remove")}
-                </Button>
-              </div>
+                  <Button variant="ghost" size="sm" onClick={() => setRemoveTarget(w)}>
+                    {td("dashboard.common.remove")}
+                  </Button>
+                </CardContent>
+              </Card>
             </li>
           ))}
         </ul>

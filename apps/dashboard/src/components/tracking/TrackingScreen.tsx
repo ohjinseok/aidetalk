@@ -8,8 +8,20 @@ import { formatKrw } from "../../lib/format";
 import { td } from "../../lib/i18n";
 import type { TrackingSummary } from "../../lib/api/schemas";
 import { useWorkspace } from "../providers/WorkspaceProvider";
-import { EmptyState } from "../ui/EmptyState";
-import { Spinner } from "../ui/Spinner";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 
 /** 이번 달 [from, to] ISO. */
 function thisMonthRange(): { from: string; to: string } {
@@ -18,18 +30,43 @@ function thisMonthRange(): { from: string; to: string } {
   return { from: from.toISOString(), to: now.toISOString() };
 }
 
-function Card({ label, value, hint }: { label: string; value: string; hint?: string }) {
+function StatCard({
+  label,
+  value,
+  hint,
+  emphasis,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  emphasis?: boolean;
+}) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <div className="flex items-center gap-1 text-xs text-gray-500">
+    <div className="rounded-xl border bg-card p-5 shadow-sm">
+      <div className="flex items-center gap-1 text-[11px] font-medium tracking-wide text-muted-foreground">
         <span>{label}</span>
         {hint ? (
-          <span title={hint} className="cursor-help text-gray-400" aria-label={hint}>
-            ⓘ
-          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="cursor-help text-muted-foreground"
+                aria-label={hint}
+              >
+                <Info className="size-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">{hint}</TooltipContent>
+          </Tooltip>
         ) : null}
       </div>
-      <p className="mt-1 text-xl font-semibold text-gray-900">{value}</p>
+      <p
+        className={`mt-1.5 tabular-nums font-semibold tracking-tight text-foreground ${
+          emphasis ? "text-2xl" : "text-xl"
+        }`}
+      >
+        {value}
+      </p>
     </div>
   );
 }
@@ -75,52 +112,65 @@ export function TrackingScreen() {
     );
   }
   if (notFound || !summary) {
-    return <EmptyState title={td("dashboard.tracking.empty")} />;
+    return (
+      <Empty>
+        <EmptyHeader>
+          <EmptyTitle>{td("dashboard.tracking.empty")}</EmptyTitle>
+        </EmptyHeader>
+      </Empty>
+    );
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">{td("dashboard.tracking.title")}</h1>
-        <span className="text-sm text-gray-500">{td("dashboard.tracking.thisMonth")}</span>
+    <div className="mx-auto max-w-4xl space-y-4 p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold tracking-tight text-foreground">
+          {td("dashboard.tracking.title")}
+        </h1>
+        <span className="text-sm text-muted-foreground">{td("dashboard.tracking.thisMonth")}</span>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Card
+        <StatCard
           label={td("dashboard.tracking.totalConversations")}
           value={String(summary.conversationCount)}
         />
-        <Card
+        <StatCard
           label={td("dashboard.tracking.linkedConversations")}
           value={String(summary.linkedConversations)}
         />
-        <Card
+        <StatCard
           label={td("dashboard.tracking.clickedConversations")}
           value={String(summary.clickedConversations)}
         />
-        <Card
+        <StatCard
           label={td("dashboard.tracking.attributedRevenue")}
           value={formatKrw(summary.attributedRevenueKrw)}
           hint={td("dashboard.tracking.attributedRevenueTooltip")}
+          emphasis
         />
       </div>
 
-      <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4 text-sm">
-        <h2 className="mb-2 text-xs font-semibold text-gray-500">
-          {td("dashboard.tracking.bySource")}
-        </h2>
-        <div className="flex gap-6">
-          <span>
-            {td("dashboard.tracking.sourceClickOnly")}: {summary.bySource.click_only}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-[11px] font-medium tracking-wide text-muted-foreground">
+            {td("dashboard.tracking.bySource")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex gap-8">
+          <span className="flex items-baseline gap-1.5 text-sm text-foreground">
+            <span className="text-muted-foreground">{td("dashboard.tracking.sourceClickOnly")}</span>
+            <span className="tabular-nums font-medium">{summary.bySource.click_only}</span>
           </span>
-          <span>
-            {td("dashboard.tracking.sourcePixel")}: {summary.bySource.pixel}
+          <span className="flex items-baseline gap-1.5 text-sm text-foreground">
+            <span className="text-muted-foreground">{td("dashboard.tracking.sourcePixel")}</span>
+            <span className="tabular-nums font-medium">{summary.bySource.pixel}</span>
           </span>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* v1은 pixel 미구현 — 정확도 안내 배너(07 §3). */}
-      <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+      <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400">
         {td("dashboard.tracking.pixelBanner")}
       </div>
     </div>
