@@ -59,6 +59,10 @@
       "errorGeneric": "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
       "emptyGeneric": "표시할 항목이 없습니다"
     },
+    "datePicker": {
+      "placeholder": "날짜 선택",
+      "rangePlaceholder": "기간 선택"
+    },
     "auth": {
       "loginTitle": "로그인",
       "signupTitle": "회원가입",

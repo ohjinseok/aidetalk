@@ -59,6 +59,10 @@
       "errorGeneric": "Something went wrong. Please try again in a moment.",
       "emptyGeneric": "Nothing to show"
     },
+    "datePicker": {
+      "placeholder": "Pick a date",
+      "rangePlaceholder": "Pick a date range"
+    },
     "auth": {
       "loginTitle": "Log in",
       "signupTitle": "Sign up",
