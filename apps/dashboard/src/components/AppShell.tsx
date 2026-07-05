@@ -1,10 +1,11 @@
 "use client";
 
 import {
+  Check,
   ChevronsUpDown,
   Inbox,
   LogOut,
-  MessageSquareText,
+  MessagesSquare,
   Monitor,
   Moon,
   Plug,
@@ -19,6 +20,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { avatarInitial } from "../lib/avatar";
 import { authApi } from "../lib/api/endpoints";
 import { td, type TranslationKey } from "../lib/i18n";
 import { AutoDisabledBanner } from "./AutoDisabledBanner";
@@ -35,7 +37,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { TooltipProvider } from "./ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+
+/** 워크스페이스 이니셜 마크 — primary 톤 정사각 배지(그라디언트 방문자 아바타와 구분). */
+function WorkspaceMark({ name }: { name: string }) {
+  return (
+    <span
+      aria-hidden
+      className="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-xs font-semibold text-primary"
+    >
+      {avatarInitial(name)}
+    </span>
+  );
+}
 
 interface NavItem {
   href: string;
@@ -120,72 +134,95 @@ export function AppShell({ children }: { children: ReactNode }) {
     <TooltipProvider>
       <AgentStatusProvider workspaceId={workspace.id}>
         <div className="flex h-screen overflow-hidden bg-background text-foreground">
-          {/* 좌측 내비 */}
-          <nav className="flex w-16 flex-col items-center gap-1 border-r border-border bg-card py-3">
-            <div className="mb-2 flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground" aria-hidden>
-              <MessageSquareText className="size-5" />
+          {/* 좌측 내비(레일) — 아이콘 전용, 레이블은 우측 툴팁으로 이동. */}
+          <nav className="flex w-16 flex-col items-center gap-1 border-r border-sidebar-border bg-sidebar py-3">
+            <div
+              className="mb-2 flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground"
+              aria-hidden
+            >
+              <MessagesSquare className="size-5" />
             </div>
             {items
               .filter((i) => !i.hidden)
               .map((item) => {
                 const active = pathname.startsWith(`${base}${item.match}`);
                 const Icon = item.icon;
+                const label = td(item.labelKey);
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    aria-label={td(item.labelKey)}
-                    aria-current={active ? "page" : undefined}
-                    className={`flex w-12 flex-col items-center gap-0.5 rounded-md py-2 text-[10px] transition-colors ${
-                      active
-                        ? "bg-accent text-primary"
-                        : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                    }`}
-                  >
-                    <Icon className="size-5" aria-hidden />
-                    {td(item.labelKey)}
-                  </Link>
+                  <Tooltip key={item.href}>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={item.href}
+                        aria-label={label}
+                        aria-current={active ? "page" : undefined}
+                        className={`relative flex size-10 items-center justify-center rounded-lg transition-colors ${
+                          active
+                            ? "bg-accent text-primary"
+                            : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                        }`}
+                      >
+                        {/* 좌측 활성 인디케이터 */}
+                        {active && (
+                          <span
+                            className="absolute left-0 h-5 w-0.5 rounded-full bg-primary"
+                            aria-hidden
+                          />
+                        )}
+                        <Icon className="size-5" aria-hidden />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">{label}</TooltipContent>
+                  </Tooltip>
                 );
               })}
             <div className="mt-auto">
-              <button
-                onClick={onLogout}
-                aria-label={td("dashboard.nav.logout")}
-                className="flex w-12 flex-col items-center gap-0.5 rounded-md py-2 text-[10px] text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-              >
-                <LogOut className="size-5" aria-hidden />
-                {td("dashboard.nav.logout")}
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={onLogout}
+                    aria-label={td("dashboard.nav.logout")}
+                    className="flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+                  >
+                    <LogOut className="size-5" aria-hidden />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">{td("dashboard.nav.logout")}</TooltipContent>
+              </Tooltip>
             </div>
           </nav>
 
           {/* 본문 */}
           <div className="flex min-w-0 flex-1 flex-col">
             {/* 상단 바 */}
-            <header className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-background px-4">
+            <header className="flex h-13 shrink-0 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
                     aria-label={td("dashboard.nav.switchWorkspace")}
-                    className="gap-2 font-semibold"
+                    className="gap-2 pl-1.5"
                   >
-                    {workspace.name}
+                    <WorkspaceMark name={workspace.name} />
+                    <span className="text-sm font-medium">{workspace.name}</span>
                     <ChevronsUpDown className="size-3.5 text-muted-foreground" aria-hidden />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
-                  {me.memberships.map((m) => (
-                    <DropdownMenuItem key={m.workspaceId} asChild>
-                      <Link
-                        href={`/w/${m.workspaceId}/inbox`}
-                        className={m.workspaceId === workspace.id ? "font-semibold text-primary" : undefined}
-                      >
-                        {m.workspaceName}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
+                <DropdownMenuContent align="start" className="w-60">
+                  {me.memberships.map((m) => {
+                    const current = m.workspaceId === workspace.id;
+                    return (
+                      <DropdownMenuItem key={m.workspaceId} asChild>
+                        <Link href={`/w/${m.workspaceId}/inbox`} className="gap-2">
+                          <WorkspaceMark name={m.workspaceName} />
+                          <span className={current ? "font-medium text-foreground" : undefined}>
+                            {m.workspaceName}
+                          </span>
+                          {current && <Check className="ml-auto size-4 text-primary" aria-hidden />}
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link href="/onboarding" className="text-muted-foreground">
@@ -196,7 +233,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span
                   className={`inline-flex items-center gap-1 ${status === "open" ? "text-green-600 dark:text-green-500" : "text-muted-foreground"}`}
                   aria-live="polite"
@@ -207,7 +244,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   />
                   {status === "open" ? "" : td("dashboard.common.loading")}
                 </span>
-                <span className="text-foreground">{me.user.name}</span>
+                <span className="text-sm text-foreground">{me.user.name}</span>
                 <Badge variant="secondary">
                   {td(membership.role === "owner" ? "dashboard.members.roleOwner" : "dashboard.members.roleAgent")}
                 </Badge>
