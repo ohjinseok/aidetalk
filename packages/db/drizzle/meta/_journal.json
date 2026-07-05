@@ -29,6 +29,13 @@
       "when": 1783234392771,
       "tag": "0003_complex_magneto",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1783236298868,
+      "tag": "0004_panoramic_maverick",
+      "breakpoints": true
     }
   ]
 }

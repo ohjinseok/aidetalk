@@ -9,11 +9,23 @@ import { isIP } from "node:net";
 
 import { AppError } from "@aidetalk/shared";
 
+import type { Env } from "../env";
+
 export interface EndpointPolicy {
   /** EDITION=cloud면 true. */
   cloud: boolean;
   /** ALLOW_INSECURE_AGENT_ENDPOINT=true면 true(셀프호스팅 완화). */
   allowInsecure: boolean;
+}
+
+/**
+ * env → EndpointPolicy. agent/웹훅 endpoint 검증이 공유하는 SSRF 가드 정책(08 §7).
+ */
+export function endpointPolicy(env: Pick<Env, "EDITION" | "ALLOW_INSECURE_AGENT_ENDPOINT">): EndpointPolicy {
+  return {
+    cloud: env.EDITION === "cloud",
+    allowInsecure: env.ALLOW_INSECURE_AGENT_ENDPOINT,
+  };
 }
 
 /** 사설/루프백/링크로컬/유니크로컬 IP 대역인지(SSRF 차단 대상). */

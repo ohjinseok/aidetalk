@@ -103,6 +103,7 @@
       "widget": "위젯",
       "members": "멤버",
       "workspace": "워크스페이스",
+      "webhooks": "웹훅",
       "logs": "AI 로그",
       "switchWorkspace": "워크스페이스 전환",
       "logout": "로그아웃"
@@ -202,7 +203,23 @@
       "disable": "비활성화",
       "empty": "아직 등록된 커넥터가 없습니다",
       "viewLogs": "로그 보기",
-      "endpointPlaceholder": "https://my-agent.example.com/aidetalk"
+      "endpointPlaceholder": "https://my-agent.example.com/aidetalk",
+      "autoDisabledBanner": "AI 에이전트가 연속 실패로 자동 비활성화되었습니다",
+      "autoDisabledBannerLink": "커넥터 화면에서 확인"
+    },
+    "webhooks": {
+      "title": "웹훅",
+      "registerTitle": "웹훅 등록",
+      "url": "URL",
+      "urlPlaceholder": "https://example.com/webhooks/aidetalk",
+      "events": "구독 이벤트",
+      "eventAutoDisabled": "AI 에이전트 자동 비활성화",
+      "eventHandoff": "상담원 핸드오프",
+      "register": "등록",
+      "empty": "아직 등록된 웹훅이 없습니다",
+      "removeConfirm": "이 웹훅을 삭제할까요?",
+      "secretModalTitle": "웹훅이 등록되었습니다",
+      "secretLabel": "서명 시크릿"
     },
     "logs": {
       "title": "AI 로그",

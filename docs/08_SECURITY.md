@@ -3,16 +3,18 @@
 > 해당 영역 구현 시 이 체크리스트를 수용 기준으로 삼는다. M2 "보안 점검" 항목은 이 문서 전체를 감사하는 작업이다.
 
 ## 1. 시크릿 취급
-- Agent shared secret: 생성 시 `adt_` + 32바이트 random. 원문은 생성/재발급 응답 1회. DB에는 sha256 해시(비교용) + AES-256-GCM 암호문(`secret_enc`) — 우리가 아웃바운드 HMAC 서명 주체라 원문 재현이 필요하므로, 서명 시에만 복호화한다(키는 SESSION_SECRET 파생, 복호화 결과 로그/응답 노출 금지).
+- Agent shared secret: 생성 시 `adt_` + 32바이트 random. 원문은 생성/재발급 응답 1회. DB에는 sha256 해시(비교용) + AES-256-GCM 암호문(`secret_enc`) — 우리가 아웃바운드 HMAC 서명 주체라 원문 재현이 필요하므로, 서명 시에만 복호화한다(복호화 결과 로그/응답 노출 금지).
+- 웹훅 shared secret도 동일 패턴: `whsec_` + 32바이트 random, sha256 해시 + `secret_enc`(§7).
+- **암호화 전용 키(`SECRET_ENC_KEY`)** — agent/웹훅 secret의 AES-256-GCM 암호화는 `SECRET_ENC_KEY`(32바이트, hex 또는 base64)로 파생한 키를 사용한다(Stripe/Slack식으로 세션 키 로테이션과 분리). **미설정 시 `SESSION_SECRET` 파생으로 폴백** — 셀프호스팅 30분 셋업을 깨지 않기 위함이며, 이 경우 부팅 시 "SECRET_ENC_KEY 설정 권장 — 세션 키 로테이션과 분리" 경고 로그를 남긴다(`apps/server/src/lib/secret-enc-key.ts`).
 - 비교는 항상 timing-safe.
-- 로그 마스킹: pino redact 설정으로 `secret`, `password`, `authorization`, `cookie` 경로 자동 마스킹. secret류 출력 필요 시 `adt_ab****` 형식.
-- 서버 시크릿(`VISITOR_TOKEN_SECRET`, `SESSION_SECRET` 등)은 환경변수로만. 코드/레포에 절대 커밋 금지 — `.env.example`에는 placeholder만.
+- 로그 마스킹: pino redact 설정으로 `secret`, `password`, `authorization`, `cookie` 경로 자동 마스킹. secret류 출력 필요 시 `adt_ab****` / `whsec_ab****` 형식.
+- 서버 시크릿(`VISITOR_TOKEN_SECRET`, `SESSION_SECRET`, `SECRET_ENC_KEY` 등)은 환경변수로만. 코드/레포에 절대 커밋 금지 — `.env.example`에는 placeholder만.
 
 ## 2. Agent Dispatcher (아웃바운드)
 - 모든 요청 HMAC-SHA256(`timestamp.body`) + timestamp ±5분 검증 규약(에이전트 측 문서화).
 - endpoint URL: 클라우드(EDITION=cloud)에서 https 강제 + **SSRF 가드** — 등록 시와 dispatch 시(DNS 리바인딩 대비) 모두 resolve된 IP가 사설/루프백/링크로컬 대역(10/8, 172.16/12, 192.168/16, 127/8, 169.254/16, ::1, fc00::/7)이면 거부. 셀프호스팅은 `ALLOW_INSECURE_AGENT_ENDPOINT=true`로 완화 가능.
 - 응답 본문 64KB 제한(초과 시 에러 처리), redirect 미추적, Content-Type 검증.
-- 연속 실패 5회 → auto_disabled + owner 이메일(클라우드) / 대시보드 배너(공통).
+- 연속 실패 5회 → auto_disabled + 구독한 웹훅에 `agent.auto_disabled` 발송(§7) + 대시보드 배너(공통). owner 이메일은 v1에서 웹훅+배너로 대체하며, 이메일 발송은 M3 클라우드에서 검토한다.
 
 ## 3. 인바운드 인증/권한
 - visitor_token: HMAC 서명 검증. 위조 토큰 → 401. 토큰의 ws와 요청 workspace 불일치 → 403.
@@ -39,7 +41,9 @@
 - 백업(클라우드, ee): pg_dump 일 1회 + 오브젝트 스토리지 암호화 보관 30일.
 
 ## 7. 웹훅(아웃바운드)도 Agent와 동일 규약
-- HMAC 서명, https 강제(클라우드), SSRF 가드 공유 유틸 사용, 응답 무시(fire-and-forget + 재시도 3회).
+- HMAC 서명(timestamp.body, `X-AideTalk-Timestamp`/`X-AideTalk-Signature`), https 강제(클라우드), SSRF 가드 공유 유틸 사용(`lib/agent-endpoint.ts`), 응답 무시(fire-and-forget). 타임아웃 10초, 실패 시 재시도 3회(1분/5분/30분).
+- 이벤트 카탈로그(04 §2): `agent.auto_disabled` { agentId, agentName, failureCount }, `conversation.handoff` { conversationId, reason }. 워크스페이스가 구독(events)한 이벤트에만 발송.
+- ⚠️ v1 한계: 재시도는 in-process `setTimeout`으로 예약한다 — 서버 재시작 시 예약된 재시도는 유실된다(내구성 있는 큐는 후속 웨이브).
 
 ## 8. 의존성/공급망
 - pnpm lockfile 커밋 필수, CI에서 `pnpm audit --prod` (high 이상 실패).

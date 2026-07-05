@@ -10,11 +10,13 @@ import { createDbConnection, encryptSecret, type DbConnection } from "@aidetalk/
 import { WebSocket } from "ws";
 
 import type { HttpAgentDispatcher } from "../src/dispatcher";
+import type { HttpWebhookDispatcher } from "../src/services/webhook-dispatcher";
 
 import { createApp } from "../src/app";
 import { createContext } from "../src/context";
 import { parseEnv, type Env } from "../src/env";
 import { createLogger } from "../src/logger";
+import { resolveSecretEncKeyMaterial } from "../src/lib/secret-enc-key";
 import { createMemoryPubSub } from "../src/pubsub/memory";
 import { createMemoryRateLimiter } from "../src/ratelimit";
 import { createMemorySessionStore } from "../src/session/store";
@@ -163,6 +165,35 @@ export async function registerMockAgent(
 /** 진행 중 dispatch 완료 대기(결정성). */
 export async function drainDispatch(h: Harness): Promise<void> {
   await (h.ctx.dispatcher as HttpAgentDispatcher).whenIdle?.();
+}
+
+/** 알려진 secret으로 워크스페이스에 웹훅 등록(서명/발송 테스트용). */
+export async function registerMockWebhook(
+  h: Harness,
+  workspaceId: string,
+  url: string,
+  events: string[],
+  opts: { secret?: string } = {},
+): Promise<{ webhookId: string; secret: string }> {
+  const secret = opts.secret ?? "whsec_test_secret_abcdefghijklmnop";
+  const secretEnc = encryptSecret(secret, resolveSecretEncKeyMaterial(h.ctx.env));
+  const webhook = await h.ctx.repos.webhook.create(workspaceId, {
+    url,
+    events,
+    secret,
+    secretEnc,
+  });
+  return { webhookId: webhook.id, secret };
+}
+
+/**
+ * 진행 중인 웹훅 발송 완료 대기(성공 또는 재시도 소진까지).
+ * ⚠️ 재시도가 스케줄되면 그 지연까지 대기하게 되므로, 재시도 스케줄 자체를 검증하는 테스트에서는
+ *   사용하지 말고 `new HttpWebhookDispatcher(h.ctx, { retryDelaysMs: [...] })`로 교체해
+ *   짧은 지연으로 직접 진행시켜라(webhooks.test.ts 참고).
+ */
+export async function drainWebhooks(h: Harness): Promise<void> {
+  await (h.ctx.webhookDispatcher as HttpWebhookDispatcher).whenIdle?.();
 }
 
 /** 유저 + 활성 멤버십 + 세션 쿠키 생성. */

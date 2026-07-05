@@ -9,9 +9,10 @@ const TABS: { seg: string; labelKey: TranslationKey }[] = [
   { seg: "widget", labelKey: "dashboard.nav.widget" },
   { seg: "members", labelKey: "dashboard.nav.members" },
   { seg: "workspace", labelKey: "dashboard.nav.workspace" },
+  { seg: "webhooks", labelKey: "dashboard.nav.webhooks" },
 ];
 
-/** 설정 하위 탭 — 07 §5 (위젯/멤버/워크스페이스). */
+/** 설정 하위 탭 — 07 §5 (위젯/멤버/워크스페이스/웹훅). */
 export function SettingsTabs() {
   const params = useParams<{ wsId: string }>();
   const pathname = usePathname();

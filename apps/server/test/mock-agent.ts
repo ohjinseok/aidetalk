@@ -30,6 +30,8 @@ export interface MockAgent {
   lastRequest(): CapturedRequest | null;
   /** 지금까지 수신한 요청 수. */
   requestCount(): number;
+  /** 지금까지 수신한 요청 전체(수신 순). */
+  allRequests(): CapturedRequest[];
   close(): Promise<void>;
 }
 
@@ -81,6 +83,7 @@ export async function startMockAgent(initial: MockAgentBehavior = {}): Promise<M
     },
     lastRequest: () => captured[captured.length - 1] ?? null,
     requestCount: () => captured.length,
+    allRequests: () => [...captured],
     async close() {
       await new Promise<void>((resolve) => server.close(() => resolve()));
     },

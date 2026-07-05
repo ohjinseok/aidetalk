@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { CopyButton } from "../ui/CopyButton";
 import { Modal } from "../ui/Modal";
-import { td } from "../../lib/i18n";
+import { td, type TranslationKey } from "../../lib/i18n";
 
 const NODE_EXAMPLE = `import crypto from "node:crypto";
 
@@ -20,27 +20,32 @@ def verify(raw_body: bytes, signature: str, secret: str) -> bool:
     expected = hmac.new(secret.encode(), raw_body, hashlib.sha256).hexdigest()
     return hmac.compare_digest(signature, expected)`;
 
-/** 커넥터 등록/재발급 후 secret 1회 노출 모달 — 07 §4. 재조회 불가 경고 필수. */
+/**
+ * 커넥터/웹훅 등록·재발급 후 secret 1회 노출 모달 — 07 §4/§5. 재조회 불가 경고 필수.
+ * 문구는 titleKey/labelKey/warningKey로 오버라이드 가능(웹훅 화면이 이 컴포넌트를 재사용, 07 §5).
+ */
 export function SecretModal({
   open,
   secret,
   onClose,
+  titleKey = "dashboard.agents.secretModalTitle",
+  labelKey = "dashboard.agents.secretLabel",
+  warningKey = "dashboard.agents.secretWarning",
 }: {
   open: boolean;
   secret: string;
   onClose: () => void;
+  titleKey?: TranslationKey;
+  labelKey?: TranslationKey;
+  warningKey?: TranslationKey;
 }) {
   const [tab, setTab] = useState<"node" | "python">("node");
   const code = tab === "node" ? NODE_EXAMPLE : PYTHON_EXAMPLE;
 
   return (
-    <Modal open={open} onClose={onClose} title={td("dashboard.agents.secretModalTitle")}>
-      <p className="mb-2 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
-        {td("dashboard.agents.secretWarning")}
-      </p>
-      <label className="mb-1 block text-xs font-medium text-gray-500">
-        {td("dashboard.agents.secretLabel")}
-      </label>
+    <Modal open={open} onClose={onClose} title={td(titleKey)}>
+      <p className="mb-2 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{td(warningKey)}</p>
+      <label className="mb-1 block text-xs font-medium text-gray-500">{td(labelKey)}</label>
       <div className="mb-4 flex items-center gap-2">
         <code className="flex-1 break-all rounded bg-gray-100 px-3 py-2 font-mono text-sm">
           {secret}

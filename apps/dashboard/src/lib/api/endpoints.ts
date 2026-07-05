@@ -23,6 +23,8 @@ import {
   messageResponseSchema,
   secretOnlySchema,
   trackingSummarySchema,
+  webhookSchema,
+  webhookWithSecretSchema,
   workspaceResponseSchema,
   type Agent,
   type AgentLog,
@@ -36,6 +38,8 @@ import {
   type Role,
   type Segment,
   type TrackingSummary,
+  type Webhook,
+  type WebhookEventName,
   type WidgetSettings,
   type Workspace,
 } from "./schemas";
@@ -247,6 +251,18 @@ export const trackingApi = {
       conversationTrackingSchema,
       opts,
     ),
+};
+
+// ---------- 웹훅(Should) ----------
+export const webhookApi = {
+  list: (wsId: string, opts?: ApiFetchOptions): Promise<Webhook[]> =>
+    apiFetch(`/v1/workspaces/${wsId}/webhooks`, listEnvelope(webhookSchema), opts).then(
+      (r) => r.items,
+    ),
+  create: (wsId: string, body: { url: string; events: WebhookEventName[] }) =>
+    apiFetch(`/v1/workspaces/${wsId}/webhooks`, webhookWithSecretSchema, { method: "POST", body }),
+  remove: (wsId: string, webhookId: string) =>
+    apiFetch(`/v1/workspaces/${wsId}/webhooks/${webhookId}`, null, { method: "DELETE" }),
 };
 
 export type { AttributionRule };

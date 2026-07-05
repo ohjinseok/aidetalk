@@ -123,6 +123,17 @@ export const widgetHandoffRequestSchema = z.object({
 });
 export type WidgetHandoffRequest = z.infer<typeof widgetHandoffRequestSchema>;
 
+// ---------- 웹훅 (§2 웹훅 섹션, Should) ----------
+/** 04 §2 웹훅 이벤트 목록. 새 이벤트 추가 시 여기와 04 문서를 함께 갱신한다. */
+export const webhookEventNames = ["agent.auto_disabled", "conversation.handoff"] as const;
+export type WebhookEventName = (typeof webhookEventNames)[number];
+
+export const createWebhookRequestSchema = z.object({
+  url: z.string().min(1),
+  events: z.array(z.enum(webhookEventNames)).min(1),
+});
+export type CreateWebhookRequest = z.infer<typeof createWebhookRequestSchema>;
+
 // ---------- 트래킹 엔드포인트 (§3, 무인증) ----------
 // ⚠️ /t/*는 검증 실패도 204로 감춘다(라우트에서 safeParse로 처리, validateJson 미들웨어 미사용).
 export const trackClickRequestSchema = z.object({

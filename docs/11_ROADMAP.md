@@ -36,7 +36,9 @@
 
 ### W5: Agent 커넥터 + 핸드오프
 - [x] agents CRUD + secret 생성/1회 노출/재발급 + 연결 테스트 엔드포인트 — 「기준」 04 §2 (2026-07-04)
-- [x] Agent Dispatcher: HMAC, 타임아웃, 응답 파싱, track_links URL 치환, 실패 처리/auto_disable, agent_logs — 「기준」 **09 §3 테스트 1~5,7 통과 (필수)** (2026-07-04, auto_disable 시 owner 이메일은 SMTP 미구성으로 로그 경고 대체 — TODO)
+- [x] Agent Dispatcher: HMAC, 타임아웃, 응답 파싱, track_links URL 치환, 실패 처리/auto_disable, agent_logs — 「기준」 **09 §3 테스트 1~5,7 통과 (필수)** (2026-07-04, auto_disable 시 owner 이메일은 웹훅+대시보드 배너로 대체 확정 — 아래 웹훅 발송기 항목에서 해소, 이메일은 M3 클라우드에서 재검토)
+- [x] 웹훅 발송기 + `agent.auto_disabled`/`conversation.handoff` 이벤트 + 대시보드 배너 — 「기준」 04 §2 웹훅 섹션 CRUD, HMAC 서명·구독 필터링·재시도(1m/5m/30m) 테스트 통과, agents 목록에 auto_disabled 있으면 워크스페이스 셸 배너 표시(재활성화 시 소멸) (2026-07-05)
+- [x] `SECRET_ENC_KEY` — agent/웹훅 secret 암호화 전용 키 분리(Stripe/Slack식), 미설정 시 SESSION_SECRET 폴백 + 부팅 경고 — 「기준」 08 §1, 전용 키·폴백 양쪽 암복호 왕복 테스트 통과 (2026-07-05)
 - [x] 핸드오프 플로우: handoff 응답/손님 요청/자동(실패) 3경로 + returned_to_ai — 「기준」 mode=human 동안 reply dispatch 0건 테스트 (2026-07-04)
 - [x] mode=assist dispatch 골격 (UI는 W7) — 「기준」 09 §3-6 통과 (2026-07-04)
 - [x] examples/agent-node — 「기준」 FAQ reply + handoff + assist 동작, README 첫 줄 Claude Code 안내, __aidetalk_ping__ 처리 (2026-07-04, agent-python도 함께 완료 — M2 항목 선반영)

@@ -104,7 +104,7 @@ X-AideTalk-Signature: hex(hmac_sha256(secret, timestamp + "." + raw_body))
 | 상황 | AideTalk 동작 |
 |---|---|
 | 타임아웃 / 5xx / 연결 실패 / 스키마 불일치 / 빈 body / 응답 64KB 초과 | (reply일 때) 자동 핸드오프 + 방문자 기본 안내, agent_logs outcome=timeout/error, failure_count++ |
-| reply 연속 5회 실패 | agent status=`auto_disabled` + 워크스페이스 owner 이메일 |
+| reply 연속 5회 실패 | agent status=`auto_disabled` + 구독한 웹훅에 `agent.auto_disabled` 발송(04 §2) + 대시보드 배너(owner 이메일은 v1에서 웹훅+배너로 대체, 이메일은 M3 클라우드에서 재검토) |
 | **assist에서의 모든 실패** | 핸드오프 없이 조용히 스킵(제안만 없음). failure_count 미반영 |
 | 성공 응답 | failure_count = 0 리셋 |
 

@@ -186,6 +186,25 @@ export function serializeConversionEvent(row: {
   };
 }
 
+/** webhooks row → 공개 Webhook 객체. ⚠️ secretHash/secretEnc는 절대 포함하지 않는다(규칙 5). */
+export function serializeWebhook(row: {
+  id: string;
+  workspaceId: string;
+  url: string;
+  events: string[];
+  status: string;
+  createdAt: Date | string;
+}) {
+  return {
+    id: row.id,
+    workspaceId: row.workspaceId,
+    url: row.url,
+    events: row.events,
+    status: row.status,
+    createdAt: toIso(row.createdAt),
+  };
+}
+
 /** 메시지 미리보기 텍스트(인박스 요약용). */
 export function messagePreview(content: MessageContent): string {
   return content.text.slice(0, 140);

@@ -36,6 +36,12 @@
 4. 귀속: 동일 visitor에 클릭된 링크 2개(대화 A, B) → last_click 규칙이면 B, first_click이면 A로 집계.
 5. S2 워크스페이스에서 트래킹 API → 404.
 
+## 6-1. 웹훅 커버리지 (Should — apps/server/src/__tests__/webhooks.test.ts)
+1. HMAC 서명이 secret으로 재현됨(agent dispatch와 동일 방식).
+2. `agent.auto_disabled` → 구독한 웹훅에만 발송, 미구독 워크스페이스/이벤트에는 미발송.
+3. 재시도 스케줄 — `HttpWebhookDispatcher`에 짧은 `retryDelaysMs`를 주입해 실제 시간으로 재시도 횟수/타이밍 검증(운영값 1m/5m/30m은 fake timer+실 fetch 조합이 불안정해 별도 검증하지 않음).
+4. CRUD 권한 — 타 워크스페이스 멤버 접근 403, 허용되지 않은 이벤트명 validation/failed.
+
 ## 6. 필수 커버리지 E — Plan 제한 (ee)
 1. starter 한도 1,000 도달 후 새 대화 → 402 plan/limit_exceeded, **기존 대화 메시지는 정상 동작**.
 2. 시트 3 초과 초대 → 402. oss(Noop enforcer)에서는 무제한 통과.

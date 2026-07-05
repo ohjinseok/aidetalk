@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { agentApi } from "../../lib/api/endpoints";
 import { td, tf } from "../../lib/i18n";
 import type { Agent, AgentStatus, AgentTestResult } from "../../lib/api/schemas";
+import { useAgentStatus } from "../providers/AgentStatusProvider";
 import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
 import { Badge } from "../ui/Badge";
@@ -26,6 +27,7 @@ export function AgentsScreen() {
   const { workspace, isOwner } = useWorkspace();
   const wsId = workspace.id;
   const toast = useToast();
+  const agentStatus = useAgentStatus();
 
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +45,8 @@ export function AgentsScreen() {
   async function reload() {
     try {
       setAgents(await agentApi.list(wsId));
+      // 목록 갱신 시마다 워크스페이스 셸 배너 상태도 함께 동기화(auto_disabled 즉시 반영/소멸).
+      await agentStatus.refresh();
     } catch (err) {
       toast.error(err);
     } finally {

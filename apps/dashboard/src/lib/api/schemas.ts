@@ -250,6 +250,26 @@ export const conversationTrackingSchema = z.object({
 });
 export type ConversationTracking = z.infer<typeof conversationTrackingSchema>;
 
+// ---------- 웹훅(Should, 04 §2 웹훅 섹션) ----------
+export const webhookEventNameSchema = z.enum(["agent.auto_disabled", "conversation.handoff"]);
+export type WebhookEventName = z.infer<typeof webhookEventNameSchema>;
+
+export const webhookSchema = z.object({
+  id: z.string(),
+  workspaceId: z.string(),
+  url: z.string(),
+  events: z.array(webhookEventNameSchema),
+  status: z.enum(["active", "disabled"]),
+  createdAt: z.string().optional(),
+});
+export type Webhook = z.infer<typeof webhookSchema>;
+
+/** 등록 응답 — secret 원문은 이 응답 1회만(04 §2). */
+export const webhookWithSecretSchema = z.object({
+  webhook: webhookSchema,
+  secret: z.string(),
+});
+
 // re-export 자주 쓰는 shared 타입
 export { messageSchema, conversationSchema, eventSchema, conversationSummarySchema };
 export type { Message, Conversation, Event, ConversationSummary, Suggestion } from "@aidetalk/shared";

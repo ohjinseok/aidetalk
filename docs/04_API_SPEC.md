@@ -148,10 +148,22 @@ PATCH /v1/workspaces/:wsId/suggestions/:id   { outcome: "accepted"|"edited"|"ign
 
 ### 웹훅 (Should)
 ```
-POST /v1/workspaces/:wsId/webhooks   { url, events } → 201 { webhook, secret(1회) }
-GET/DELETE 동형
+POST   /v1/workspaces/:wsId/webhooks         { url, events } → 201 { webhook, secret(1회) }
+GET    /v1/workspaces/:wsId/webhooks         → { items }
+DELETE /v1/workspaces/:wsId/webhooks/:id     → 204
 ```
-발송: `POST url` body `{ event, data, occurredAt }` + `X-AideTalk-Signature`(에이전트와 동일 HMAC 방식). 실패 재시도 3회(1m/5m/30m).
+- `events`는 아래 이벤트 카탈로그 이름만 허용(zod enum). secret은 agents와 동일 패턴 — 원문은 등록 응답 1회만, DB에는 sha256 해시 + AES-GCM 암호문(`secret_enc`)만 저장.
+- endpointUrl 검증/SSRF 가드는 agent endpoint와 동일 공유 유틸(08 §2/§7) — 클라우드는 https 강제 + 사설 IP 차단.
+
+**발송**: `POST url` body `{ event, data, occurredAt }` + `X-AideTalk-Timestamp`/`X-AideTalk-Signature`(에이전트와 동일 HMAC-SHA256(timestamp.body) 방식). 타임아웃 10초, 응답 본문은 읽지 않는다(fire-and-forget, status<300만 성공 판정). 실패 시 재시도 3회(1분/5분/30분 지연) — ⚠️ v1은 in-process `setTimeout` 예약이라 서버 재시작 시 예약된 재시도는 유실된다.
+
+**이벤트 카탈로그**:
+| event | data | 발생 시점 |
+|---|---|---|
+| `agent.auto_disabled` | `{ agentId, agentName, failureCount }` | 커넥터 연속 실패 5회로 status=auto_disabled 전환 시(dispatcher의 auto_disable 경로) |
+| `conversation.handoff` | `{ conversationId, reason }` | 대화가 사람에게 넘어갈 때(에이전트 handoff 응답/손님 요청/실패 자동 핸드오프 3경로 공통, services/handoff.ts) |
+
+워크스페이스가 구독(`events`에 포함)하지 않은 이벤트는 발송되지 않는다.
 
 ## 3. 트래킹 엔드포인트 (`/t/*`) — 무인증, CORS `*`
 

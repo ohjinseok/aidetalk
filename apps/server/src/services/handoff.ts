@@ -97,5 +97,11 @@ export async function performHandoff(
     await ctx.broadcaster.inboxUpsert(input.workspaceId, convSummary);
   }
 
+  // 6) 웹훅(구독한 워크스페이스에만) — fire-and-forget, 응답을 기다리지 않는다(08 §7).
+  ctx.webhookDispatcher.dispatch(input.workspaceId, "conversation.handoff", {
+    conversationId: input.conversation.id,
+    reason: input.reason,
+  });
+
   return conversation;
 }

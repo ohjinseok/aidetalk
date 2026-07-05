@@ -75,7 +75,8 @@ export interface PubSubAdapter {
                     message_to_visitor(또는 기본 문구) 전송, 상담원에게 handoff 알림 push
    - type=noop  → 아무것도 안 함
    - 타임아웃/5xx/스키마 불일치 → 자동 핸드오프 + 기본 안내 메시지 + agent_logs(outcome=timeout|error)
-     + agents.failure_count++ → 연속 5회 시 status=auto_disabled + owner 이메일
+     + agents.failure_count++ → 연속 5회 시 status=auto_disabled + 구독 웹훅에 `agent.auto_disabled` 발송 +
+       대시보드 배너(웹훅+배너로 대체, v1 — owner 이메일은 M3 클라우드에서 검토)
 5. 모든 dispatch는 agent_logs에 요약 기록
 ```
 - 디스패치는 **메시지당 1회, 재시도 없음**(v1) — 에이전트 측 멱등성 부담 제거.

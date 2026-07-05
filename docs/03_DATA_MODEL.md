@@ -223,8 +223,9 @@ export const webhooks = pgTable("webhooks", {
   id: text("id").primaryKey(),                       // whk_
   workspaceId: text("workspace_id").notNull(),
   url: text("url").notNull(),
-  events: jsonb("events").notNull(),                 // ["conversation.created","conversation.closed"]
+  events: jsonb("events").notNull(),                 // ["agent.auto_disabled","conversation.handoff"]
   secretHash: text("secret_hash").notNull(),
+  secretEnc: text("secret_enc"),                     // agents.secretEnc와 동일 패턴(AES-GCM, 서명 시에만 복호화)
   status: text("status").notNull().default("active"),
   createdAt: ts(),
 });
@@ -248,7 +249,7 @@ agentLogRepo:   append / listByAgent(cursor) / purgeOlderThan(days)
 trackedLinkRepo: createMany / markClicked(token) / listByConversation
 conversionRepo: create(externalRef 충돌 시 AppError conversion/duplicate) / listByConversation / aggregateByWorkspace(period, rule)
 assistRepo:     append / setOutcome / listByConversation   // memberContext 필수
-webhookRepo:    create / list / remove
+webhookRepo:    create(secret 해시화+enc 저장) / list / getById / listSubscribed(event) / remove
 ```
 
 ## 4. 설계 결정 기록

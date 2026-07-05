@@ -16,6 +16,7 @@ import type { HonoEnv } from "./http/types";
 import { createAuthRoutes, createMeRoute } from "./routes/auth";
 import { createInviteRoutes } from "./routes/invites";
 import { createTrackingRoutes } from "./routes/tracking";
+import { createWebhookRoutes } from "./routes/webhooks";
 import { createWidgetRoutes } from "./routes/widget";
 import { createWorkspaceRoutes } from "./routes/workspaces";
 
@@ -37,6 +38,7 @@ export function createApp(ctx: AppContext): Hono<HonoEnv> {
   app.route("/v1", createMeRoute()); // GET /v1/me
   app.route("/v1/invites", createInviteRoutes());
   app.route("/v1/workspaces", createWorkspaceRoutes());
+  app.route("/v1/workspaces", createWebhookRoutes());
   app.route("/t", createTrackingRoutes());
 
   return app;

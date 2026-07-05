@@ -18,6 +18,7 @@
 | `PORT` | `4000` | | |
 | `VISITOR_TOKEN_SECRET` | - | ✅ | 32바이트+ 랜덤 |
 | `SESSION_SECRET` | - | ✅ | 〃 |
+| `SECRET_ENC_KEY` | (없음) | | agent/웹훅 secret AES-256-GCM 암호화 전용 키(32바이트, hex 또는 base64). 미설정 시 SESSION_SECRET 파생으로 폴백 + 부팅 경고 로그(08 §1). 세션 키 로테이션과 분리하려면 설정 권장 |
 | `EDITION` | (없음) | | `cloud`면 ee 모듈 로드(PlanEnforcer/Billing). 미설정 = 셀프호스팅 |
 | `ALLOW_INSECURE_AGENT_ENDPOINT` | `false` | | 셀프호스팅에서 http 에이전트 허용 |
 | `SMTP_URL` | (없음) | | 없으면 이메일 발송 전부 skip + 로그 (셀프호스팅 기본 동작) |
@@ -49,6 +50,7 @@ services:
       DASHBOARD_URL: ${DASHBOARD_URL}
       VISITOR_TOKEN_SECRET: ${VISITOR_TOKEN_SECRET}
       SESSION_SECRET: ${SESSION_SECRET}
+      SECRET_ENC_KEY: ${SECRET_ENC_KEY:-}
     ports: [ "4000:4000" ]
     volumes: [ files:/data/files ]
     # 부팅 엔트리포인트에서 pnpm db:migrate 자동 실행 (마이그레이션 → 서버 기동)

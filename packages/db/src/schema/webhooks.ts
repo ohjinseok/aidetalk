@@ -14,6 +14,8 @@ export const webhooks = pgTable("webhooks", {
   url: text("url").notNull(),
   events: jsonb("events").$type<WebhookEvents>().notNull(),
   secretHash: text("secret_hash").notNull(),
+  // 서명용 원문의 AES-GCM 암호문(agents.secretEnc와 동일 패턴) — 아웃바운드 HMAC 서명 시에만 복호화.
+  secretEnc: text("secret_enc"),
   status: text("status").notNull().default("active"),
   createdAt: createdAt(),
 });

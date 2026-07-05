@@ -36,8 +36,9 @@ import {
 import type { HonoEnv, MemberAuth } from "../http/types";
 import { testAgentConnection } from "../dispatch/test";
 import { generateAgentSecret } from "../lib/agent-secret";
-import { validateAgentEndpoint } from "../lib/agent-endpoint";
+import { endpointPolicy, validateAgentEndpoint } from "../lib/agent-endpoint";
 import { decodeCursor, encodeCursor } from "../lib/cursor";
+import { resolveSecretEncKeyMaterial } from "../lib/secret-enc-key";
 import {
   serializeAgent,
   serializeAgentLog,
@@ -110,7 +111,7 @@ export function createWorkspaceRoutes(): Hono<HonoEnv> {
 
     const endpointUrl = await validateAgentEndpoint(body.endpointUrl, endpointPolicy(ctx.env));
     const secret = generateAgentSecret();
-    const secretEnc = encryptSecret(secret, ctx.env.SESSION_SECRET);
+    const secretEnc = encryptSecret(secret, resolveSecretEncKeyMaterial(ctx.env));
 
     const agent = await ctx.repos.agent.create(wsId, {
       name: body.name,
@@ -180,7 +181,7 @@ export function createWorkspaceRoutes(): Hono<HonoEnv> {
     if (!existing) throw AppError.of("not_found", "커넥터를 찾을 수 없다.");
 
     const secret = generateAgentSecret();
-    const secretEnc = encryptSecret(secret, ctx.env.SESSION_SECRET);
+    const secretEnc = encryptSecret(secret, resolveSecretEncKeyMaterial(ctx.env));
     await ctx.repos.agent.rotateSecret(wsId, agentId, secret, secretEnc);
     return c.json({ secret });
   });
@@ -536,13 +537,6 @@ async function assertS1Segment(c: Context<HonoEnv>): Promise<void> {
   if (!workspace || workspace.segment === "s2_no_site") {
     throw AppError.of("not_found", "이 워크스페이스에는 트래킹 API가 없다.");
   }
-}
-
-function endpointPolicy(env: HonoEnv["Variables"]["ctx"]["env"]) {
-  return {
-    cloud: env.EDITION === "cloud",
-    allowInsecure: env.ALLOW_INSECURE_AGENT_ENDPOINT,
-  };
 }
 
 function parseStatus(raw: string | undefined): "open" | "pending" | "closed" | undefined {

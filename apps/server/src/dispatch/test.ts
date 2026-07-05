@@ -8,6 +8,7 @@ import { parseAgentResponse, type AgentRequest } from "@aidetalk/shared";
 
 import type { AppContext } from "../context";
 import { assertResolvesToPublicIp } from "../lib/agent-endpoint";
+import { resolveSecretEncKeyMaterial } from "../lib/secret-enc-key";
 import { postToAgent } from "./http";
 
 /** 05 문서 지정 핑 텍스트. */
@@ -38,7 +39,7 @@ export async function testAgentConnection(
   }
   let secret: string;
   try {
-    secret = decryptSecret(agent.secretEnc, app.env.SESSION_SECRET);
+    secret = decryptSecret(agent.secretEnc, resolveSecretEncKeyMaterial(app.env));
   } catch {
     return { ok: false, latencyMs: 0, error: "secret 복호화 실패" };
   }

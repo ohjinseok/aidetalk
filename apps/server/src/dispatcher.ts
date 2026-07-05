@@ -20,6 +20,7 @@ import type { AppContext } from "./context";
 import { buildAgentRequest, HISTORY_LIMIT } from "./dispatch/build-request";
 import { postToAgent, type DispatchOutcome } from "./dispatch/http";
 import { assertResolvesToPublicIp } from "./lib/agent-endpoint";
+import { resolveSecretEncKeyMaterial } from "./lib/secret-enc-key";
 import { serializeSuggestion } from "./lib/serialize";
 import {
   extractUrls,
@@ -88,7 +89,7 @@ export class HttpAgentDispatcher implements AgentDispatcher {
     let secret: string;
     try {
       if (!agent.secretEnc) throw new Error("secretEnc 없음");
-      secret = decryptSecret(agent.secretEnc, this.app.env.SESSION_SECRET);
+      secret = decryptSecret(agent.secretEnc, resolveSecretEncKeyMaterial(this.app.env));
     } catch {
       this.app.logger.error({ agentId: agent.id }, "커넥터 secret 복호화 실패(서명 불가)");
       if (mode === "reply") {
@@ -180,7 +181,7 @@ export class HttpAgentDispatcher implements AgentDispatcher {
 
   // ---------- reply 결과 처리 ----------
   private async handleReplyOutcome(
-    agent: { id: string; endpointUrl: string },
+    agent: { id: string; name: string; endpointUrl: string },
     vmCtx: VisitorMessageContext,
     request: AgentRequest,
     outcome: DispatchOutcome,
@@ -298,7 +299,7 @@ export class HttpAgentDispatcher implements AgentDispatcher {
 
   /** reply 실패 → 자동 핸드오프 + 기본 안내 + 실패 카운트 + auto_disable. */
   private async handleReplyFailure(
-    agent: { id: string },
+    agent: { id: string; name: string },
     vmCtx: VisitorMessageContext,
     request: AgentRequest,
     outcome: DispatchOutcome,
@@ -321,11 +322,15 @@ export class HttpAgentDispatcher implements AgentDispatcher {
     const bumped = await this.app.repos.agent.bumpFailure(vmCtx.workspaceId, agent.id);
     if (bumped && bumped.failureCount >= AUTO_DISABLE_THRESHOLD) {
       await this.app.repos.agent.setStatus(vmCtx.workspaceId, agent.id, "auto_disabled");
-      // TODO(question): 워크스페이스 owner 이메일 발송(클라우드)은 ee/notification 도입 후.
-      //   현재는 로그로 대체(SMTP 미구성 시 셀프호스팅은 대시보드 배너로 안내).
+      // TODO(question): owner 이메일 발송은 웹훅+배너로 대체(v1), 이메일은 M3 클라우드.
+      this.app.webhookDispatcher.dispatch(vmCtx.workspaceId, "agent.auto_disabled", {
+        agentId: agent.id,
+        agentName: agent.name,
+        failureCount: bumped.failureCount,
+      });
       this.app.logger.warn(
         { agentId: agent.id, workspaceId: vmCtx.workspaceId },
-        "커넥터 연속 실패로 auto_disabled — owner 알림 필요(TODO)",
+        "커넥터 연속 실패로 auto_disabled — 웹훅+배너로 안내",
       );
     }
 

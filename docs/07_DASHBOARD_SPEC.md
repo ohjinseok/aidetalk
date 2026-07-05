@@ -15,10 +15,12 @@
 /(app)/w/[wsId]/settings/widget            # 위젯 설정 + 임베드 코드
 /(app)/w/[wsId]/settings/members
 /(app)/w/[wsId]/settings/workspace         # 이름, 귀속 규칙, (클라우드) 플랜/결제 → ee 컴포넌트 주입 지점
+/(app)/w/[wsId]/settings/webhooks          # 웹훅 등록/목록/삭제(Should, 04 §2)
 /onboarding                                # 첫 로그인: 워크스페이스 생성(name, segment 선택)
 ```
 - 레이아웃: 좌측 얇은 내비(인박스/트래킹/커넥터/설정) + 워크스페이스 스위처(상단).
 - 인증 가드: 미들웨어에서 세션 없으면 /login. wsId membership은 서버 컴포넌트에서 검증.
+- 워크스페이스 셸 상단 배너: agents 목록에 status=auto_disabled가 하나라도 있으면 경고 배너("AI 에이전트가 연속 실패로 자동 비활성화되었습니다") + 커넥터 화면 링크를 표시한다. 재활성화하면 배너가 사라진다(`AgentStatusProvider`가 상태를 들고 있고, 커넥터 화면에서 상태 변경 시 갱신).
 
 ## 2. 인박스 (핵심 화면)
 
@@ -58,6 +60,7 @@
 - 위젯 설정: primaryColor 피커, greeting, tone(formal/casual), launcherPosition, officeHours 에디터(요일별 시간), offHoursMessage. 우측에 **위젯 라이브 프리뷰**(iframe로 위젯 데모 페이지 로드). 하단 임베드 코드 블록 + 복사.
 - 멤버: 목록(역할/상태), 이메일 초대(→ inviteUrl 복사. 이메일 발송은 클라우드만, 셀프호스팅은 URL 복사 방식), 역할 변경/제거는 owner만.
 - 워크스페이스: 이름, attributionRule(라스트클릭/퍼스트클릭), 위험 구역(대화 전체 CSV export — Could, hard delete).
+- 웹훅(Should, 04 §2): 등록 폼(url + events 체크박스 — `agent.auto_disabled`/`conversation.handoff`), 등록 완료 모달(**secret 1회 표시 + 복사 버튼 + "다시 볼 수 없음" 경고** — 커넥터 화면의 SecretModal 패턴 재사용), 목록(url/구독 이벤트/상태) + 삭제.
 - (클라우드) 결제 탭: `EDITION=cloud`일 때만 렌더 — ee의 `<BillingPanel/>`을 dynamic import. 코어 코드는 존재 여부만 확인(규칙 8).
 
 ## 6. 공통 컴포넌트/규칙

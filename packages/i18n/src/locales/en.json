@@ -103,6 +103,7 @@
       "widget": "Widget",
       "members": "Members",
       "workspace": "Workspace",
+      "webhooks": "Webhooks",
       "logs": "AI logs",
       "switchWorkspace": "Switch workspace",
       "logout": "Log out"
@@ -202,7 +203,23 @@
       "disable": "Disable",
       "empty": "No connectors registered yet",
       "viewLogs": "View logs",
-      "endpointPlaceholder": "https://my-agent.example.com/aidetalk"
+      "endpointPlaceholder": "https://my-agent.example.com/aidetalk",
+      "autoDisabledBanner": "An AI agent was auto-disabled after repeated failures",
+      "autoDisabledBannerLink": "Check connectors"
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "registerTitle": "Register webhook",
+      "url": "URL",
+      "urlPlaceholder": "https://example.com/webhooks/aidetalk",
+      "events": "Subscribed events",
+      "eventAutoDisabled": "AI agent auto-disabled",
+      "eventHandoff": "Conversation handoff",
+      "register": "Register",
+      "empty": "No webhooks registered yet",
+      "removeConfirm": "Delete this webhook?",
+      "secretModalTitle": "Webhook registered",
+      "secretLabel": "Signing secret"
     },
     "logs": {
       "title": "AI logs",

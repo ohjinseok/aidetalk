@@ -28,6 +28,12 @@ export const envSchema = z
     PORT: z.coerce.number().int().positive().default(4000),
     VISITOR_TOKEN_SECRET: z.string().min(16, "32바이트+ 랜덤 시크릿이 필요하다."),
     SESSION_SECRET: z.string().min(16, "32바이트+ 랜덤 시크릿이 필요하다."),
+    /**
+     * agent/webhook secret AES-256-GCM 암호화 전용 키(Stripe/Slack식 키 분리) — 08 §1.
+     * 미설정 시 SESSION_SECRET 파생으로 폴백(부팅 시 경고 로그, lib/secret-enc-key.ts).
+     * 설정 시 32바이트를 표현하는 hex(64자) 또는 base64/base64url 문자열이어야 한다.
+     */
+    SECRET_ENC_KEY: z.string().optional(),
     EDITION: z.enum(["cloud"]).optional(),
     ALLOW_INSECURE_AGENT_ENDPOINT: boolish(false),
     SMTP_URL: z.string().optional(),
@@ -46,7 +52,32 @@ export const envSchema = z
         message: "PUBSUB_DRIVER=redis일 때 REDIS_URL이 필요하다.",
       });
     }
+    if (env.SECRET_ENC_KEY !== undefined && secretEncKeyByteLength(env.SECRET_ENC_KEY) !== 32) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["SECRET_ENC_KEY"],
+        message: "SECRET_ENC_KEY는 32바이트를 표현하는 hex 또는 base64 문자열이어야 한다.",
+      });
+    }
   });
+
+/** hex(짝수 길이) 문자열의 디코딩 바이트 길이. hex가 아니면 null. */
+function hexDecodedLength(value: string): number | null {
+  if (!/^[0-9a-fA-F]+$/.test(value) || value.length % 2 !== 0) return null;
+  return value.length / 2;
+}
+
+/** base64/base64url(패딩 선택) 문자열의 디코딩 바이트 길이. base64가 아니면 null. */
+function base64DecodedLength(value: string): number | null {
+  if (!/^[A-Za-z0-9+/_-]+={0,2}$/.test(value)) return null;
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  return Buffer.from(normalized, "base64").length;
+}
+
+/** SECRET_ENC_KEY 후보 문자열이 표현하는 바이트 길이(hex 우선, 아니면 base64). 판정 불가면 null. */
+export function secretEncKeyByteLength(value: string): number | null {
+  return hexDecodedLength(value) ?? base64DecodedLength(value);
+}
 
 export type Env = z.infer<typeof envSchema>;
 
