@@ -28,6 +28,7 @@
     "messagePending": "Sending",
     "messageFailed": "Failed to send",
     "messageRetry": "Retry",
+    "readReceipt": "Read",
     "dateToday": "Today",
     "dateYesterday": "Yesterday",
     "offHoursDefault": "We're currently outside support hours. Leave a message and we'll get back to you.",
@@ -89,7 +90,10 @@
       "acceptDesc": "Click below to accept the workspace invite",
       "acceptSubmit": "Accept invite",
       "accepted": "Invite accepted",
-      "missingToken": "Invalid invite link"
+      "missingToken": "Invalid invite link",
+      "needAuth": "Sign up or log in first to accept the invite",
+      "toSignup": "Sign up and accept",
+      "toLogin": "Log in and accept"
     },
     "nav": {
       "inbox": "Inbox",
@@ -128,6 +132,8 @@
       "send": "Send",
       "modeSwitchHint": "Sending now stops AI replies and switches to human (you) mode",
       "viewLog": "View log",
+      "readReceipt": "Read",
+      "visitorTyping": "Visitor is typing…",
       "linkClickedAt": "🔗 Clicked {time}",
       "linkNotClicked": "Not clicked",
       "infoTitle": "Visitor info",

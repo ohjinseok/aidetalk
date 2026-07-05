@@ -27,6 +27,10 @@ export const conversations = pgTable(
     // ⚠️ 밀리초 정밀도(precision 3): messages.created_at과 정밀도를 맞춰
     //   (last_message_at, id) 키셋 커서가 마이크로초 잔차로 중복/누락되지 않게 한다(인박스 목록).
     lastMessageAt: timestamp("last_message_at", { withTimezone: true, precision: 3 }),
+    // 양방향 읽음 표시(read receipts) — 각 주체가 읽음 처리한 마지막 메시지 id. 미읽음이면 null.
+    // 비교는 id 정렬이 아니라 대상 메시지의 created_at으로 한다(msg_ nanoid는 단조 아님).
+    visitorLastReadMessageId: text("visitor_last_read_message_id"),
+    agentLastReadMessageId: text("agent_last_read_message_id"),
     metadata: jsonb("metadata").$type<ConversationMetadata>().notNull().default({}),
     createdAt: createdAt(),
     updatedAt: updatedAt(),

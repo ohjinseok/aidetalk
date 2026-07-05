@@ -28,11 +28,14 @@
 <Launcher>            우하단(설정으로 좌하단) 원형 버튼, 미읽음 뱃지
 <ChatWindow>          380×640px 카드(모바일: 전체화면). 열림/닫힘 상태는 sessionStorage
   <Header>            워크스페이스 이름, "상담원 연결" 메뉴, 닫기
-  <MessageList>       말풍선(visitor 우측/상대 좌측), 시스템 라인, 날짜 구분선, 타이핑 인디케이터
+  <MessageList>       말풍선(visitor 우측/상대 좌측), 시스템 라인, 날짜 구분선, 타이핑 인디케이터, 읽음 표시
   <QuickReplies>      마지막 메시지의 quickReplies 버튼 (누르면 그 텍스트로 message.send)
   <EmailPrompt>       첫 메시지 전송 후 1회 노출: "답변 놓치지 않게 이메일 남기기" (건너뛰기 가능) → PATCH /profile
   <Composer>          textarea 자동 높이, Enter 전송(Shift+Enter 줄바꿈), 전송 버튼
 ```
+- **읽음 표시(read receipts)**: 내가 보낸 마지막 메시지 밑에, 상담원이 읽으면 "읽음" 라벨(i18n `widget.readReceipt`). 판정은 read.update(by="agent")로 받은 lastMessageId의 created_at이 내 마지막 메시지 이상일 때(msg id는 단조 아님 → created_at 비교). 대화 열림/새 메시지 수신 시 `read.mark` 전송.
+- **손님 타이핑**: 손님 타이핑은 상담원 화면에만 표시하고 위젯에는 되돌려보내지 않는다(위젯 타이핑 인디케이터는 ai|human만).
+- **운영시간(officeHours) 판정 규칙**: open < close → [open, close) / open > close → 자정 넘김([open,24:00)∪[00:00,close)) / open == close → 24시간 영업. isOfficeHours는 서버가 세션 응답에 실어준다(04 §1).
 - 색상은 widgetSettings.primaryColor를 CSS 변수 `--od-primary`로 주입. 나머지 스타일은 전부 고정 팔레트.
 - 모든 문구는 i18n 키(packages/i18n, 위젯 번들에는 ko만 포함 v1).
 - z-index 2147483000, `position: fixed`. 호스트 CSS 영향 차단은 Shadow DOM + 모든 요소 명시적 스타일로.

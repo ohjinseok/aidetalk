@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
 import { useToast } from "../../components/providers/ToastProvider";
 import { Button } from "../../components/ui/Button";
 import { FormRow, Input } from "../../components/ui/Field";
-import { authApi } from "../../lib/api/endpoints";
+import { Spinner } from "../../components/ui/Spinner";
+import { authApi, memberApi } from "../../lib/api/endpoints";
 import { td } from "../../lib/i18n";
 
-export default function LoginPage() {
+function LoginInner() {
   const router = useRouter();
+  const params = useSearchParams();
+  const inviteToken = params.get("inviteToken");
   const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,6 +25,16 @@ export default function LoginPage() {
     setBusy(true);
     try {
       await authApi.login({ email, password });
+      // 초대 링크로 온 로그인이면 로그인 직후 자동 수락 → 해당 워크스페이스로 이동.
+      if (inviteToken) {
+        try {
+          const res = await memberApi.acceptInvite(inviteToken);
+          router.replace(`/w/${res.member.workspaceId}/inbox`);
+          return;
+        } catch (err) {
+          toast.error(err);
+        }
+      }
       const me = await authApi.me();
       const first = me.memberships[0];
       router.replace(first ? `/w/${first.workspaceId}/inbox` : "/onboarding");
@@ -31,6 +44,10 @@ export default function LoginPage() {
       setBusy(false);
     }
   }
+
+  const signupHref = inviteToken
+    ? `/signup?inviteToken=${encodeURIComponent(inviteToken)}`
+    : "/signup";
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
@@ -64,11 +81,19 @@ export default function LoginPage() {
           {td("dashboard.auth.loginSubmit")}
         </Button>
         <p className="mt-4 text-center text-sm text-gray-500">
-          <Link href="/signup" className="text-brand hover:underline">
+          <Link href={signupHref} className="text-brand hover:underline">
             {td("dashboard.auth.toSignup")}
           </Link>
         </p>
       </form>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<Spinner />}>
+      <LoginInner />
+    </Suspense>
   );
 }

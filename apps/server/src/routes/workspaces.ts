@@ -3,7 +3,9 @@
  * Agent 커넥터 CRUD/test/logs, 인박스(대화·메시지·이벤트·제안), 멤버, 설정.
  * DB 접근은 전부 repos 경유(라우트 직접 쿼리 금지). 에러 코드는 04 §7만.
  */
-import { encryptSecret } from "@aidetalk/db";
+import { randomBytes } from "node:crypto";
+
+import { encryptSecret, hashSecret } from "@aidetalk/db";
 import { AppError } from "@aidetalk/shared";
 import { Hono, type Context } from "hono";
 
@@ -410,28 +412,44 @@ export function createWorkspaceRoutes(): Hono<HonoEnv> {
   // ================= 멤버 =================
 
   // 초대(owner만) — planEnforcer.assertCanAddSeat.
+  // 기가입 이메일이면 기존 멤버 초대(members.invite → 수락 후 합류) 흐름 유지.
+  // 미가입 이메일이면 invites 행 생성(가입/로그인 후 수락). 두 경우 모두 inviteUrl은
+  // 대시보드 /invites/accept?token= 로 통일한다.
   app.post("/:wsId/members", validateJson(inviteMemberRequestSchema), async (c) => {
     const ctx = c.get("ctx");
-    assertOwner(c.get("member")!);
+    const owner = c.get("member")!;
+    assertOwner(owner);
     const wsId = c.req.param("wsId");
     const body = validated<InviteMemberRequest>(c);
 
+    // 시트 한도 검사는 초대(행 생성) 시점에.
     await ctx.planEnforcer.assertCanAddSeat(wsId);
 
-    // TODO(question): 03 데이터 모델에 미가입 이메일용 invites 테이블이 없다.
-    //   members.user_id가 NOT NULL FK라 초대 대상은 먼저 가입된 계정이어야 한다.
-    //   미가입 이메일 초대는 별도 invites 테이블 도입 필요 — 우선 가입 계정만 초대 가능.
+    const acceptUrl = (token: string) =>
+      `${ctx.env.DASHBOARD_URL}/invites/accept?token=${encodeURIComponent(token)}`;
+
     const user = await ctx.repos.user.getByEmail(body.email);
-    if (!user) {
-      throw AppError.of("not_found", "해당 이메일의 가입 계정이 없다(먼저 가입 필요).");
-    }
-    if (await ctx.repos.member.getRole(wsId, user.id)) {
-      throw AppError.of("conflict", "이미 워크스페이스 멤버다.");
+    if (user) {
+      // 기가입 계정 — 기존 members 초대 흐름 유지.
+      if (await ctx.repos.member.getRole(wsId, user.id)) {
+        throw AppError.of("conflict", "이미 워크스페이스 멤버다.");
+      }
+      const member = await ctx.repos.member.invite(wsId, { userId: user.id, role: body.role });
+      return c.json(
+        { member: serializeMember(member), inviteUrl: acceptUrl(member.inviteToken!) },
+        201,
+      );
     }
 
-    const member = await ctx.repos.member.invite(wsId, { userId: user.id, role: body.role });
-    const inviteUrl = `${ctx.env.DASHBOARD_URL}/invite?token=${member.inviteToken}`;
-    return c.json({ member: serializeMember(member), inviteUrl }, 201);
+    // 미가입 이메일 — invites 행 생성. raw token은 응답 URL에만 노출, DB엔 sha256만 저장.
+    const rawToken = randomBytes(24).toString("base64url");
+    const invite = await ctx.repos.invite.create(wsId, {
+      email: body.email,
+      role: body.role,
+      tokenHash: hashSecret(rawToken),
+      invitedBy: owner.userId,
+    });
+    return c.json({ member: null, invite: serializeInvite(invite), inviteUrl: acceptUrl(rawToken) }, 201);
   });
 
   // 목록.
@@ -576,6 +594,30 @@ function serializeMember(row: {
       row.createdAt instanceof Date
         ? row.createdAt.toISOString()
         : (row.createdAt ?? null),
+  };
+}
+
+/** invites row → 공개 초대 객체(token_hash는 절대 노출 금지, 규칙 5). */
+function serializeInvite(row: {
+  id: string;
+  workspaceId: string;
+  email: string;
+  role: string;
+  expiresAt: Date | string;
+  acceptedAt: Date | string | null;
+  createdAt: Date | string;
+}) {
+  const iso = (v: Date | string | null) =>
+    v == null ? null : v instanceof Date ? v.toISOString() : v;
+  return {
+    id: row.id,
+    workspaceId: row.workspaceId,
+    email: row.email,
+    role: row.role,
+    status: "invited" as const,
+    expiresAt: iso(row.expiresAt),
+    acceptedAt: iso(row.acceptedAt),
+    createdAt: iso(row.createdAt),
   };
 }
 

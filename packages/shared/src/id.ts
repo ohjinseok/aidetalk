@@ -22,6 +22,7 @@ export const ID_PREFIXES = [
   "cvn", // conversions
   "asg", // assist_suggestions
   "whk", // webhooks
+  "inv", // invites (미가입 이메일 초대)
 ] as const;
 
 export type IdPrefix = (typeof ID_PREFIXES)[number];

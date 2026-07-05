@@ -161,6 +161,30 @@ export function makeConversationRepo(db: Database) {
       return row?.count ?? 0;
     },
 
+    /**
+     * 읽음 표시 갱신(read receipts) — by 주체가 읽은 마지막 메시지 id를 기록.
+     * 04 §5.1/§5.3 read.mark 처리의 저장 지점. 갱신된 대화 행 반환(없으면 undefined).
+     */
+    async setReadMarker(
+      workspaceId: string,
+      conversationId: string,
+      by: "visitor" | "agent",
+      lastMessageId: string,
+    ) {
+      const patch =
+        by === "visitor"
+          ? { visitorLastReadMessageId: lastMessageId }
+          : { agentLastReadMessageId: lastMessageId };
+      const [row] = await db
+        .update(conversations)
+        .set({ ...patch, updatedAt: new Date() })
+        .where(
+          and(eq(conversations.workspaceId, workspaceId), eq(conversations.id, conversationId)),
+        )
+        .returning();
+      return row;
+    },
+
     async touchLastMessage(workspaceId: string, conversationId: string, at: Date = new Date()) {
       const [row] = await db
         .update(conversations)

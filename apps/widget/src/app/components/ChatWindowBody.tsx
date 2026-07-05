@@ -17,6 +17,7 @@ export function ChatWindowBody({ snap, controller }: Props) {
         items={snap.items}
         localSystemLines={snap.localSystemLines}
         typing={snap.typing}
+        readReceiptMsgId={snap.readReceiptMsgId}
         onRetry={(id) => controller.retry(id)}
       />
       <QuickReplies replies={snap.quickReplies} onPick={(txt) => controller.sendQuickReply(txt)} />

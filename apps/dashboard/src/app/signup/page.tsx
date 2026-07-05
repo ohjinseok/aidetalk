@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
 import { useToast } from "../../components/providers/ToastProvider";
 import { Button } from "../../components/ui/Button";
 import { FormRow, Input } from "../../components/ui/Field";
-import { authApi } from "../../lib/api/endpoints";
+import { Spinner } from "../../components/ui/Spinner";
+import { authApi, memberApi } from "../../lib/api/endpoints";
 import { td } from "../../lib/i18n";
 
-export default function SignupPage() {
+function SignupInner() {
   const router = useRouter();
+  const params = useSearchParams();
+  const inviteToken = params.get("inviteToken");
   const toast = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,6 +26,17 @@ export default function SignupPage() {
     setBusy(true);
     try {
       await authApi.signup({ name, email, password });
+      // 초대 링크로 온 가입이면 가입 직후 자동 수락 → 해당 워크스페이스로 이동.
+      if (inviteToken) {
+        try {
+          const res = await memberApi.acceptInvite(inviteToken);
+          router.replace(`/w/${res.member.workspaceId}/inbox`);
+          return;
+        } catch (err) {
+          // 초대 수락 실패(만료 등)여도 가입은 완료 — 안내 후 온보딩으로.
+          toast.error(err);
+        }
+      }
       // 신규 가입은 워크스페이스가 없으므로 온보딩으로.
       router.replace("/onboarding");
     } catch (err) {
@@ -31,6 +45,10 @@ export default function SignupPage() {
       setBusy(false);
     }
   }
+
+  const loginHref = inviteToken
+    ? `/login?inviteToken=${encodeURIComponent(inviteToken)}`
+    : "/login";
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
@@ -68,11 +86,19 @@ export default function SignupPage() {
           {td("dashboard.auth.signupSubmit")}
         </Button>
         <p className="mt-4 text-center text-sm text-gray-500">
-          <Link href="/login" className="text-brand hover:underline">
+          <Link href={loginHref} className="text-brand hover:underline">
             {td("dashboard.auth.toLogin")}
           </Link>
         </p>
       </form>
     </main>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<Spinner />}>
+      <SignupInner />
+    </Suspense>
   );
 }

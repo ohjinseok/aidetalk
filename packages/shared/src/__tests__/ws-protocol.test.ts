@@ -92,6 +92,10 @@ describe("서버 → 위젯 (§5.2)", () => {
       { type: "typing.start", payload: { conversationId: "conv_1", by: "ai" } },
       { type: "typing.stop", payload: { conversationId: "conv_1", by: "human" } },
       { type: "conversation.updated", payload: { conversation: sampleConversation } },
+      {
+        type: "read.update",
+        payload: { conversationId: "conv_1", by: "agent", lastMessageId: "msg_1" },
+      },
       { type: "error", payload: { code: "rate/limited", message: "느려요" } },
     ];
     for (const c of cases) {
@@ -107,6 +111,7 @@ describe("대시보드 → 서버 (§5.3)", () => {
       { type: "subscribe.conversation", payload: { conversationId: "conv_1" } },
       { type: "unsubscribe.conversation", payload: { conversationId: "conv_1" } },
       { type: "typing.set", payload: { conversationId: "conv_1", isTyping: false } },
+      { type: "read.mark", payload: { conversationId: "conv_1", lastMessageId: "msg_1" } },
     ];
     for (const c of cases) {
       expect(dashboardToServerMessageSchema.safeParse(c).success).toBe(true);
@@ -141,6 +146,12 @@ describe("서버 → 대시보드 (§5.4)", () => {
         },
       },
       { type: "presence.update", payload: { conversationId: "conv_1", visitorOnline: true } },
+      { type: "typing.start", payload: { conversationId: "conv_1", by: "visitor" } },
+      { type: "typing.stop", payload: { conversationId: "conv_1", by: "visitor" } },
+      {
+        type: "read.update",
+        payload: { conversationId: "conv_1", by: "visitor", lastMessageId: "msg_1" },
+      },
     ];
     for (const c of cases) {
       expect(serverToDashboardMessageSchema.safeParse(c).success).toBe(true);

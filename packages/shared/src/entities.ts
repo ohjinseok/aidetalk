@@ -44,6 +44,10 @@ export const conversationSchema = z.object({
   mode: conversationModeSchema,
   assigneeId: z.string().nullable(),
   lastMessageAt: z.string().nullable(),
+  // 양방향 읽음 표시(read receipts) — 각 주체가 읽은 마지막 메시지 id. 03 conversations.
+  // 전방호환을 위해 optional(구버전 응답 허용). 값 없으면 null.
+  visitorLastReadMessageId: z.string().nullable().optional(),
+  agentLastReadMessageId: z.string().nullable().optional(),
   metadata: z.record(z.unknown()),
   createdAt: z.string(),
 });

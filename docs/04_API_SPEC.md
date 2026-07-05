@@ -85,12 +85,21 @@ GET  /v1/me                 → { user, memberships: [{ workspaceId, workspaceNa
 POST  /v1/workspaces                      { name, segment } → 201 { workspace } (생성자=owner)
 GET   /v1/workspaces/:wsId               → { workspace }
 PATCH /v1/workspaces/:wsId/settings      { widgetSettings?, attributionRule?, name? } → { workspace }  // owner만
-POST  /v1/workspaces/:wsId/members       { email, role } → 201 { member(invited), inviteUrl }  // owner만, planEnforcer.assertCanAddSeat
+POST  /v1/workspaces/:wsId/members       { email, role } → 201 { member?, invite?, inviteUrl }  // owner만, planEnforcer.assertCanAddSeat(초대 시점)
 POST  /v1/invites/accept                  { inviteToken } → { member }  // 로그인 상태에서
 GET   /v1/workspaces/:wsId/members       → { items }
 DELETE /v1/workspaces/:wsId/members/:id  → 204  // owner만
 ```
 - 이후 모든 `/v1/workspaces/:wsId/...`는 미들웨어에서 membership 검증 → 아니면 `403 auth/forbidden`.
+- **POST /members 분기(owner만, planEnforcer.assertCanAddSeat는 초대 행 생성 전에):**
+  - 기가입 이메일 → 기존 members 초대 흐름 유지: `member(status=invited)` 생성 + `inviteUrl` 반환. res `{ member, inviteUrl }`.
+  - 미가입 이메일 → `invites` 행 생성(토큰은 sha256만 저장, raw는 inviteUrl 1회 노출). res `{ member: null, invite, inviteUrl }`.
+  - 두 경우 모두 `inviteUrl = {DASHBOARD_URL}/invites/accept?token={raw}`.
+- **POST /invites/accept(로그인 상태)** — 토큰으로 두 종류 초대를 모두 수락:
+  - `invites` 행(미가입 이메일 초대): token_hash 조회 → 만료(7일)/재수락 거부 + 로그인 사용자 이메일 == invite.email 검증 → markAccepted(원자적) 후 members 행 생성.
+  - `members` 행(기가입 계정 초대): inviteToken(raw) 조회 → 대상 계정 일치 검증 → status=active.
+  - 실패: 만료/무효 `404 not_found`, 이미 수락/이미 멤버 `409 conflict`, 대상 불일치 `403 auth/forbidden`.
+  - 대시보드 흐름: 미로그인으로 초대 링크 접속 시 `/invites/accept`가 가입/로그인으로 유도(토큰 유지). 가입/로그인 직후 자동 수락 → 해당 워크스페이스로 이동.
 
 ### Agent 커넥터
 ```
@@ -174,15 +183,16 @@ GET /healthz              → 200 { ok, version }
 | `message.send` | `{ conversationId, clientMsgId, text }` | text 1~4000자. 중복 clientMsgId면 기존 메시지로 ack. 이 대화의 `conv:{id}:all` 자동 구독 |
 | `conversation.subscribe` | `{ conversationId }` | 손님 소켓을 `conv:{id}:all`에 명시 구독(상대 메시지 실시간 수신). 기존 대화 복원/REST 우선 전송 시 누락 방지. `conv:{id}:agents`는 절대 구독 안 함(규칙 9) |
 | `typing.set` | `{ conversationId, isTyping }` | 손님 타이핑 상태 (상담원 화면 표시용) |
-| `read.mark` | `{ conversationId, lastMessageId }` | 읽음 처리 |
+| `read.mark` | `{ conversationId, lastMessageId }` | 읽음 처리. 저장 후 상담원에게 read.update(by="visitor") 브로드캐스트 |
 
 ### 5.2 서버 → 위젯
 | type | payload |
 |---|---|
 | `message.ack` | `{ clientMsgId, message }` — 저장 확정. 위젯은 임시 말풍선을 확정으로 치환 |
 | `message.new` | `{ message }` — 상대(AI/상담원/시스템) 메시지 |
-| `typing.start` / `typing.stop` | `{ conversationId, by: "ai" \| "human" }` |
+| `typing.start` / `typing.stop` | `{ conversationId, by: "ai" \| "human" }` — ⚠️ 손님 타이핑(by="visitor")은 위젯에 되돌려보내지 않음 |
 | `conversation.updated` | `{ conversation }` — mode/status 변경 시 |
+| `read.update` | `{ conversationId, by: "visitor"\|"agent", lastMessageId }` — 상대 읽음 통지. 위젯은 by="agent"로 내 마지막 메시지에 "읽음" 표시 |
 | `error` | `{ code, message, ref? }` — 예: rate/limited |
 
 ### 5.3 대시보드 → 서버
@@ -190,7 +200,8 @@ GET /healthz              → 200 { ok, version }
 |---|---|
 | `subscribe.workspace` | `{ workspaceId }` — 인박스 목록 실시간용. membership 검증 |
 | `subscribe.conversation` / `unsubscribe.conversation` | `{ conversationId }` |
-| `typing.set` | `{ conversationId, isTyping }` |
+| `typing.set` | `{ conversationId, isTyping }` — 상담원 타이핑(by="human"으로 손님에게 전달) |
+| `read.mark` | `{ conversationId, lastMessageId }` — 상담원 열람/포커스 시 읽음 처리. 저장 후 손님에게 read.update(by="agent") 브로드캐스트 |
 
 ### 5.4 서버 → 대시보드
 | type | payload |
@@ -198,6 +209,8 @@ GET /healthz              → 200 { ok, version }
 | `inbox.upsert` | `{ conversationSummary }` — 목록 갱신(새 대화/새 메시지/상태 변경) |
 | `message.new` | `{ message }` — 구독 중 대화 |
 | `conversation.updated` | `{ conversation }` |
+| `typing.start` / `typing.stop` | `{ conversationId, by: "visitor"\|"ai"\|"human" }` — 대시보드는 by="visitor"만 "입력 중…" 표시 |
+| `read.update` | `{ conversationId, by: "visitor"\|"agent", lastMessageId }` — 대시보드는 by="visitor"로 상담원 마지막 메시지에 "읽음" 표시 |
 | `handoff.new` | `{ conversationSummary, reason, summary }` — 브라우저 알림 트리거 |
 | `suggestion.new` | `{ suggestion }` — 어시스트 패널. **agent 채널에만 발행** |
 | `presence.update` | `{ conversationId, visitorOnline: bool }` |
@@ -213,7 +226,7 @@ conv:{conversationId}:agents  → suggestion.new  (⚠️ visitor 소켓은 이 
 ## 6. 공유 객체 형태 (shared zod와 1:1)
 ```ts
 Message = { id, conversationId, role, authorId, content: { type: "text", text, quickReplies?: string[] }, createdAt }
-Conversation = { id, workspaceId, visitorId, status, mode, assigneeId, lastMessageAt, metadata, createdAt }
+Conversation = { id, workspaceId, visitorId, status, mode, assigneeId, lastMessageAt, visitorLastReadMessageId, agentLastReadMessageId, metadata, createdAt }
 ConversationSummary = { conversation, visitor: { id, name, email }, lastMessage: { textPreview, role, createdAt } }
 Suggestion = { id, conversationId, triggerMessageId, draft, rationale, actions, source, outcome, createdAt }
 Event = { id, type, actor, payload, createdAt }

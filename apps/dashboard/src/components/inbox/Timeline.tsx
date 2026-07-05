@@ -35,10 +35,13 @@ export function Timeline({
   items,
   wsId,
   tracked,
+  readReceiptMsgId,
 }: {
   items: TimelineItem[];
   wsId: string;
   tracked?: TrackedMap;
+  /** 이 메시지 id 아래에 "읽음"을 표시(손님이 읽은 상담원 마지막 메시지). */
+  readReceiptMsgId?: string | null;
 }) {
   return (
     <div className="flex flex-col gap-2 px-4 py-4">
@@ -89,6 +92,9 @@ export function Timeline({
                       ? tf("dashboard.conversation.linkClickedAt", { time: formatHm(link.clickedAt) })
                       : td("dashboard.conversation.linkNotClicked")}
                   </span>
+                ) : null}
+                {readReceiptMsgId && m.id === readReceiptMsgId ? (
+                  <span className="text-brand">{td("dashboard.conversation.readReceipt")}</span>
                 ) : null}
               </div>
             </div>

@@ -105,8 +105,27 @@ export const memberSchema = z.object({
 });
 export type Member = z.infer<typeof memberSchema>;
 
+/** 미가입 이메일 초대 행(invites 테이블) — 04 §2. */
+export const inviteSchema = z.object({
+  id: z.string(),
+  workspaceId: z.string(),
+  email: z.string(),
+  role: roleSchema,
+  status: z.literal("invited"),
+  expiresAt: z.string().nullable(),
+  acceptedAt: z.string().nullable(),
+  createdAt: z.string().nullable(),
+});
+export type Invite = z.infer<typeof inviteSchema>;
+
+/**
+ * POST /members 응답 — 04 §2.
+ * 기가입이면 member(invited) 반환, 미가입이면 member=null + invite(이메일 초대 행).
+ * 두 경우 모두 inviteUrl(/invites/accept?token=) 제공.
+ */
 export const inviteResponseSchema = z.object({
-  member: memberSchema,
+  member: memberSchema.nullable().optional(),
+  invite: inviteSchema.optional(),
   inviteUrl: z.string(),
 });
 

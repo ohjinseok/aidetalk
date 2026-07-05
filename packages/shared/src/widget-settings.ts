@@ -19,7 +19,15 @@ export type LauncherPosition = z.infer<typeof launcherPositionSchema>;
 /** "HH:mm" 24시간 표기. */
 const hhmm = z.string().regex(/^\d{2}:\d{2}$/, "HH:mm 형식이어야 한다.");
 
-/** 운영시간 규칙 — days: 1(월)~7(일) ISO 요일, [open, close) 반열림(서버 widget-settings 평가와 1:1). */
+/**
+ * 운영시간 규칙 — days: 1(월)~7(일) ISO 요일. open/close는 "HH:mm".
+ * 판정 규칙(서버 lib/widget-settings 평가와 1:1, 03/06 문서와 동일):
+ *  - open < close  → [open, close) 반열림(예 09:00~18:00).
+ *  - open > close  → 자정 넘김: [open, 24:00) ∪ [00:00, close) (예 22:00~02:00).
+ *  - open == close → 24시간 영업(항상 운영시간)으로 해석.
+ * 요일 판정은 "현재 시각"의 요일 기준이다(자정 넘김 규칙이 익일 새벽을 포함할 때, 전날 요일이
+ *  아니라 그 새벽 시점의 요일 rule로 판정 — v1 단순화).
+ */
 export const officeHoursRuleSchema = z.object({
   days: z.array(z.number().int().min(1).max(7)),
   open: hhmm,

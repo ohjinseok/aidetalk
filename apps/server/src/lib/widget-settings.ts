@@ -5,8 +5,10 @@
  *        offHoursMessage }
  * days는 1..7 = 월..일(ISO 요일). tz는 IANA 타임존.
  *
- * TODO(question): officeHours.rules의 open==close 또는 자정 넘김(close < open, 예 22:00~02:00)
- *   해석이 03 문서에 미정. 현재는 [open, close) 반열림·자정 미넘김으로 가정.
+ * 운영시간 판정 규칙(03/06 문서·shared officeHoursRuleSchema와 1:1):
+ *  - open < close  → [open, close) 반열림(예 09:00~18:00).
+ *  - open > close  → 자정 넘김: [open, 24:00) ∪ [00:00, close) (예 22:00~02:00).
+ *  - open == close → 24시간 영업(해당 요일 항상 운영시간)으로 해석.
  */
 import { z } from "zod";
 
@@ -59,7 +61,14 @@ export function isOfficeHours(settings: Record<string, unknown>, now: Date = new
     if (!rule.days.includes(weekday)) continue;
     const open = toMinutes(rule.open);
     const close = toMinutes(rule.close);
-    if (minutes >= open && minutes < close) return true;
+    if (open === close) return true; // 24시간 영업
+    if (open < close) {
+      // 같은 날 [open, close)
+      if (minutes >= open && minutes < close) return true;
+    } else {
+      // 자정 넘김 [open, 24:00) ∪ [00:00, close)
+      if (minutes >= open || minutes < close) return true;
+    }
   }
   return false;
 }

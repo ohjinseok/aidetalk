@@ -151,6 +151,11 @@ export class DashboardSocket {
     this.rawSend({ type: "typing.set", payload: { conversationId, isTyping } });
   }
 
+  /** 읽음 처리 — 대화 열람/포커스 시. 저장 후 서버가 손님에게 read.update(by=agent) 브로드캐스트. */
+  markRead(conversationId: string, lastMessageId: string): void {
+    this.rawSend({ type: "read.mark", payload: { conversationId, lastMessageId } });
+  }
+
   onEvent(handler: EventHandler): () => void {
     this.eventHandlers.add(handler);
     return () => this.eventHandlers.delete(handler);

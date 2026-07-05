@@ -104,6 +104,7 @@ export const WIDGET_CSS = `
 }
 .od-meta { font-size: 11px; color: var(--od-muted); margin-top: 2px; text-align: right; }
 .od-retry { background: none; border: none; color: #2563eb; cursor: pointer; font-size: 11px; padding: 0; margin-left: 6px; }
+.od-read { color: var(--od-primary); margin-left: 6px; }
 .od-typing { display: flex; gap: 4px; padding: 8px 12px; }
 .od-typing span {
   width: 6px; height: 6px; border-radius: 50%; background: var(--od-muted);

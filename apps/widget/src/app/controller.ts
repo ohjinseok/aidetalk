@@ -14,6 +14,7 @@ import {
 } from "./lib/connection";
 import { newClientMsgId } from "./lib/ids";
 import { MessageStore } from "./lib/messageStore";
+import { readReceiptMsgId } from "./lib/readReceipt";
 import type {
   ConnectionStatus,
   DisplayItem,
@@ -44,6 +45,8 @@ export interface WidgetSnapshot {
   typing: TypingState;
   unread: number;
   emailPromptVisible: boolean;
+  /** 이 손님 메시지 id 밑에 "읽음"을 표시(상담원이 읽은 경우). 없으면 null. */
+  readReceiptMsgId: string | null;
   error: string | null;
 }
 
@@ -61,6 +64,8 @@ export class WidgetController {
   private mode: ConnectionMode = "ws";
   private typing: TypingState = { ai: false, human: false };
   private unread = 0;
+  /** 상담원이 읽음 처리한 마지막 메시지 id(read.update by="agent")로 갱신. */
+  private agentLastReadMessageId: string | null = null;
   private emailPromptVisible = false;
   private emailPromptShown = false;
   private emailCaptured = false;
@@ -121,8 +126,14 @@ export class WidgetController {
       typing: this.typing,
       unread: this.unread,
       emailPromptVisible: this.emailPromptVisible,
+      readReceiptMsgId: this.computeReadReceiptMsgId(),
       error: this.error,
     };
+  }
+
+  /** "읽음" 표시 대상 손님 메시지 id(순수 로직은 lib/readReceipt). */
+  private computeReadReceiptMsgId(): string | null {
+    return readReceiptMsgId(this.store.confirmedList(), this.agentLastReadMessageId);
   }
 
   // ---------- 상태 머신 §3 ----------
@@ -184,6 +195,8 @@ export class WidgetController {
         // 기존 열린 대화 복원 — 새 메시지를 보내지 않아도 상대 메시지를 실시간 수신해야 한다.
         this.subscribeConversation();
         await this.syncMessages();
+        // 열린 채로 기존 대화를 복원했으면 즉시 읽음 처리(대화 열림 시 read.mark).
+        this.markReadIfPossible();
       }
       this.phase = "ready";
       this.emit();
@@ -398,6 +411,12 @@ export class WidgetController {
         break;
       case "conversation.updated":
         // mode/status 변경 반영(현재는 상태 표시만).
+        break;
+      case "read.update":
+        // 상담원이 읽음 처리 → 내 마지막 메시지에 "읽음" 표시(by="visitor"는 내 자신 → 무시).
+        if (msg.payload.by === "agent") {
+          this.agentLastReadMessageId = msg.payload.lastMessageId;
+        }
         break;
       case "error":
         this.error = msg.payload.code;

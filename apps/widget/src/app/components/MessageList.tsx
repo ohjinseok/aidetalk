@@ -7,6 +7,8 @@ interface Props {
   items: DisplayItem[];
   localSystemLines: string[];
   typing: TypingState;
+  /** 이 손님 메시지 id 밑에 "읽음"을 표시(상담원이 읽은 경우). */
+  readReceiptMsgId: string | null;
   onRetry: (clientMsgId: string) => void;
 }
 
@@ -29,7 +31,7 @@ function timeLabel(iso: string): string {
 }
 
 /** 말풍선/시스템 라인/날짜 구분선/타이핑 인디케이터(06 §2). */
-export function MessageList({ items, localSystemLines, typing, onRetry }: Props) {
+export function MessageList({ items, localSystemLines, typing, readReceiptMsgId, onRetry }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -94,11 +96,15 @@ export function MessageList({ items, localSystemLines, typing, onRetry }: Props)
       continue;
     }
     const side = m.role === "visitor" ? "visitor" : "other";
+    const showRead = m.role === "visitor" && m.id === readReceiptMsgId;
     rows.push(
       <div class={`od-row od-${side}`} key={m.id}>
         <div>
           <div class="od-bubble">{m.content.text}</div>
-          <div class="od-meta">{timeLabel(m.createdAt)}</div>
+          <div class="od-meta">
+            {timeLabel(m.createdAt)}
+            {showRead ? <span class="od-read">{t("widget.readReceipt")}</span> : null}
+          </div>
         </div>
       </div>,
     );

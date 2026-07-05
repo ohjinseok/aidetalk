@@ -42,6 +42,8 @@ export function serializeConversation(row: {
   mode: string;
   assigneeId: string | null;
   lastMessageAt: Date | string | null;
+  visitorLastReadMessageId?: string | null;
+  agentLastReadMessageId?: string | null;
   metadata: Record<string, unknown>;
   createdAt: Date | string;
 }): Conversation {
@@ -53,6 +55,8 @@ export function serializeConversation(row: {
     mode: row.mode as ConversationMode,
     assigneeId: row.assigneeId,
     lastMessageAt: row.lastMessageAt ? toIso(row.lastMessageAt) : null,
+    visitorLastReadMessageId: row.visitorLastReadMessageId ?? null,
+    agentLastReadMessageId: row.agentLastReadMessageId ?? null,
     metadata: row.metadata,
     createdAt: toIso(row.createdAt),
   };

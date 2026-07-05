@@ -4,6 +4,7 @@
  */
 export * from "./workspaces";
 export * from "./auth";
+export * from "./invites";
 export * from "./agents";
 export * from "./visitors";
 export * from "./conversations";

@@ -77,6 +77,11 @@ export class MessageStore {
     return sorted[sorted.length - 1] ?? null;
   }
 
+  /** 확정 메시지 정렬 목록(created_at asc, 동률 id) — 읽음 표시 계산 등. */
+  confirmedList(): Message[] {
+    return this.sortedConfirmed();
+  }
+
   private sortedConfirmed(): Message[] {
     return [...this.confirmed.values()].sort((a, b) => {
       if (a.createdAt === b.createdAt) return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;

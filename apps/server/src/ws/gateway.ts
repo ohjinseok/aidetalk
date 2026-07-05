@@ -126,6 +126,11 @@ export function createGateway(ctx: AppContext): Gateway {
       // 방어선: visitor는 agents 채널을 구독하지 않지만 이중으로 차단.
       if (isAgentsChannel(channel)) return false;
       if (env.type === "suggestion.new") return false;
+      // 손님 타이핑은 위젯에 되돌려보내지 않는다(상담원 표시 전용, 규칙: 위젯 UI는 ai|human만).
+      if (env.type === "typing.start" || env.type === "typing.stop") {
+        const by = (env.payload as { by?: string } | undefined)?.by;
+        if (by === "visitor") return false;
+      }
       // 자기 자신의 손님 메시지 echo 제외(ack로 이미 처리됨).
       if (env.type === "message.new") {
         const role = (env.payload as { message?: { role?: string } } | undefined)?.message?.role;
@@ -299,15 +304,26 @@ export function createGateway(ctx: AppContext): Gateway {
         return;
       }
       case "typing.set": {
-        // 손님 타이핑 → 상담원 화면 표시.
-        // TODO(question): 04 §5.4에 visitor→dashboard 타이핑 WS 타입이 없다.
-        //   by 열거형은 ai|human뿐이라 손님 타이핑을 표현할 스키마가 없어 이번 웨이브는 미전달.
+        // 손님 타이핑 → conv:all에 by="visitor" 브로드캐스트(상담원 화면 "입력 중…").
+        // 위젯 소켓에는 되돌려보내지 않는다(shouldDeliver에서 visitor typing 필터).
         await assertVisitorOwns(visitor, msg.payload.conversationId);
+        await ctx.broadcaster.typing(msg.payload.conversationId, "visitor", msg.payload.isTyping);
         return;
       }
       case "read.mark": {
-        // TODO(question): 읽음 상태 저장 모델이 03 스키마에 없어 이번 웨이브는 수용 후 무동작.
+        // 손님 읽음 처리 저장 + read.update(by="visitor") 브로드캐스트(상담원 "읽음" 표시).
         await assertVisitorOwns(visitor, msg.payload.conversationId);
+        await ctx.repos.conversation.setReadMarker(
+          visitor.workspaceId,
+          msg.payload.conversationId,
+          "visitor",
+          msg.payload.lastMessageId,
+        );
+        await ctx.broadcaster.readUpdate(
+          msg.payload.conversationId,
+          "visitor",
+          msg.payload.lastMessageId,
+        );
         return;
       }
     }
@@ -365,6 +381,26 @@ export function createGateway(ctx: AppContext): Gateway {
         );
         if (!wsId) return;
         await ctx.broadcaster.typing(msg.payload.conversationId, "human", msg.payload.isTyping);
+        return;
+      }
+      case "read.mark": {
+        // 상담원 읽음 처리 저장 + read.update(by="agent") 브로드캐스트(손님 "읽음" 표시).
+        const wsId = await findMemberWorkspaceOfConversation(
+          userId,
+          msg.payload.conversationId,
+        );
+        if (!wsId) return;
+        await ctx.repos.conversation.setReadMarker(
+          wsId,
+          msg.payload.conversationId,
+          "agent",
+          msg.payload.lastMessageId,
+        );
+        await ctx.broadcaster.readUpdate(
+          msg.payload.conversationId,
+          "agent",
+          msg.payload.lastMessageId,
+        );
         return;
       }
     }

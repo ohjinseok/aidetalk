@@ -13,7 +13,8 @@
 
 ```
 workspaces 1─N members (users 조인)      workspaces 1─N agents 1─N agent_logs
-workspaces 1─N visitors                  workspaces 1─N webhooks (Should)
+workspaces 1─N invites (미가입 이메일)   workspaces 1─N webhooks (Should)
+workspaces 1─N visitors
 workspaces 1─N conversations 1─N messages
 conversations 1─N conversation_events
 conversations 1─N tracked_links ─N conversions     (전환 트래킹, S1)
@@ -38,6 +39,10 @@ export const workspaces = pgTable("workspaces", {
   // { primaryColor: "#4F46E5", greeting: string, tone: "formal"|"casual",
   //   launcherPosition: "right"|"left", officeHours: { enabled, tz, rules: [{days:[1..7], open:"09:00", close:"18:00"}],
   //   offHoursMessage: string } }
+  // officeHours.rules 판정 규칙(서버 lib/widget-settings 평가와 1:1):
+  //   open < close  → [open, close) 반열림(예 09:00~18:00)
+  //   open > close  → 자정 넘김: [open, 24:00) ∪ [00:00, close) (예 22:00~02:00)
+  //   open == close → 24시간 영업(해당 요일 항상 운영시간)
   attributionRule: text("attribution_rule").notNull().default("last_click"), // 'last_click' | 'first_click'
   createdAt: ts(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -61,6 +66,23 @@ export const members = pgTable("members", {
   inviteToken: text("invite_token"),                 // 초대 수락 전까지만 값 존재
   createdAt: ts(),
 }, (t) => [uniqueIndex("members_ws_user").on(t.workspaceId, t.userId)]);
+
+// ---------- invites (미가입 이메일 멤버 초대) ----------
+// members는 user_id NOT NULL FK라 아직 가입하지 않은 이메일을 담을 수 없다.
+// invites는 "이메일 + 역할 + 토큰"만 담고, 초대 대상이 가입/로그인해 토큰을 수락하면 members 행을 만든다.
+export const invites = pgTable("invites", {
+  id: text("id").primaryKey(),                       // inv_
+  workspaceId: text("workspace_id").notNull().references(() => workspaces.id),
+  email: text("email").notNull(),                    // 초대 대상 이메일(미가입일 수 있음)
+  role: text("role").notNull(),                      // 'owner' | 'agent_member'
+  tokenHash: text("token_hash").notNull(),           // sha256(raw token). 원문 저장 금지(규칙 5), inviteUrl로 1회 노출
+  invitedBy: text("invited_by").notNull().references(() => users.id),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(), // 발급 + 7일
+  acceptedAt: timestamp("accepted_at", { withTimezone: true }),         // 수락 전 null(멱등/재수락 거부)
+  createdAt: ts(),
+}, (t) => [index("invites_ws_email").on(t.workspaceId, t.email)]);
+// 수락 흐름: POST /v1/invites/accept — 로그인 사용자 이메일 == invite.email 확인, 만료/재수락 거부,
+//   markAccepted(원자적) 후 members 행 생성.
 
 // ---------- agents (AI 커넥터) ----------
 export const agents = pgTable("agents", {
@@ -101,6 +123,10 @@ export const conversations = pgTable("conversations", {
   mode: text("mode").notNull().default("ai"),        // 'ai' | 'human' — 핸드오프 핵심 상태
   assigneeId: text("assignee_id"),                   // FK users, mode=human일 때 담당
   lastMessageAt: timestamp("last_message_at", { withTimezone: true }),
+  // 양방향 읽음 표시(read receipts) — 각 주체가 읽은 마지막 메시지 id. 미읽음이면 null.
+  // 비교는 id 정렬이 아니라 대상 메시지의 created_at으로 한다(msg_ nanoid는 단조 아님).
+  visitorLastReadMessageId: text("visitor_last_read_message_id"),
+  agentLastReadMessageId: text("agent_last_read_message_id"),
   metadata: jsonb("metadata").notNull().default({}), // { startPageUrl, referrer, uaSummary }
   createdAt: ts(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -211,10 +237,11 @@ export const webhooks = pgTable("webhooks", {
 ```
 workspaceRepo:  create / getById / updateSettings / updatePlan
 userRepo:       create / getByEmail / verifyPassword
-memberRepo:     invite / acceptInvite / list / remove / getRole
+memberRepo:     addActive / invite / acceptInvite / getByInviteToken / listByUser / list / remove / getRole
+inviteRepo:     create / getByTokenHash / markAccepted(원자적·재수락 거부) / listPending   // 미가입 이메일 초대
 agentRepo:      create(secret 해시화) / update / setStatus / bumpFailure(성공시 reset) / getActive
 visitorRepo:    getOrCreateByToken / updateProfile / mergeByEmail / touchLastSeen
-conversationRepo: create / getById / listForInbox(status, cursor) / setMode / assign / setStatus / touchLastMessage
+conversationRepo: create / getById / listForInbox(status, cursor) / setMode / assign / setStatus / setReadMarker(by) / touchLastMessage
 messageRepo:    append(clientMsgId 중복 시 기존 행 반환) / listAfter(cursor) / listRecent(n)
 eventRepo:      append / listByConversation
 agentLogRepo:   append / listByAgent(cursor) / purgeOlderThan(days)

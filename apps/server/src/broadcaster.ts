@@ -18,7 +18,13 @@ import { channels } from "./pubsub/channels";
 export interface Broadcaster {
   messageNew(conversationId: string, message: Message): Promise<void>;
   conversationUpdated(conversation: Conversation): Promise<void>;
-  typing(conversationId: string, by: "ai" | "human", isTyping: boolean): Promise<void>;
+  typing(conversationId: string, by: "ai" | "human" | "visitor", isTyping: boolean): Promise<void>;
+  /** 읽음 표시 통지 — conv:all 채널(위젯+대시보드 공용). 04 §5. */
+  readUpdate(
+    conversationId: string,
+    by: "visitor" | "agent",
+    lastMessageId: string,
+  ): Promise<void>;
   inboxUpsert(workspaceId: string, summary: ConversationSummary): Promise<void>;
   /** 핸드오프 알림 — ws:{id}:inbox 채널(agent 소켓 전용). 브라우저 알림 트리거(§5.4). */
   handoffNew(
@@ -51,6 +57,12 @@ export function createBroadcaster(pubsub: PubSubAdapter): Broadcaster {
       await pubsub.publish(
         channels.convAll(conversationId),
         envelope(isTyping ? "typing.start" : "typing.stop", { conversationId, by }),
+      );
+    },
+    async readUpdate(conversationId, by, lastMessageId) {
+      await pubsub.publish(
+        channels.convAll(conversationId),
+        envelope("read.update", { conversationId, by, lastMessageId }),
       );
     },
     async inboxUpsert(workspaceId, summary) {

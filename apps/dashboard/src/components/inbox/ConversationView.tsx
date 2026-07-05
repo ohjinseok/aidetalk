@@ -7,6 +7,7 @@ import type { Conversation, Message, Suggestion } from "@aidetalk/shared";
 import { assistApi, inboxApi, memberApi, trackingApi } from "../../lib/api/endpoints";
 import { td } from "../../lib/i18n";
 import type { ConversationDetail, ConversationTracking, Member } from "../../lib/api/schemas";
+import { readReceiptMsgId as computeReadReceiptMsgId } from "../../lib/readReceipt";
 import { mergeTimeline } from "../../lib/timeline";
 import { upsertMessage } from "../../lib/timeline";
 import { useSocketEvent, useSocket } from "../providers/SocketProvider";
@@ -35,6 +36,9 @@ export function ConversationView({ convId }: { convId: string }) {
   const [tracking, setTracking] = useState<ConversationTracking | null>(null);
 
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  // 양방향 읽음 표시(read receipts): 손님이 읽은 마지막 메시지 id + 손님 타이핑 상태.
+  const [visitorLastReadId, setVisitorLastReadId] = useState<string | null>(null);
+  const [visitorTyping, setVisitorTyping] = useState(false);
   const [dimmed, setDimmed] = useState<Set<string>>(new Set());
   const [composer, setComposer] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -57,6 +61,8 @@ export function ConversationView({ convId }: { convId: string }) {
         if (!alive) return;
         setDetail(d);
         setConversation(d.conversation);
+        setVisitorLastReadId(d.conversation.visitorLastReadMessageId ?? null);
+        setVisitorTyping(false);
 
         const msgs = await inboxApi.messages(wsId, convId, { limit: 50 });
         if (!alive) return;
@@ -101,6 +107,13 @@ export function ConversationView({ convId }: { convId: string }) {
     return () => socket.unsubscribeConversation(convId);
   }, [socket, convId]);
 
+  // ---- 열람/새 메시지 시 읽음 처리(read.mark) ----
+  // 상담원이 이 대화를 보고 있으면 마지막 메시지를 읽음 처리 → 손님에게 "읽음" 표시.
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (last) socket.markRead(convId, last.id);
+  }, [socket, convId, messages]);
+
   useSocketEvent((msg) => {
     if (msg.type === "message.new") {
       const m = msg.payload.message;
@@ -108,6 +121,7 @@ export function ConversationView({ convId }: { convId: string }) {
       setMessages((prev) => upsertMessage(prev, m));
       // 손님 새 메시지 → 이전 pending 카드 dim(07 §2.3)
       if (m.role === "visitor") {
+        setVisitorTyping(false);
         setSuggestions((cur) => {
           setDimmed((prev) => {
             const next = new Set(prev);
@@ -122,6 +136,16 @@ export function ConversationView({ convId }: { convId: string }) {
     } else if (msg.type === "suggestion.new") {
       const s = msg.payload.suggestion;
       if (s.conversationId === convId) setSuggestions((prev) => [s, ...prev]);
+    } else if (msg.type === "read.update") {
+      // 손님이 읽음 처리 → 상담원 마지막 메시지에 "읽음" 표시(by="agent"는 내 자신 → 무시).
+      if (msg.payload.conversationId === convId && msg.payload.by === "visitor") {
+        setVisitorLastReadId(msg.payload.lastMessageId);
+      }
+    } else if (msg.type === "typing.start" || msg.type === "typing.stop") {
+      // 손님 타이핑만 "입력 중…"으로 표시(ai/human은 상담원 화면에 불필요).
+      if (msg.payload.conversationId === convId && msg.payload.by === "visitor") {
+        setVisitorTyping(msg.type === "typing.start");
+      }
     }
   });
 
@@ -138,6 +162,12 @@ export function ConversationView({ convId }: { convId: string }) {
     }
     return map;
   }, [tracking]);
+
+  // 상담원이 보낸 마지막 메시지 밑에 "읽음"을 표시할 대상 id(순수 로직은 lib/readReceipt).
+  const readReceiptMsgId = useMemo(
+    () => computeReadReceiptMsgId(messages, visitorLastReadId),
+    [messages, visitorLastReadId],
+  );
 
   const acceptRate = useMemo(() => {
     const decided = suggestions.filter((s) => s.outcome !== "pending");
@@ -313,8 +343,20 @@ export function ConversationView({ convId }: { convId: string }) {
 
         {/* 스레드 */}
         <div className="min-h-0 flex-1 overflow-y-auto bg-gray-50">
-          <Timeline items={timeline} wsId={wsId} tracked={trackedMap} />
+          <Timeline
+            items={timeline}
+            wsId={wsId}
+            tracked={trackedMap}
+            readReceiptMsgId={readReceiptMsgId}
+          />
         </div>
+
+        {/* 손님 입력 중 표시 */}
+        {visitorTyping ? (
+          <div className="px-4 py-1 text-xs text-gray-400">
+            {td("dashboard.conversation.visitorTyping")}
+          </div>
+        ) : null}
 
         {/* 컴포저 */}
         <Composer

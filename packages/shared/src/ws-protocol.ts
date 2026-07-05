@@ -23,8 +23,15 @@ export type WsEnvelope = z.infer<typeof wsEnvelopeSchema>;
 /** 메시지 텍스트 제약 — §5.1 message.send, 손님 전송 공통. */
 const messageText = z.string().min(1).max(4000);
 
-/** 타이핑 주체 — §5.2 typing.start/stop. */
-export const typingBySchema = z.enum(["ai", "human"]);
+/** 읽음 표시 주체 — §5 read.update. */
+export const readBySchema = z.enum(["visitor", "agent"]);
+
+/**
+ * 타이핑 주체 — §5.2/§5.4 typing.start/stop.
+ * "visitor"는 손님 타이핑을 상담원 화면에 표시하기 위한 값(§5.4). 게이트웨이는 손님 타이핑을
+ * 위젯 소켓에는 되돌려보내지 않는다(위젯 UI는 ai|human만 표시).
+ */
+export const typingBySchema = z.enum(["ai", "human", "visitor"]);
 
 // ---------- 5.1 위젯 → 서버 ----------
 export const widgetToServerMessageSchema = z.discriminatedUnion("type", [
@@ -98,6 +105,15 @@ export const serverToWidgetMessageSchema = z.discriminatedUnion("type", [
     }),
   }),
   z.object({
+    // 상대(상담원)의 읽음 처리 통지 — 위젯은 by="agent"를 받아 내 마지막 메시지에 "읽음" 표시.
+    type: z.literal("read.update"),
+    payload: z.object({
+      conversationId: z.string(),
+      by: readBySchema,
+      lastMessageId: z.string(),
+    }),
+  }),
+  z.object({
     type: z.literal("error"),
     payload: z.object({
       code: z.string(),
@@ -135,6 +151,14 @@ export const dashboardToServerMessageSchema = z.discriminatedUnion("type", [
       isTyping: z.boolean(),
     }),
   }),
+  z.object({
+    // 상담원이 대화를 열람/포커스 → 읽음 처리. 저장 후 손님에게 read.update(by=agent) 브로드캐스트.
+    type: z.literal("read.mark"),
+    payload: z.object({
+      conversationId: z.string(),
+      lastMessageId: z.string(),
+    }),
+  }),
 ]);
 export type DashboardToServerMessage = z.infer<typeof dashboardToServerMessageSchema>;
 
@@ -156,6 +180,30 @@ export const serverToDashboardMessageSchema = z.discriminatedUnion("type", [
     type: z.literal("conversation.updated"),
     payload: z.object({
       conversation: conversationSchema,
+    }),
+  }),
+  z.object({
+    // 손님/AI/상담원 타이핑 — 대시보드는 by="visitor"만 "입력 중…"으로 표시(§5.4).
+    type: z.literal("typing.start"),
+    payload: z.object({
+      conversationId: z.string(),
+      by: typingBySchema,
+    }),
+  }),
+  z.object({
+    type: z.literal("typing.stop"),
+    payload: z.object({
+      conversationId: z.string(),
+      by: typingBySchema,
+    }),
+  }),
+  z.object({
+    // 상대(손님)의 읽음 처리 통지 — 대시보드는 by="visitor"를 받아 상담원 마지막 메시지에 "읽음" 표시.
+    type: z.literal("read.update"),
+    payload: z.object({
+      conversationId: z.string(),
+      by: readBySchema,
+      lastMessageId: z.string(),
     }),
   }),
   z.object({

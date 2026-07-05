@@ -28,6 +28,7 @@
     "messagePending": "전송 중",
     "messageFailed": "전송 실패",
     "messageRetry": "다시 시도",
+    "readReceipt": "읽음",
     "dateToday": "오늘",
     "dateYesterday": "어제",
     "offHoursDefault": "지금은 상담 운영 시간이 아닙니다. 메시지를 남겨주시면 확인 후 답변드리겠습니다.",
@@ -89,7 +90,10 @@
       "acceptDesc": "아래 버튼을 눌러 워크스페이스 초대를 수락합니다",
       "acceptSubmit": "초대 수락",
       "accepted": "초대를 수락했습니다",
-      "missingToken": "유효하지 않은 초대 링크입니다"
+      "missingToken": "유효하지 않은 초대 링크입니다",
+      "needAuth": "초대를 수락하려면 먼저 가입하거나 로그인하세요",
+      "toSignup": "회원가입하고 수락",
+      "toLogin": "로그인하고 수락"
     },
     "nav": {
       "inbox": "인박스",
@@ -128,6 +132,8 @@
       "send": "보내기",
       "modeSwitchHint": "지금 전송하면 AI 응답이 중단되고 상담원(나) 모드로 전환됩니다",
       "viewLog": "로그 보기",
+      "readReceipt": "읽음",
+      "visitorTyping": "손님이 입력 중…",
       "linkClickedAt": "🔗 클릭됨 {time}",
       "linkNotClicked": "미클릭",
       "infoTitle": "방문자 정보",
