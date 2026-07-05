@@ -44,16 +44,18 @@ export function SecretModal({
 
   return (
     <Modal open={open} onClose={onClose} title={td(titleKey)}>
-      <p className="mb-2 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{td(warningKey)}</p>
-      <label className="mb-1 block text-xs font-medium text-gray-500">{td(labelKey)}</label>
+      <p className="mb-2 rounded bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        {td(warningKey)}
+      </p>
+      <label className="mb-1 block text-xs font-medium text-muted-foreground">{td(labelKey)}</label>
       <div className="mb-4 flex items-center gap-2">
-        <code className="flex-1 break-all rounded bg-gray-100 px-3 py-2 font-mono text-sm">
+        <code className="flex-1 break-all rounded bg-muted px-3 py-2 font-mono text-sm text-foreground">
           {secret}
         </code>
         <CopyButton value={secret} />
       </div>
 
-      <p className="mb-2 text-xs font-medium text-gray-500">
+      <p className="mb-2 text-xs font-medium text-muted-foreground">
         {td("dashboard.agents.secretExampleTitle")}
       </p>
       <div className="mb-2 flex gap-1">
@@ -62,14 +64,16 @@ export function SecretModal({
             key={t}
             onClick={() => setTab(t)}
             className={`rounded px-2 py-1 text-xs ${
-              tab === t ? "bg-brand text-white" : "bg-gray-100 text-gray-600"
+              tab === t
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:text-foreground"
             }`}
           >
             {t === "node" ? td("dashboard.agents.exampleNode") : td("dashboard.agents.examplePython")}
           </button>
         ))}
       </div>
-      <pre className="overflow-x-auto rounded bg-gray-900 p-3 text-xs text-gray-100">
+      <pre className="overflow-x-auto rounded bg-muted p-3 text-xs font-mono text-foreground">
         <code>{code}</code>
       </pre>
     </Modal>

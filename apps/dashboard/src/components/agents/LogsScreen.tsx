@@ -20,6 +20,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 // Radix Select는 빈 문자열 value 불가 — "전체" 필터에 센티넬 값을 쓴다.
 const ALL_OUTCOMES = "all";
@@ -80,14 +88,14 @@ export function LogsScreen({ agentId }: { agentId: string }) {
   return (
     <div className="mx-auto max-w-4xl overflow-y-auto p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">{td("dashboard.logs.title")}</h1>
-        <Link href={`/w/${wsId}/agents`} className="text-sm text-brand hover:underline">
+        <h1 className="text-lg font-semibold tracking-tight">{td("dashboard.logs.title")}</h1>
+        <Link href={`/w/${wsId}/agents`} className="text-sm text-primary hover:underline">
           ← {td("dashboard.common.back")}
         </Link>
       </div>
 
       <div className="mb-3 flex items-center gap-2">
-        <span className="text-xs text-gray-500">{td("dashboard.logs.filterOutcome")}</span>
+        <span className="text-xs text-muted-foreground">{td("dashboard.logs.filterOutcome")}</span>
         <Select
           value={outcomeFilter || ALL_OUTCOMES}
           onValueChange={(v) =>
@@ -117,39 +125,37 @@ export function LogsScreen({ agentId }: { agentId: string }) {
           </EmptyHeader>
         </Empty>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-gray-100 text-xs text-gray-400">
-              <tr>
-                <th className="px-3 py-2">{td("dashboard.logs.time")}</th>
-                <th className="px-3 py-2">{td("dashboard.logs.mode")}</th>
-                <th className="px-3 py-2">{td("dashboard.logs.outcome")}</th>
-                <th className="px-3 py-2">{td("dashboard.logs.latency")}</th>
-                <th className="px-3 py-2">{td("dashboard.logs.preview")}</th>
-              </tr>
-            </thead>
-            <tbody>
+        <div className="rounded-lg border border-border bg-card shadow-xs">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{td("dashboard.logs.time")}</TableHead>
+                <TableHead>{td("dashboard.logs.mode")}</TableHead>
+                <TableHead>{td("dashboard.logs.outcome")}</TableHead>
+                <TableHead>{td("dashboard.logs.latency")}</TableHead>
+                <TableHead>{td("dashboard.logs.preview")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {visible.map((log) => {
                 const rs = log.responseSummary as Record<string, unknown> | null | undefined;
                 const latency = rs && typeof rs.latencyMs === "number" ? `${rs.latencyMs}ms` : "";
                 return (
-                  <tr
-                    key={log.id}
-                    className="cursor-pointer border-b border-gray-50 hover:bg-gray-50"
-                    onClick={() => setDetail(log)}
-                  >
-                    <td className="px-3 py-2 text-gray-600">{formatMessageTime(log.createdAt)}</td>
-                    <td className="px-3 py-2">{log.mode}</td>
-                    <td className="px-3 py-2">{td(OUTCOME_KEY[log.outcome])}</td>
-                    <td className="px-3 py-2 text-gray-500">{latency}</td>
-                    <td className="max-w-xs truncate px-3 py-2 text-gray-500">
+                  <TableRow key={log.id} className="cursor-pointer" onClick={() => setDetail(log)}>
+                    <TableCell className="text-muted-foreground">
+                      {formatMessageTime(log.createdAt)}
+                    </TableCell>
+                    <TableCell>{log.mode}</TableCell>
+                    <TableCell>{td(OUTCOME_KEY[log.outcome])}</TableCell>
+                    <TableCell className="text-muted-foreground">{latency}</TableCell>
+                    <TableCell className="max-w-xs truncate text-muted-foreground">
                       {preview(log.requestSummary)}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
 
@@ -169,18 +175,18 @@ export function LogsScreen({ agentId }: { agentId: string }) {
         {detail ? (
           <div className="space-y-3 text-sm">
             <div>
-              <p className="mb-1 text-xs font-medium text-gray-500">
+              <p className="mb-1 text-xs font-medium text-muted-foreground">
                 {td("dashboard.logs.requestSummary")}
               </p>
-              <pre className="overflow-x-auto rounded bg-gray-900 p-3 text-xs text-gray-100">
+              <pre className="overflow-x-auto rounded bg-muted p-3 font-mono text-xs text-foreground">
                 {JSON.stringify(detail.requestSummary, null, 2)}
               </pre>
             </div>
             <div>
-              <p className="mb-1 text-xs font-medium text-gray-500">
+              <p className="mb-1 text-xs font-medium text-muted-foreground">
                 {td("dashboard.logs.responseSummary")}
               </p>
-              <pre className="overflow-x-auto rounded bg-gray-900 p-3 text-xs text-gray-100">
+              <pre className="overflow-x-auto rounded bg-muted p-3 font-mono text-xs text-foreground">
                 {JSON.stringify(detail.responseSummary ?? null, null, 2)}
               </pre>
             </div>
