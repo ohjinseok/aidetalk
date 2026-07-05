@@ -112,6 +112,12 @@
       "switchWorkspace": "워크스페이스 전환",
       "logout": "로그아웃"
     },
+    "theme": {
+      "toggle": "테마 전환",
+      "system": "시스템",
+      "light": "라이트",
+      "dark": "다크"
+    },
     "inbox": {
       "filterOpen": "열림",
       "filterPending": "대기",

@@ -112,6 +112,12 @@
       "switchWorkspace": "Switch workspace",
       "logout": "Log out"
     },
+    "theme": {
+      "toggle": "Toggle theme",
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
     "inbox": {
       "filterOpen": "Open",
       "filterPending": "Pending",
