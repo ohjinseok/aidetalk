@@ -1,7 +1,7 @@
 "use client";
 
 import { td } from "../../lib/i18n";
-import { Button } from "./Button";
+import { Button } from "@/components/ui/button";
 import { Modal } from "./Modal";
 
 /** 파괴적 액션 확인(07 §6). */
@@ -29,10 +29,10 @@ export function ConfirmDialog({
       title={title ?? td("dashboard.confirm.title")}
       footer={
         <>
-          <Button variant="secondary" onClick={onCancel}>
+          <Button variant="outline" onClick={onCancel}>
             {td("dashboard.confirm.cancel")}
           </Button>
-          <Button variant={danger ? "danger" : "primary"} onClick={onConfirm}>
+          <Button variant={danger ? "destructive" : "default"} onClick={onConfirm}>
             {confirmLabel ?? td("dashboard.confirm.confirm")}
           </Button>
         </>

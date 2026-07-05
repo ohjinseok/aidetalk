@@ -3,7 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 
 import { td } from "../../lib/i18n";
-import { Button } from "./Button";
+import { Button } from "@/components/ui/button";
 
 /** 접근성: role=dialog, Esc 닫기, 오버레이 클릭 닫기. */
 export function Modal({

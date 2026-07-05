@@ -7,7 +7,7 @@ import { td } from "../../lib/i18n";
 import type { AttributionRule } from "../../lib/api/schemas";
 import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
-import { Button } from "../ui/Button";
+import { Button } from "@/components/ui/button";
 import { FormRow, Input, Select } from "../ui/Field";
 
 /** EDITION 플래그 — 클라우드에서만 결제 탭 노출(07 §5). 코어는 ee/를 import하지 않음(규칙 8). */
@@ -63,7 +63,7 @@ export function WorkspaceSettingsScreen() {
         </FormRow>
       ) : null}
 
-      <Button variant="primary" disabled={saving || !isOwner} onClick={() => void onSave()}>
+      <Button disabled={saving || !isOwner} onClick={() => void onSave()}>
         {td("dashboard.common.save")}
       </Button>
 
@@ -83,7 +83,7 @@ export function WorkspaceSettingsScreen() {
         </h2>
         <p className="mb-2 text-xs text-red-600">{td("dashboard.workspace.exportHint")}</p>
         {/* TODO(question): 대화 CSV export 엔드포인트가 04 §2에 없음(Could). API 확정 후 연결. */}
-        <Button variant="secondary" size="sm" disabled title="TODO: export endpoint">
+        <Button variant="outline" size="sm" disabled title="TODO: export endpoint">
           {td("dashboard.workspace.exportCsv")}
         </Button>
       </section>

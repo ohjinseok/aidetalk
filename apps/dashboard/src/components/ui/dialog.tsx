@@ -6,6 +6,7 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 import { td } from "@/lib/i18n"
+import { buttonVariants } from "@/components/ui/button"
 
 function Dialog({
   ...props
@@ -110,14 +111,8 @@ function DialogFooter({
     >
       {children}
       {showCloseButton && (
-        <DialogPrimitive.Close asChild>
-          {/* 기존 대문자 Button.tsx와의 케이스 충돌을 피하려 outline 버튼을 인라인 스타일로 구성 */}
-          <button
-            type="button"
-            className="inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-md border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-colors outline-none hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50"
-          >
-            {td("dashboard.common.close")}
-          </button>
+        <DialogPrimitive.Close className={cn(buttonVariants({ variant: "outline" }))}>
+          {td("dashboard.common.close")}
         </DialogPrimitive.Close>
       )}
     </div>

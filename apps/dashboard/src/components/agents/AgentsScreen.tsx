@@ -9,8 +9,8 @@ import type { Agent, AgentStatus, AgentTestResult } from "../../lib/api/schemas"
 import { useAgentStatus } from "../providers/AgentStatusProvider";
 import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
-import { Badge } from "../ui/Badge";
-import { Button } from "../ui/Button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { EmptyState } from "../ui/EmptyState";
 import { FormRow, Input } from "../ui/Field";
@@ -18,9 +18,10 @@ import { Spinner } from "../ui/Spinner";
 import { SecretModal } from "./SecretModal";
 
 function statusBadge(status: AgentStatus) {
-  if (status === "active") return <Badge tone="green">{td("dashboard.agents.statusActive")}</Badge>;
-  if (status === "disabled") return <Badge tone="gray">{td("dashboard.agents.statusDisabled")}</Badge>;
-  return <Badge tone="red">{td("dashboard.agents.statusAutoDisabled")}</Badge>;
+  if (status === "active") return <Badge variant="success">{td("dashboard.agents.statusActive")}</Badge>;
+  if (status === "disabled") return <Badge variant="secondary">{td("dashboard.agents.statusDisabled")}</Badge>;
+  // auto_disabled는 반드시 destructive(빨강) 유지 — 장애 상태를 눈에 띄게.
+  return <Badge variant="destructive">{td("dashboard.agents.statusAutoDisabled")}</Badge>;
 }
 
 export function AgentsScreen() {
@@ -163,7 +164,7 @@ export function AgentsScreen() {
             />
             {td("dashboard.agents.assistEnabled")}
           </label>
-          <Button type="submit" variant="primary" disabled={submitting}>
+          <Button type="submit" disabled={submitting}>
             {td("dashboard.agents.register")}
           </Button>
         </form>
@@ -205,7 +206,7 @@ export function AgentsScreen() {
                 </div>
 
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <Button variant="secondary" size="sm" onClick={() => void onTest(agent)}>
+                  <Button variant="outline" size="sm" onClick={() => void onTest(agent)}>
                     {tr === "loading" ? td("dashboard.agents.testing") : td("dashboard.agents.test")}
                   </Button>
                   {tr && tr !== "loading" ? (

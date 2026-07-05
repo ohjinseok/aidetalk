@@ -13,8 +13,8 @@ import { upsertMessage } from "../../lib/timeline";
 import { useSocketEvent, useSocket } from "../providers/SocketProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
 import { useToast } from "../providers/ToastProvider";
-import { Badge } from "../ui/Badge";
-import { Button } from "../ui/Button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Select } from "../ui/Field";
 import { Spinner } from "../ui/Spinner";
 import { AssistPanel } from "./AssistPanel";
@@ -299,12 +299,12 @@ export function ConversationView({ convId }: { convId: string }) {
             <span className="truncate text-sm font-semibold">
               {detail.visitor.name || detail.visitor.email || convId.slice(-6)}
             </span>
-            <Badge tone={modeHuman ? "green" : "indigo"}>
+            <Badge variant={modeHuman ? "success" : "default"}>
               {modeHuman
                 ? td("dashboard.conversation.modeBadgeHuman")
                 : td("dashboard.conversation.modeBadgeAi")}
             </Badge>
-            <Badge tone={conversation.status === "closed" ? "gray" : "yellow"}>{td(statusKey)}</Badge>
+            <Badge variant={conversation.status === "closed" ? "secondary" : "warning"}>{td(statusKey)}</Badge>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <Select
@@ -321,11 +321,11 @@ export function ConversationView({ convId }: { convId: string }) {
               ))}
             </Select>
             {modeHuman ? (
-              <Button variant="secondary" size="sm" onClick={() => void onReturnToAi()}>
+              <Button variant="outline" size="sm" onClick={() => void onReturnToAi()}>
                 {td("dashboard.conversation.returnToAi")}
               </Button>
             ) : null}
-            <Button variant="secondary" size="sm" onClick={() => void onToggleClose()}>
+            <Button variant="outline" size="sm" onClick={() => void onToggleClose()}>
               {conversation.status === "closed"
                 ? td("dashboard.conversation.reopen")
                 : td("dashboard.conversation.close")}

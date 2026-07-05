@@ -9,7 +9,7 @@ import { td, type TranslationKey } from "../../lib/i18n";
 import type { AgentLog, AgentLogOutcome } from "../../lib/api/schemas";
 import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
-import { Button } from "../ui/Button";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "../ui/EmptyState";
 import { Modal } from "../ui/Modal";
 import { Select } from "../ui/Field";

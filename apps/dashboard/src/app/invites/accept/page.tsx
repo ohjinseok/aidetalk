@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 import { useToast } from "../../../components/providers/ToastProvider";
-import { Button } from "../../../components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Spinner } from "../../../components/ui/Spinner";
 import { authApi, memberApi } from "../../../lib/api/endpoints";
 import { td } from "../../../lib/i18n";
@@ -62,7 +62,7 @@ function AcceptInner() {
       ) : authState === "authed" ? (
         <>
           <p className="mb-5 text-sm text-gray-500">{td("dashboard.invite.acceptDesc")}</p>
-          <Button variant="primary" className="w-full" disabled={busy} onClick={onAccept}>
+          <Button className="w-full" disabled={busy} onClick={onAccept}>
             {td("dashboard.invite.acceptSubmit")}
           </Button>
         </>
@@ -70,12 +70,12 @@ function AcceptInner() {
         <>
           <p className="mb-5 text-sm text-gray-500">{td("dashboard.invite.needAuth")}</p>
           <Link href={`/signup?${tokenQs}`} className="mb-2 block">
-            <Button variant="primary" className="w-full">
+            <Button className="w-full">
               {td("dashboard.invite.toSignup")}
             </Button>
           </Link>
           <Link href={`/login?${tokenQs}`} className="block">
-            <Button variant="secondary" className="w-full">
+            <Button variant="outline" className="w-full">
               {td("dashboard.invite.toLogin")}
             </Button>
           </Link>

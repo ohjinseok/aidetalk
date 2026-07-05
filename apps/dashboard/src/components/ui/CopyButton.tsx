@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { td } from "../../lib/i18n";
-import { Button } from "./Button";
+import { Button } from "@/components/ui/button";
 
 /** 클립보드 복사 버튼 — 복사 후 "복사됨" 잠깐 표시. */
 export function CopyButton({
@@ -18,8 +18,8 @@ export function CopyButton({
   const [copied, setCopied] = useState(false);
   return (
     <Button
-      variant="secondary"
-      size={size}
+      variant="outline"
+      size={size === "md" ? "default" : "sm"}
       aria-label={label ?? td("dashboard.common.copy")}
       onClick={async () => {
         try {

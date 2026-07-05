@@ -8,6 +8,7 @@ import type { DateRange } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { td } from "@/lib/i18n"
+import { buttonVariants } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
@@ -15,9 +16,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-// 트리거 버튼 — buttonVariants 의존 없이 토큰 클래스로 직접 구성한다.
-const triggerClass =
-  "inline-flex h-9 w-full items-center justify-start gap-2 whitespace-nowrap rounded-md border border-input bg-background px-3 py-2 text-left text-sm font-normal shadow-xs transition-colors outline-none hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50"
+// 트리거 버튼 — outline buttonVariants 위에 폭/정렬/폰트만 오버라이드한다.
+const triggerClass = cn(
+  buttonVariants({ variant: "outline" }),
+  "w-full justify-start text-left font-normal"
+)
 
 // 표시 포맷: date-fns의 ko 로케일로 "2026년 7월 5일" 형태.
 const DISPLAY_FORMAT = "PPP"

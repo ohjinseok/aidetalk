@@ -7,7 +7,7 @@ import { td, type TranslationKey } from "../../lib/i18n";
 import type { LauncherPosition, OfficeHoursRule, Tone, WidgetSettings } from "../../lib/api/schemas";
 import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
-import { Button } from "../ui/Button";
+import { Button } from "@/components/ui/button";
 import { CopyButton } from "../ui/CopyButton";
 import { FormRow, Input, Select, Textarea } from "../ui/Field";
 import { WidgetPreview } from "./WidgetPreview";
@@ -247,7 +247,7 @@ export function WidgetSettingsScreen() {
               </div>
             </div>
           ))}
-          <Button type="button" variant="secondary" size="sm" onClick={addRule}>
+          <Button type="button" variant="outline" size="sm" onClick={addRule}>
             {td("dashboard.widget.addRule")}
           </Button>
         </fieldset>
@@ -261,7 +261,7 @@ export function WidgetSettingsScreen() {
           />
         </FormRow>
 
-        <Button variant="primary" disabled={saving || !isOwner} onClick={() => void onSave()}>
+        <Button disabled={saving || !isOwner} onClick={() => void onSave()}>
           {td("dashboard.common.save")}
         </Button>
         {!isOwner ? (

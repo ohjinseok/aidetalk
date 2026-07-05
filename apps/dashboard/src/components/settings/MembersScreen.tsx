@@ -7,8 +7,8 @@ import { td } from "../../lib/i18n";
 import type { Member, Role } from "../../lib/api/schemas";
 import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
-import { Badge } from "../ui/Badge";
-import { Button } from "../ui/Button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { CopyButton } from "../ui/CopyButton";
 import { EmptyState } from "../ui/EmptyState";
@@ -97,7 +97,7 @@ export function MembersScreen() {
               </FormRow>
             </div>
             <div className="mb-4">
-              <Button type="submit" variant="primary">
+              <Button type="submit">
                 {td("dashboard.members.invite")}
               </Button>
             </div>
@@ -131,10 +131,10 @@ export function MembersScreen() {
                 {m.email ? <p className="truncate text-xs text-gray-400">{m.email}</p> : null}
               </div>
               <div className="flex items-center gap-2">
-                <Badge tone={m.role === "owner" ? "indigo" : "gray"}>
+                <Badge variant={m.role === "owner" ? "default" : "secondary"}>
                   {td(m.role === "owner" ? "dashboard.members.roleOwner" : "dashboard.members.roleAgent")}
                 </Badge>
-                <Badge tone={m.status === "active" ? "green" : "yellow"}>
+                <Badge variant={m.status === "active" ? "success" : "warning"}>
                   {td(m.status === "active" ? "dashboard.members.statusActive" : "dashboard.members.statusInvited")}
                 </Badge>
                 {isOwner ? (

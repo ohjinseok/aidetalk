@@ -3,7 +3,7 @@
 import type { Suggestion } from "@aidetalk/shared";
 
 import { td, tf } from "../../lib/i18n";
-import { Button } from "../ui/Button";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "../ui/EmptyState";
 
 /**
@@ -65,7 +65,7 @@ export function AssistPanel({
                     {s.actions.map((a, i) => (
                       <Button
                         key={i}
-                        variant="secondary"
+                        variant="outline"
                         size="sm"
                         onClick={() => onInsertLink(a.url)}
                       >
@@ -77,10 +77,10 @@ export function AssistPanel({
 
                 {isPending ? (
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    <Button variant="primary" size="sm" onClick={() => onAccept(s)}>
+                    <Button size="sm" onClick={() => onAccept(s)}>
                       {td("dashboard.assist.sendAsIs")}
                     </Button>
-                    <Button variant="secondary" size="sm" onClick={() => onEdit(s)}>
+                    <Button variant="outline" size="sm" onClick={() => onEdit(s)}>
                       {td("dashboard.assist.editAndSend")}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => onIgnore(s)}>

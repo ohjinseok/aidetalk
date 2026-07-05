@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useToast } from "../../components/providers/ToastProvider";
-import { Button } from "../../components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { FormRow, Input } from "../../components/ui/Field";
 import { workspaceApi } from "../../lib/api/endpoints";
 import { td } from "../../lib/i18n";
@@ -91,7 +91,7 @@ export default function OnboardingPage() {
           </div>
         </fieldset>
 
-        <Button type="submit" variant="primary" className="w-full" disabled={busy}>
+        <Button type="submit" className="w-full" disabled={busy}>
           {td("dashboard.onboarding.createSubmit")}
         </Button>
       </form>

@@ -3,7 +3,7 @@
 import { useState, type KeyboardEvent } from "react";
 
 import { td } from "../../lib/i18n";
-import { Button } from "../ui/Button";
+import { Button } from "@/components/ui/button";
 
 /**
  * 답장 컴포저 — 07 §2.2.
@@ -61,7 +61,7 @@ export function Composer({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={onKeyDown}
         />
-        <Button variant="primary" disabled={!canSend} onClick={() => void send()}>
+        <Button disabled={!canSend} onClick={() => void send()}>
           {td("dashboard.conversation.send")}
         </Button>
       </div>

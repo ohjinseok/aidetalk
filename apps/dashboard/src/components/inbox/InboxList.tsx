@@ -13,8 +13,8 @@ import type { InboxItem } from "../../lib/api/schemas";
 import { patchInboxConversation, upsertInbox } from "../../lib/ws/reducer";
 import { useSocketEvent } from "../providers/SocketProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
-import { Badge } from "../ui/Badge";
-import { Button } from "../ui/Button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "../ui/EmptyState";
 import { Input } from "../ui/Field";
 import { Spinner } from "../ui/Spinner";
@@ -200,7 +200,7 @@ export function InboxList() {
                     </span>
                   </div>
                   <div className="mt-0.5 flex items-center gap-1.5">
-                    <Badge tone={conv.mode === "ai" ? "indigo" : "green"}>
+                    <Badge variant={conv.mode === "ai" ? "default" : "success"}>
                       {conv.mode === "ai" ? td("dashboard.inbox.modeAi") : td("dashboard.inbox.modeHuman")}
                     </Badge>
                     <span className="truncate text-xs text-gray-500">

@@ -13,11 +13,7 @@ import {
 } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
-
-// 기존 대문자 Button.tsx와 케이스 비구분 FS 충돌을 피하기 위해
-// shadcn button 대신 ghost 버튼 스타일을 인라인으로 정의한다.
-const ghostButtonClass =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors outline-none hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50"
+import { buttonVariants } from "@/components/ui/button"
 
 function Calendar({
   className,
@@ -57,12 +53,12 @@ function Calendar({
           defaultClassNames.nav
         ),
         button_previous: cn(
-          ghostButtonClass,
+          buttonVariants({ variant: "ghost" }),
           "size-(--cell-size) p-0 select-none aria-disabled:opacity-50",
           defaultClassNames.button_previous
         ),
         button_next: cn(
-          ghostButtonClass,
+          buttonVariants({ variant: "ghost" }),
           "size-(--cell-size) p-0 select-none aria-disabled:opacity-50",
           defaultClassNames.button_next
         ),
@@ -207,7 +203,7 @@ function CalendarDayButton({
       data-range-end={modifiers.range_end}
       data-range-middle={modifiers.range_middle}
       className={cn(
-        ghostButtonClass,
+        buttonVariants({ variant: "ghost" }),
         "flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-[3px] group-data-[focused=true]/day:ring-ring/50 data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-middle=true]:rounded-none data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground dark:hover:text-accent-foreground [&>span]:text-xs [&>span]:opacity-70",
         defaultClassNames.day,
         className

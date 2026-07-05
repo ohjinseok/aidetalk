@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
 import { useToast } from "../../components/providers/ToastProvider";
-import { Button } from "../../components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { FormRow, Input } from "../../components/ui/Field";
 import { Spinner } from "../../components/ui/Spinner";
 import { authApi, memberApi } from "../../lib/api/endpoints";
@@ -82,7 +82,7 @@ function SignupInner() {
             onChange={(e) => setPassword(e.target.value)}
           />
         </FormRow>
-        <Button type="submit" variant="primary" className="w-full" disabled={busy}>
+        <Button type="submit" className="w-full" disabled={busy}>
           {td("dashboard.auth.signupSubmit")}
         </Button>
         <p className="mt-4 text-center text-sm text-gray-500">

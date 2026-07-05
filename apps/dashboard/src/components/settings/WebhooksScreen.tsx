@@ -8,8 +8,8 @@ import type { Webhook, WebhookEventName } from "../../lib/api/schemas";
 import { SecretModal } from "../agents/SecretModal";
 import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
-import { Badge } from "../ui/Badge";
-import { Button } from "../ui/Button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { EmptyState } from "../ui/EmptyState";
 import { FormRow, Input } from "../ui/Field";
@@ -116,7 +116,7 @@ export function WebhooksScreen() {
             ))}
           </div>
         </div>
-        <Button type="submit" variant="primary" disabled={submitting || events.length === 0}>
+        <Button type="submit" disabled={submitting || events.length === 0}>
           {td("dashboard.webhooks.register")}
         </Button>
       </form>
@@ -134,7 +134,7 @@ export function WebhooksScreen() {
                   <p className="break-all text-sm font-medium">{w.url}</p>
                   <div className="mt-1 flex flex-wrap gap-1">
                     {w.events.map((ev) => (
-                      <Badge key={ev} tone="indigo">
+                      <Badge key={ev} variant="default">
                         {ev === "agent.auto_disabled"
                           ? td("dashboard.webhooks.eventAutoDisabled")
                           : td("dashboard.webhooks.eventHandoff")}
