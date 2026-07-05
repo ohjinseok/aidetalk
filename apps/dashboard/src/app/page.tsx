@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-import { Spinner } from "../components/ui/Spinner";
+import { Spinner } from "@/components/ui/spinner";
 import { authApi } from "../lib/api/endpoints";
 import { ApiError } from "../lib/api/client";
 

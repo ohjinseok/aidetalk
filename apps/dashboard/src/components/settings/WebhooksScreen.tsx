@@ -11,9 +11,10 @@ import { useWorkspace } from "../providers/WorkspaceProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
-import { EmptyState } from "../ui/EmptyState";
-import { FormRow, Input } from "../ui/Field";
-import { Spinner } from "../ui/Spinner";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { FormRow } from "@/components/ui/form-row";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 
 /** 04 §2 웹훅 이벤트 카탈로그 — 새 이벤트 추가 시 서버 http/schemas.ts와 함께 갱신. */
 const EVENT_OPTIONS: { value: WebhookEventName; labelKey: "dashboard.webhooks.eventAutoDisabled" | "dashboard.webhooks.eventHandoff" }[] = [
@@ -124,7 +125,11 @@ export function WebhooksScreen() {
       {loading ? (
         <Spinner />
       ) : webhooks.length === 0 ? (
-        <EmptyState title={td("dashboard.webhooks.empty")} />
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>{td("dashboard.webhooks.empty")}</EmptyTitle>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <ul className="space-y-3">
           {webhooks.map((w) => (

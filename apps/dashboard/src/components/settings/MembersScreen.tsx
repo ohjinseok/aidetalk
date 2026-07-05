@@ -11,9 +11,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { CopyButton } from "../ui/CopyButton";
-import { EmptyState } from "../ui/EmptyState";
-import { FormRow, Input, Select } from "../ui/Field";
-import { Spinner } from "../ui/Spinner";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { FormRow } from "@/components/ui/form-row";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 
 export function MembersScreen() {
   const { workspace, isOwner } = useWorkspace();
@@ -86,13 +94,14 @@ export function MembersScreen() {
             </div>
             <div className="w-32">
               <FormRow label={td("dashboard.members.inviteRole")} htmlFor="inviteRole">
-                <Select
-                  id="inviteRole"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as Role)}
-                >
-                  <option value="agent_member">{td("dashboard.members.roleAgent")}</option>
-                  <option value="owner">{td("dashboard.members.roleOwner")}</option>
+                <Select value={role} onValueChange={(v) => setRole(v as Role)}>
+                  <SelectTrigger id="inviteRole" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="agent_member">{td("dashboard.members.roleAgent")}</SelectItem>
+                    <SelectItem value="owner">{td("dashboard.members.roleOwner")}</SelectItem>
+                  </SelectContent>
                 </Select>
               </FormRow>
             </div>
@@ -121,7 +130,11 @@ export function MembersScreen() {
       {loading ? (
         <Spinner />
       ) : members.length === 0 ? (
-        <EmptyState title={td("dashboard.members.empty")} />
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>{td("dashboard.members.empty")}</EmptyTitle>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
           {members.map((m) => (

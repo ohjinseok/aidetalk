@@ -9,7 +9,16 @@ import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "../ui/CopyButton";
-import { FormRow, Input, Select, Textarea } from "../ui/Field";
+import { FormRow } from "@/components/ui/form-row";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { WidgetPreview } from "./WidgetPreview";
 
 const DAY_KEYS: TranslationKey[] = [
@@ -142,25 +151,33 @@ export function WidgetSettingsScreen() {
 
         <FormRow label={td("dashboard.widget.tone")} htmlFor="tone">
           <Select
-            id="tone"
             value={form.tone}
-            onChange={(e) => setForm((f) => ({ ...f, tone: e.target.value as Tone }))}
+            onValueChange={(v) => setForm((f) => ({ ...f, tone: v as Tone }))}
           >
-            <option value="formal">{td("dashboard.widget.toneFormal")}</option>
-            <option value="casual">{td("dashboard.widget.toneCasual")}</option>
+            <SelectTrigger id="tone" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="formal">{td("dashboard.widget.toneFormal")}</SelectItem>
+              <SelectItem value="casual">{td("dashboard.widget.toneCasual")}</SelectItem>
+            </SelectContent>
           </Select>
         </FormRow>
 
         <FormRow label={td("dashboard.widget.launcherPosition")} htmlFor="pos">
           <Select
-            id="pos"
             value={form.launcherPosition}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, launcherPosition: e.target.value as LauncherPosition }))
+            onValueChange={(v) =>
+              setForm((f) => ({ ...f, launcherPosition: v as LauncherPosition }))
             }
           >
-            <option value="right">{td("dashboard.widget.positionRight")}</option>
-            <option value="left">{td("dashboard.widget.positionLeft")}</option>
+            <SelectTrigger id="pos" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="right">{td("dashboard.widget.positionRight")}</SelectItem>
+              <SelectItem value="left">{td("dashboard.widget.positionLeft")}</SelectItem>
+            </SelectContent>
           </Select>
         </FormRow>
 

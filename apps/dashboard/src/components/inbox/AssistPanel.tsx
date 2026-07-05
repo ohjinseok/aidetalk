@@ -4,7 +4,7 @@ import type { Suggestion } from "@aidetalk/shared";
 
 import { td, tf } from "../../lib/i18n";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "../ui/EmptyState";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 
 /**
  * 어시스트 사이드 패널(우 컬럼, mode=human 전용) — 07 §2.3.
@@ -43,7 +43,11 @@ export function AssistPanel({
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
         {suggestions.length === 0 ? (
-          <EmptyState title={td("dashboard.assist.empty")} />
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>{td("dashboard.assist.empty")}</EmptyTitle>
+            </EmptyHeader>
+          </Empty>
         ) : (
           suggestions.map((s) => {
             const isPending = s.outcome === "pending";

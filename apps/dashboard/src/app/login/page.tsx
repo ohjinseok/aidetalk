@@ -6,8 +6,9 @@ import { Suspense, useState } from "react";
 
 import { useToast } from "../../components/providers/ToastProvider";
 import { Button } from "@/components/ui/button";
-import { FormRow, Input } from "../../components/ui/Field";
-import { Spinner } from "../../components/ui/Spinner";
+import { FormRow } from "@/components/ui/form-row";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { authApi, memberApi } from "../../lib/api/endpoints";
 import { td } from "../../lib/i18n";
 

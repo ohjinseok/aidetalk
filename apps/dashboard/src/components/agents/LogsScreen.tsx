@@ -10,10 +10,19 @@ import type { AgentLog, AgentLogOutcome } from "../../lib/api/schemas";
 import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "../ui/EmptyState";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Modal } from "../ui/Modal";
-import { Select } from "../ui/Field";
-import { Spinner } from "../ui/Spinner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+
+// Radix Select는 빈 문자열 value 불가 — "전체" 필터에 센티넬 값을 쓴다.
+const ALL_OUTCOMES = "all";
 
 const OUTCOMES: AgentLogOutcome[] = ["reply", "handoff", "noop", "suggest", "timeout", "error"];
 const OUTCOME_KEY: Record<AgentLogOutcome, TranslationKey> = {
@@ -78,25 +87,35 @@ export function LogsScreen({ agentId }: { agentId: string }) {
       </div>
 
       <div className="mb-3 flex items-center gap-2">
-        <label className="text-xs text-gray-500">{td("dashboard.logs.filterOutcome")}</label>
+        <span className="text-xs text-gray-500">{td("dashboard.logs.filterOutcome")}</span>
         <Select
-          className="w-40"
-          value={outcomeFilter}
-          onChange={(e) => setOutcomeFilter(e.target.value as AgentLogOutcome | "")}
+          value={outcomeFilter || ALL_OUTCOMES}
+          onValueChange={(v) =>
+            setOutcomeFilter(v === ALL_OUTCOMES ? "" : (v as AgentLogOutcome))
+          }
         >
-          <option value="">{td("dashboard.logs.all")}</option>
-          {OUTCOMES.map((o) => (
-            <option key={o} value={o}>
-              {td(OUTCOME_KEY[o])}
-            </option>
-          ))}
+          <SelectTrigger className="w-40" aria-label={td("dashboard.logs.filterOutcome")}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_OUTCOMES}>{td("dashboard.logs.all")}</SelectItem>
+            {OUTCOMES.map((o) => (
+              <SelectItem key={o} value={o}>
+                {td(OUTCOME_KEY[o])}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
       </div>
 
       {loading && logs.length === 0 ? (
         <Spinner />
       ) : visible.length === 0 ? (
-        <EmptyState title={td("dashboard.logs.empty")} />
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>{td("dashboard.logs.empty")}</EmptyTitle>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
           <table className="w-full text-left text-sm">

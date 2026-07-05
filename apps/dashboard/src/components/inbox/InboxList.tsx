@@ -15,9 +15,9 @@ import { useSocketEvent } from "../providers/SocketProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "../ui/EmptyState";
-import { Input } from "../ui/Field";
-import { Spinner } from "../ui/Spinner";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 
 const TABS: { status: ConversationStatus; labelKey: TranslationKey }[] = [
   { status: "open", labelKey: "dashboard.inbox.filterOpen" },
@@ -168,14 +168,16 @@ export function InboxList() {
       <ul className="min-h-0 flex-1 overflow-y-auto">
         {items.length === 0 && !loading ? (
           <li>
-            <EmptyState
-              title={td("dashboard.inbox.empty")}
-              description={
-                <Link href={`/w/${wsId}/settings/widget`} className="text-brand hover:underline">
-                  {td("dashboard.inbox.emptyHint")}
-                </Link>
-              }
-            />
+            <Empty>
+              <EmptyHeader>
+                <EmptyTitle>{td("dashboard.inbox.empty")}</EmptyTitle>
+                <EmptyDescription>
+                  <Link href={`/w/${wsId}/settings/widget`} className="text-brand hover:underline">
+                    {td("dashboard.inbox.emptyHint")}
+                  </Link>
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           </li>
         ) : (
           items.map((item) => {

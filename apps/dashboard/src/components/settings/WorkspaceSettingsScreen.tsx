@@ -8,7 +8,15 @@ import type { AttributionRule } from "../../lib/api/schemas";
 import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
 import { Button } from "@/components/ui/button";
-import { FormRow, Input, Select } from "../ui/Field";
+import { FormRow } from "@/components/ui/form-row";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /** EDITION 플래그 — 클라우드에서만 결제 탭 노출(07 §5). 코어는 ee/를 import하지 않음(규칙 8). */
 const IS_CLOUD = process.env.NEXT_PUBLIC_EDITION === "cloud";
@@ -52,13 +60,17 @@ export function WorkspaceSettingsScreen() {
       {isS1 ? (
         <FormRow label={td("dashboard.workspace.attributionRule")} htmlFor="attr">
           <Select
-            id="attr"
             value={rule}
             disabled={!isOwner}
-            onChange={(e) => setRule(e.target.value as AttributionRule)}
+            onValueChange={(v) => setRule(v as AttributionRule)}
           >
-            <option value="last_click">{td("dashboard.workspace.lastClick")}</option>
-            <option value="first_click">{td("dashboard.workspace.firstClick")}</option>
+            <SelectTrigger id="attr" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="last_click">{td("dashboard.workspace.lastClick")}</SelectItem>
+              <SelectItem value="first_click">{td("dashboard.workspace.firstClick")}</SelectItem>
+            </SelectContent>
           </Select>
         </FormRow>
       ) : null}

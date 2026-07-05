@@ -5,7 +5,8 @@ import { useState } from "react";
 
 import { useToast } from "../../components/providers/ToastProvider";
 import { Button } from "@/components/ui/button";
-import { FormRow, Input } from "../../components/ui/Field";
+import { FormRow } from "@/components/ui/form-row";
+import { Input } from "@/components/ui/input";
 import { workspaceApi } from "../../lib/api/endpoints";
 import { td } from "../../lib/i18n";
 import type { Segment } from "../../lib/api/schemas";

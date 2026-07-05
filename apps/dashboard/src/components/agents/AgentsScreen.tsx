@@ -12,9 +12,10 @@ import { useWorkspace } from "../providers/WorkspaceProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
-import { EmptyState } from "../ui/EmptyState";
-import { FormRow, Input } from "../ui/Field";
-import { Spinner } from "../ui/Spinner";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { FormRow } from "@/components/ui/form-row";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { SecretModal } from "./SecretModal";
 
 function statusBadge(status: AgentStatus) {
@@ -174,7 +175,11 @@ export function AgentsScreen() {
       {loading ? (
         <Spinner />
       ) : agents.length === 0 ? (
-        <EmptyState title={td("dashboard.agents.empty")} />
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>{td("dashboard.agents.empty")}</EmptyTitle>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <ul className="space-y-3">
           {agents.map((agent) => {

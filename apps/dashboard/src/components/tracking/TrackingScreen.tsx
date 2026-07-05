@@ -8,8 +8,8 @@ import { formatKrw } from "../../lib/format";
 import { td } from "../../lib/i18n";
 import type { TrackingSummary } from "../../lib/api/schemas";
 import { useWorkspace } from "../providers/WorkspaceProvider";
-import { EmptyState } from "../ui/EmptyState";
-import { Spinner } from "../ui/Spinner";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { Spinner } from "@/components/ui/spinner";
 
 /** 이번 달 [from, to] ISO. */
 function thisMonthRange(): { from: string; to: string } {
@@ -75,7 +75,13 @@ export function TrackingScreen() {
     );
   }
   if (notFound || !summary) {
-    return <EmptyState title={td("dashboard.tracking.empty")} />;
+    return (
+      <Empty>
+        <EmptyHeader>
+          <EmptyTitle>{td("dashboard.tracking.empty")}</EmptyTitle>
+        </EmptyHeader>
+      </Empty>
+    );
   }
 
   return (

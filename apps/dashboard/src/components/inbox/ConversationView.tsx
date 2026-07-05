@@ -15,8 +15,17 @@ import { useWorkspace } from "../providers/WorkspaceProvider";
 import { useToast } from "../providers/ToastProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select } from "../ui/Field";
-import { Spinner } from "../ui/Spinner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+
+// Radix Select는 빈 문자열 value를 허용하지 않아 "담당자 미지정"에 센티넬 값을 쓴다.
+const UNASSIGNED = "__unassigned__";
 import { AssistPanel } from "./AssistPanel";
 import { Composer } from "./Composer";
 import { Timeline, type TrackedMap } from "./Timeline";
@@ -308,17 +317,22 @@ export function ConversationView({ convId }: { convId: string }) {
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <Select
-              aria-label={td("dashboard.conversation.assign")}
-              value={conversation.assigneeId ?? ""}
-              onChange={(e) => void onAssign(e.target.value || null)}
-              className="w-40"
+              value={conversation.assigneeId ?? UNASSIGNED}
+              onValueChange={(v) => void onAssign(v === UNASSIGNED ? null : v)}
             >
-              <option value="">{td("dashboard.conversation.assignPlaceholder")}</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.userId}>
-                  {m.name || m.email || m.userId}
-                </option>
-              ))}
+              <SelectTrigger className="w-40" aria-label={td("dashboard.conversation.assign")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={UNASSIGNED}>
+                  {td("dashboard.conversation.assignPlaceholder")}
+                </SelectItem>
+                {members.map((m) => (
+                  <SelectItem key={m.id} value={m.userId}>
+                    {m.name || m.email || m.userId}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
             {modeHuman ? (
               <Button variant="outline" size="sm" onClick={() => void onReturnToAi()}>

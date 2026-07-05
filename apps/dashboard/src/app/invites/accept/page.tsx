@@ -6,7 +6,7 @@ import { Suspense, useEffect, useState } from "react";
 
 import { useToast } from "../../../components/providers/ToastProvider";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "../../../components/ui/Spinner";
+import { Spinner } from "@/components/ui/spinner";
 import { authApi, memberApi } from "../../../lib/api/endpoints";
 import { td } from "../../../lib/i18n";
 
