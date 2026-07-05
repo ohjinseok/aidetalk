@@ -4,10 +4,10 @@
 
 ## 상태
 
-M0 "docker/compose.yml 초안" 완료 (`docs/11_ROADMAP.md`).
 `postgres + redis + server(healthz 200) + dashboard`가 `compose.yml`로 기동한다.
-서버는 아직 마이그레이션이 없는 M0 스캐폴드 단계라 DB 연결 없이도 `/healthz`가 뜬다
-(M1에서 부팅 엔트리포인트에 `pnpm db:migrate` 자동 실행 추가 예정 — `docs/10_DEPLOYMENT.md` §2).
+서버는 `RUN_MIGRATIONS_ON_BOOT=true` 환경변수로 부팅 시 자동 마이그레이션을 지원하지만,
+이 compose 파일은 기본값(false)을 그대로 쓰므로 `pnpm db:migrate`를 수동 실행하거나
+`.env`에 해당 값을 켜서 자동화한다 (`docs/10_DEPLOYMENT.md` §2).
 
 ## 파일
 

@@ -32,3 +32,6 @@ test-results/
 
 # Vite
 apps/widget/dist/
+
+# VitePress
+**/.vitepress/cache/

@@ -3,7 +3,7 @@ import { defineConfig } from "vitepress";
 // AideTalk 공개 문서 사이트.
 // 기본 로케일은 ko(루트 경로). en은 /en/ 하위에 병행 구조로 둔다.
 // 완전 번역: 홈 / 설치 가이드 / Agent Protocol. 나머지(위젯 임베드, 예제 에이전트)는
-// en 스텁 페이지에서 ko 원문으로 안내한다 (ROADMAP M2 "문서 사이트" 완료 기준).
+// en 스텁 페이지에서 ko 원문으로 안내한다.
 export default defineConfig({
   title: "AideTalk Docs",
   description: "AideTalk — 오픈소스 CS 메신저 셀프호스팅/Agent Protocol/위젯 임베드 문서",

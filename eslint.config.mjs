@@ -13,6 +13,7 @@ export default tseslint.config(
       "**/build/**",
       "**/.next/**",
       "**/.turbo/**",
+      "**/.vitepress/cache/**",
       "**/node_modules/**",
       "**/coverage/**",
       "**/next-env.d.ts",

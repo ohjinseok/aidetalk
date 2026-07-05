@@ -75,8 +75,10 @@ services:
       retries: 10
       start_period: 10s
     networks: [aidetalk]
-    # TODO(M1): 부팅 엔트리포인트에서 pnpm db:migrate 자동 실행 후 서버 기동 (docs/10_DEPLOYMENT.md §2).
-    # 현재는 마이그레이션이 없는 M0 스캐폴드 단계라 DB 연결 없이도 /healthz가 뜬다.
+    # 마이그레이션: 서버는 RUN_MIGRATIONS_ON_BOOT=true 환경변수로 부팅 시 자동 마이그레이션을
+    # 지원한다(apps/server/src/index.ts, docs/10_DEPLOYMENT.md §2). 기본값은 false이고 이 compose
+    # 파일도 명시적으로 켜지 않으므로, 최초 기동 전/후 `pnpm db:migrate`를 수동 실행하거나
+    # .env에 RUN_MIGRATIONS_ON_BOOT=true를 설정해 자동화한다.
 
   dashboard:
     build:

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 #
-# AideTalk dashboard(Next.js 15 App Router) 프로덕션 이미지.
+# AideTalk dashboard(Next.js 16 App Router) 프로덕션 이미지.
 # 셀프호스팅과 클라우드가 동일 이미지를 쓴다(docs/10_DEPLOYMENT.md §0, §3).
 # 빌드 컨텍스트는 모노레포 루트(docker/compose.yml에서 `context: ..`로 지정).
 
