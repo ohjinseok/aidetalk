@@ -64,10 +64,11 @@ export const WIDGET_CSS = `
 /* ── 패널 ─────────────────────────────────────────────── */
 .od-window {
   position: fixed;
-  bottom: 20px;
+  /* 런처(56px, bottom 20px) 위로 12px 띄워 겹침 방지 */
+  bottom: 88px;
   z-index: 2147483000;
   width: 380px; height: 640px;
-  max-height: calc(100vh - 40px);
+  max-height: calc(100vh - 108px);
   background: var(--od-bg);
   border: 1px solid var(--od-border);
   border-radius: 16px;
