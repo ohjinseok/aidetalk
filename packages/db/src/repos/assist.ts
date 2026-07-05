@@ -6,13 +6,20 @@
  * visitor 세션(토큰)으로는 타입상 호출조차 불가능하게 만든다.
  * append는 agent dispatch 파이프라인(system)이 생성하므로 memberContext를 받지 않는다.
  */
-import { newId } from "@aidetalk/shared";
-import { AppError } from "@aidetalk/shared";
+import { AppError, newId } from "@aidetalk/shared";
 import { and, asc, eq } from "drizzle-orm";
 
 import type { Database } from "../client";
 import { assistSuggestions } from "../schema/assist-suggestions";
 import type { MemberContext } from "./_context";
+import { assertConversationOwned } from "./_shared";
+
+/** 상담원의 워크스페이스와 요청 워크스페이스가 일치하는지 확인. 아니면 forbidden(규칙 9). */
+function assertMemberWorkspace(memberContext: MemberContext, workspaceId: string) {
+  if (memberContext.workspaceId !== workspaceId) {
+    throw AppError.of("auth/forbidden", "다른 워크스페이스의 제안에 접근할 수 없다.");
+  }
+}
 
 export interface AppendSuggestionInput {
   conversationId: string;
@@ -27,6 +34,8 @@ export function makeAssistRepo(db: Database) {
   return {
     /** 제안 생성 — dispatcher(system)가 호출. 손님에게 전송 금지(규칙 9). */
     async append(workspaceId: string, input: AppendSuggestionInput) {
+      // 대화가 워크스페이스 소유인지 검증(다른 repo와 대칭 — 크로스테넌트 삽입 차단).
+      await assertConversationOwned(db, workspaceId, input.conversationId);
       const [row] = await db
         .insert(assistSuggestions)
         .values({
@@ -54,9 +63,7 @@ export function makeAssistRepo(db: Database) {
       outcome: "accepted" | "edited" | "ignored",
       memberContext: MemberContext,
     ) {
-      if (memberContext.workspaceId !== workspaceId) {
-        throw AppError.of("auth/forbidden", "다른 워크스페이스의 제안에 접근할 수 없다.");
-      }
+      assertMemberWorkspace(memberContext, workspaceId);
       const [row] = await db
         .update(assistSuggestions)
         .set({ outcome })
@@ -79,9 +86,7 @@ export function makeAssistRepo(db: Database) {
       conversationId: string,
       memberContext: MemberContext,
     ) {
-      if (memberContext.workspaceId !== workspaceId) {
-        throw AppError.of("auth/forbidden", "다른 워크스페이스의 제안에 접근할 수 없다.");
-      }
+      assertMemberWorkspace(memberContext, workspaceId);
       return db
         .select()
         .from(assistSuggestions)

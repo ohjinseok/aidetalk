@@ -3,7 +3,7 @@
  * externalRef 충돌 시 AppError("conversion/duplicate"). 귀속은 조회 시 계산.
  */
 import { AppError, newId } from "@aidetalk/shared";
-import { and, asc, between, eq, isNotNull, sql } from "drizzle-orm";
+import { and, asc, between, eq, sql } from "drizzle-orm";
 
 import type { Database } from "../client";
 import { conversions } from "../schema/conversions";
@@ -17,11 +17,6 @@ export interface CreateConversionInput {
   currency?: string;
   externalRef?: string | null; // 멱등키
   occurredAt: Date;
-}
-
-export interface AggregatePeriod {
-  from: Date;
-  to: Date;
 }
 
 export function makeConversionRepo(db: Database) {
@@ -65,44 +60,6 @@ export function makeConversionRepo(db: Database) {
           ),
         )
         .orderBy(asc(conversions.occurredAt), asc(conversions.id));
-    },
-
-    /**
-     * 기간 내 워크스페이스 전환 집계(기여 "추정" — CLAUDE.md 규칙 10).
-     * rule(last_click|first_click)은 대화 단위 귀속 계산에 쓰이며, 여기서는
-     * 원본 이벤트의 총합/건수를 반환한다. 정교한 귀속은 상위 계층에서 조합.
-     */
-    async aggregateByWorkspace(
-      workspaceId: string,
-      period: AggregatePeriod,
-      _rule: "last_click" | "first_click" = "last_click",
-    ) {
-      const [row] = await db
-        .select({
-          count: sql<number>`count(*)::int`,
-          totalAmount: sql<number>`coalesce(sum(${conversions.amount}), 0)::bigint`,
-          revenueCount: sql<number>`count(*) filter (where ${conversions.amount} is not null)::int`,
-        })
-        .from(conversions)
-        .where(
-          and(
-            eq(conversions.workspaceId, workspaceId),
-            between(conversions.occurredAt, period.from, period.to),
-          ),
-        );
-      return {
-        count: row?.count ?? 0,
-        revenueCount: row?.revenueCount ?? 0,
-        totalAmount: Number(row?.totalAmount ?? 0),
-      };
-    },
-
-    /** 특정 전환에 귀속 링크가 있는지 등 조회용 보조(내부). */
-    async listAttributed(workspaceId: string) {
-      return db
-        .select()
-        .from(conversions)
-        .where(and(eq(conversions.workspaceId, workspaceId), isNotNull(conversions.trackedLinkId)));
     },
 
     /**

@@ -63,14 +63,6 @@ export function makeInviteRepo(db: Database) {
         .returning();
       return row;
     },
-
-    /** 워크스페이스의 미수락 초대 목록(멤버 화면 표시용). */
-    async listPending(workspaceId: string) {
-      return db
-        .select()
-        .from(invites)
-        .where(eq(invites.workspaceId, workspaceId));
-    },
   };
 }
 

@@ -2,12 +2,13 @@
  * conversationRepo — 03_DATA_MODEL.md §3.
  */
 import { newId } from "@aidetalk/shared";
-import { and, between, desc, eq, lt, or, sql } from "drizzle-orm";
+import { and, between, desc, eq, sql } from "drizzle-orm";
 
 import type { Database } from "../client";
 import { conversations, type ConversationMetadata } from "../schema/conversations";
 import { messages } from "../schema/messages";
 import type { Cursor } from "./_context";
+import { keysetCursorCondition } from "./_shared";
 
 export interface CreateConversationInput {
   visitorId: string;
@@ -66,15 +67,8 @@ export function makeConversationRepo(db: Database) {
       }
       if (params.cursor) {
         // (lastMessageAt, id) < (cursor.createdAt, cursor.id) — desc 페이지네이션
-        const cursorAt = new Date(params.cursor.createdAt);
         conds.push(
-          or(
-            lt(conversations.lastMessageAt, cursorAt),
-            and(
-              eq(conversations.lastMessageAt, cursorAt),
-              lt(conversations.id, params.cursor.id),
-            ),
-          )!,
+          keysetCursorCondition(conversations.lastMessageAt, conversations.id, params.cursor, "desc"),
         );
       }
       return db

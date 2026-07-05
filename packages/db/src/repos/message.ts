@@ -4,13 +4,13 @@
  * 순서 보장: ORDER BY created_at, id.
  */
 import type { MessageContent, MessageRole } from "@aidetalk/shared";
-import { AppError, newId } from "@aidetalk/shared";
-import { and, asc, desc, eq, gt, or } from "drizzle-orm";
+import { newId } from "@aidetalk/shared";
+import { and, asc, desc, eq } from "drizzle-orm";
 
 import type { Database } from "../client";
-import { conversations } from "../schema/conversations";
 import { messages } from "../schema/messages";
 import type { Cursor } from "./_context";
+import { assertConversationOwned, keysetCursorCondition } from "./_shared";
 
 export interface AppendMessageInput {
   role: MessageRole;
@@ -20,22 +20,13 @@ export interface AppendMessageInput {
 }
 
 export function makeMessageRepo(db: Database) {
-  /** 대화가 워크스페이스 소유인지 확인. 아니면 not_found로 격리. */
-  async function assertOwned(workspaceId: string, conversationId: string) {
-    const [row] = await db
-      .select({ id: conversations.id })
-      .from(conversations)
-      .where(and(eq(conversations.workspaceId, workspaceId), eq(conversations.id, conversationId)));
-    if (!row) throw AppError.of("not_found", "대화를 찾을 수 없다.");
-  }
-
   return {
     /**
      * 메시지 추가. clientMsgId 중복이면 기존 행을 반환(멱등).
      * clientMsgId가 null이면 항상 새 행 insert.
      */
     async append(workspaceId: string, conversationId: string, input: AppendMessageInput) {
-      await assertOwned(workspaceId, conversationId);
+      await assertConversationOwned(db, workspaceId, conversationId);
       const values = {
         id: newId("msg"),
         conversationId,
@@ -76,16 +67,10 @@ export function makeMessageRepo(db: Database) {
       cursor?: Cursor,
       limit = 100,
     ) {
-      await assertOwned(workspaceId, conversationId);
+      await assertConversationOwned(db, workspaceId, conversationId);
       const conds = [eq(messages.conversationId, conversationId)];
       if (cursor) {
-        const cursorAt = new Date(cursor.createdAt);
-        conds.push(
-          or(
-            gt(messages.createdAt, cursorAt),
-            and(eq(messages.createdAt, cursorAt), gt(messages.id, cursor.id)),
-          )!,
-        );
+        conds.push(keysetCursorCondition(messages.createdAt, messages.id, cursor, "asc"));
       }
       return db
         .select()
@@ -97,7 +82,7 @@ export function makeMessageRepo(db: Database) {
 
     /** 대화의 마지막 메시지 1건(인박스 요약용). 없으면 undefined. */
     async getLast(workspaceId: string, conversationId: string) {
-      await assertOwned(workspaceId, conversationId);
+      await assertConversationOwned(db, workspaceId, conversationId);
       const [row] = await db
         .select()
         .from(messages)
@@ -109,7 +94,7 @@ export function makeMessageRepo(db: Database) {
 
     /** 최근 n개 — 최신 n개를 뽑되 오래된→최신 순으로 정렬해 반환. */
     async listRecent(workspaceId: string, conversationId: string, n = 50) {
-      await assertOwned(workspaceId, conversationId);
+      await assertConversationOwned(db, workspaceId, conversationId);
       const rows = await db
         .select()
         .from(messages)

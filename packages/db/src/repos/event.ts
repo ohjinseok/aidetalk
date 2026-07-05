@@ -3,12 +3,12 @@
  * 대화 소유 검증을 내부에서 수행.
  */
 import type { EventType } from "@aidetalk/shared";
-import { AppError, newId } from "@aidetalk/shared";
-import { and, asc, eq } from "drizzle-orm";
+import { newId } from "@aidetalk/shared";
+import { asc, eq } from "drizzle-orm";
 
 import type { Database } from "../client";
 import { conversationEvents, type ConversationEventPayload } from "../schema/conversation-events";
-import { conversations } from "../schema/conversations";
+import { assertConversationOwned } from "./_shared";
 
 export interface AppendEventInput {
   type: EventType;
@@ -17,17 +17,9 @@ export interface AppendEventInput {
 }
 
 export function makeEventRepo(db: Database) {
-  async function assertOwned(workspaceId: string, conversationId: string) {
-    const [row] = await db
-      .select({ id: conversations.id })
-      .from(conversations)
-      .where(and(eq(conversations.workspaceId, workspaceId), eq(conversations.id, conversationId)));
-    if (!row) throw AppError.of("not_found", "대화를 찾을 수 없다.");
-  }
-
   return {
     async append(workspaceId: string, conversationId: string, input: AppendEventInput) {
-      await assertOwned(workspaceId, conversationId);
+      await assertConversationOwned(db, workspaceId, conversationId);
       const [row] = await db
         .insert(conversationEvents)
         .values({
@@ -42,7 +34,7 @@ export function makeEventRepo(db: Database) {
     },
 
     async listByConversation(workspaceId: string, conversationId: string) {
-      await assertOwned(workspaceId, conversationId);
+      await assertConversationOwned(db, workspaceId, conversationId);
       return db
         .select()
         .from(conversationEvents)

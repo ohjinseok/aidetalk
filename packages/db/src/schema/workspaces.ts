@@ -1,15 +1,10 @@
 /**
  * workspaces — 테넌트 루트. 03_DATA_MODEL.md §2.
  */
+import type { WidgetSettings } from "@aidetalk/shared";
 import { pgTable, text, jsonb } from "drizzle-orm/pg-core";
 
 import { createdAt, updatedAt } from "./_helpers";
-
-/**
- * widget_settings jsonb 형태 — 03 문서 §2 주석 (zod: shared/widget-settings.ts 예정).
- * 스키마가 확정되기 전까지 느슨한 레코드 타입으로 둔다.
- */
-export type WidgetSettings = Record<string, unknown>;
 
 export const workspaces = pgTable("workspaces", {
   id: text("id").primaryKey(), // ws_

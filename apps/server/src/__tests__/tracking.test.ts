@@ -221,7 +221,14 @@ describe("09 §5-4 귀속: last_click vs first_click", () => {
       },
     });
     expect(res.status).toBe(204);
-    expect(await h.ctx.repos.conversion.listAttributed(s.workspaceId)).toHaveLength(0);
+    // 귀속 후보가 없으면 conversions 자체가 생성되지 않는다 — 기간 요약이 전부 0.
+    const summary = await h.ctx.repos.conversion.summarizeAttributed(
+      s.workspaceId,
+      new Date(0),
+      new Date(),
+    );
+    expect(summary.attributedRevenueKrw).toBe(0);
+    expect(summary.bySource.click_only + summary.bySource.pixel).toBe(0);
   });
 });
 

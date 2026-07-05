@@ -218,7 +218,11 @@ export class HttpAgentDispatcher implements AgentDispatcher {
       content: r.content,
       createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
     }));
-    const wsMeta = (workspace?.widgetSettings.agentMetadata as Record<string, unknown>) ?? {};
+    // agentMetadata는 widgetSettings 정규 스키마 밖의 선택 필드라 캐스팅으로 읽는다(있으면 그대로 전달).
+    const wsMeta =
+      ((workspace?.widgetSettings as Record<string, unknown> | undefined)?.agentMetadata as
+        | Record<string, unknown>
+        | undefined) ?? {};
     return buildAgentRequest({
       mode,
       conversation,

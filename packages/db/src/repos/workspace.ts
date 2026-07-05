@@ -2,11 +2,11 @@
  * workspaceRepo — 03_DATA_MODEL.md §3.
  * create만 예외적으로 workspaceId를 받지 않는다(워크스페이스 자체를 생성).
  */
-import { newId } from "@aidetalk/shared";
+import { newId, type WidgetSettings } from "@aidetalk/shared";
 import { eq } from "drizzle-orm";
 
 import type { Database } from "../client";
-import { workspaces, type WidgetSettings } from "../schema/workspaces";
+import { workspaces } from "../schema/workspaces";
 
 export interface CreateWorkspaceInput {
   name: string;
@@ -64,15 +64,6 @@ export function makeWorkspaceRepo(db: Database) {
       const [row] = await db
         .update(workspaces)
         .set(set)
-        .where(eq(workspaces.id, workspaceId))
-        .returning();
-      return row;
-    },
-
-    async updatePlan(workspaceId: string, plan: "oss" | "starter" | "pro") {
-      const [row] = await db
-        .update(workspaces)
-        .set({ plan, updatedAt: new Date() })
         .where(eq(workspaces.id, workspaceId))
         .returning();
       return row;

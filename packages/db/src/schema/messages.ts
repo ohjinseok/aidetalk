@@ -14,7 +14,7 @@ export const messages = pgTable(
     conversationId: text("conversation_id")
       .notNull()
       .references(() => conversations.id),
-    clientMsgId: text("client_msg_id"), // 위젯 임시 ID
+    clientMsgId: text("client_msg_id"),
     role: text("role").notNull(), // 'visitor' | 'agent_ai' | 'agent_human' | 'system'
     authorId: text("author_id"), // role별 visitor/user/agent id, system은 null
     content: jsonb("content").$type<MessageContent>().notNull(), // { type:"text", text, quickReplies?: string[] }
