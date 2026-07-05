@@ -8,9 +8,9 @@
 **AideTalk** — 한국 SMB를 위한 오픈소스 CS 메신저.
 유저가 직접 만든 AI Agent를 HTTP 커넥터로 연결하는 채팅 위젯 + 상담 인박스.
 차별 기능: **매출 전환 트래킹**(상담→구매 측정, 사이트 있는 S1 전용)과 **실시간 상담 어시스트**(AI가 상담원을 코칭).
-수익 모델: Open Core — 셀프호스팅 무료(AGPL), 클라우드 유료. `docs/01_BUSINESS_MODEL.md`.
+수익 모델: Open Core — 셀프호스팅 무료(AGPL), 클라우드 유료. `docs/internal/01_BUSINESS_MODEL.md`.
 
-문서 맵: `docs/00_PRD.md`(요구사항) / `02_ARCHITECTURE`(설계) / `03_DATA_MODEL`(스키마) / `04_API_SPEC`(REST·WS 명세) / `05_AGENT_PROTOCOL`(커넥터 계약) / `06_WIDGET_SPEC` / `07_DASHBOARD_SPEC` / `08_SECURITY` / `09_TESTING` / `10_DEPLOYMENT` / `11_ROADMAP`(작업 단위)
+문서 맵: `docs/internal/00_PRD.md`(요구사항) / `02_ARCHITECTURE`(설계) / `03_DATA_MODEL`(스키마) / `04_API_SPEC`(REST·WS 명세) / `05_AGENT_PROTOCOL`(커넥터 계약) / `06_WIDGET_SPEC` / `07_DASHBOARD_SPEC` / `08_SECURITY` / `09_TESTING` / `10_DEPLOYMENT` / `11_ROADMAP`(작업 단위)
 
 ## 절대 규칙 (위반 금지)
 

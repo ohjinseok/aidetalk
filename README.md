@@ -8,7 +8,7 @@
 
 ## 비즈니스 한 줄 요약 (돈 버는 구조)
 
-**Open Core 모델.** 코어(위젯+인박스+커넥터)는 AGPL-3.0 오픈소스로 무료 셀프호스팅 → GitHub/커뮤니티로 유입 → 운영이 귀찮아진 팀이 **유료 클라우드(SaaS)로 전환**하는 것이 주 수익. LLM 비용은 유저가 부담(BYO Key)하므로 우리 원가는 서버비뿐 → 고마진. 상세는 `docs/01_BUSINESS_MODEL.md`.
+**Open Core 모델.** 코어(위젯+인박스+커넥터)는 AGPL-3.0 오픈소스로 무료 셀프호스팅 → GitHub/커뮤니티로 유입 → 운영이 귀찮아진 팀이 **유료 클라우드(SaaS)로 전환**하는 것이 주 수익. LLM 비용은 유저가 부담(BYO Key)하므로 우리 원가는 서버비뿐 → 고마진. 상세는 `docs/internal/01_BUSINESS_MODEL.md`.
 
 ## 브랜드 & 네이밍 규칙 (확정)
 
@@ -34,8 +34,8 @@
 | # | 파일 | 역할 | 누가 언제 읽나 |
 |---|---|---|---|
 | - | `CLAUDE.md` | Claude Code 작업 규칙 (레포 루트 배치) | 매 세션 자동 로드 |
-| 00 | `docs/00_PRD.md` | 제품 요구사항 — 무엇을 왜 | 기능 추가/변경 판단 시 |
-| 01 | `docs/01_BUSINESS_MODEL.md` | 과금 모델 + plan 제한의 **코드 명세** | 결제/plan 관련 작업 시 |
+| 00 | `docs/internal/00_PRD.md` | 제품 요구사항 — 무엇을 왜 | 기능 추가/변경 판단 시 |
+| 01 | `docs/internal/01_BUSINESS_MODEL.md` | 과금 모델 + plan 제한의 **코드 명세** | 결제/plan 관련 작업 시 |
 | 02 | `docs/02_ARCHITECTURE.md` | 시스템 설계 — 어떻게 | 구조 결정 시 |
 | 03 | `docs/03_DATA_MODEL.md` | DB 스키마 (**Drizzle 코드 포함**) | 스키마 작업 시 |
 | 04 | `docs/04_API_SPEC.md` | REST + WebSocket **전체 API 명세** | 서버/클라이언트 구현 시 상시 |

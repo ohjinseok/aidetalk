@@ -1,7 +1,7 @@
 # Contributing to AideTalk
 
 AideTalk에 관심을 가져주셔서 감사합니다. 이 문서는 코드/문서 기여 방법을 설명합니다.
-프로젝트 배경과 절대 규칙은 [`CLAUDE.md`](./CLAUDE.md)를, 요구사항은 [`docs/00_PRD.md`](./docs/00_PRD.md)를
+프로젝트 배경과 절대 규칙은 [`CLAUDE.md`](./CLAUDE.md)를, 요구사항은 [`docs/internal/00_PRD.md`](./docs/internal/00_PRD.md)를
 먼저 읽어보시길 권합니다 — AI 페어 개발자뿐 아니라 사람 기여자에게도 같은 규칙이 적용됩니다.
 
 > Read this in English: this file is Korean-first. A short English summary is at the bottom
