@@ -1,10 +1,21 @@
 "use client";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { td } from "../../lib/i18n";
-import { Button } from "@/components/ui/button";
-import { Modal } from "./Modal";
 
-/** 파괴적 액션 확인(07 §6). */
+/**
+ * 파괴적 액션 확인(07 §6) — 내부는 shadcn AlertDialog. 콜사이트 props는 유지한다.
+ * Esc/취소로 닫으면 onCancel, 확인 버튼은 onConfirm.
+ */
 export function ConfirmDialog({
   open,
   title,
@@ -23,22 +34,27 @@ export function ConfirmDialog({
   onCancel: () => void;
 }) {
   return (
-    <Modal
+    <AlertDialog
       open={open}
-      onClose={onCancel}
-      title={title ?? td("dashboard.confirm.title")}
-      footer={
-        <>
-          <Button variant="outline" onClick={onCancel}>
-            {td("dashboard.confirm.cancel")}
-          </Button>
-          <Button variant={danger ? "destructive" : "default"} onClick={onConfirm}>
-            {confirmLabel ?? td("dashboard.confirm.confirm")}
-          </Button>
-        </>
-      }
+      onOpenChange={(next) => {
+        if (!next) onCancel();
+      }}
     >
-      <p className="text-sm text-gray-700">{message}</p>
-    </Modal>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title ?? td("dashboard.confirm.title")}</AlertDialogTitle>
+          <AlertDialogDescription>{message}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{td("dashboard.confirm.cancel")}</AlertDialogCancel>
+          <AlertDialogAction
+            variant={danger ? "destructive" : "default"}
+            onClick={onConfirm}
+          >
+            {confirmLabel ?? td("dashboard.confirm.confirm")}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
