@@ -83,7 +83,7 @@ export default function OnboardingPage() {
                     className={cn(
                       "cursor-pointer rounded-lg border p-4 transition-colors",
                       segment === s.value
-                        ? "border-primary ring-1 ring-primary bg-primary/5"
+                        ? "border-primary bg-primary/5"
                         : "border-border hover:border-primary/50"
                     )}
                   >

@@ -1,5 +1,7 @@
 "use client";
 
+import { MessageCircle } from "lucide-react";
+
 import type { WidgetSettings } from "../../lib/api/schemas";
 import { td } from "../../lib/i18n";
 
@@ -32,11 +34,11 @@ export function WidgetPreview({ settings }: { settings: WidgetSettings }) {
         </div>
         <div className={`mt-2 flex ${right ? "justify-end" : "justify-start"}`}>
           <div
-            className="flex h-12 w-12 items-center justify-center rounded-full text-xl shadow-lg"
+            className="flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg"
             style={{ background: color }}
             aria-hidden
           >
-            💬
+            <MessageCircle className="size-5" strokeWidth={2} />
           </div>
         </div>
       </div>

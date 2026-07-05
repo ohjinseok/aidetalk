@@ -42,8 +42,8 @@ function StatCard({
   emphasis?: boolean;
 }) {
   return (
-    <div className="rounded-xl border bg-card p-4 shadow-sm">
-      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+    <div className="rounded-xl border bg-card p-5 shadow-sm">
+      <div className="flex items-center gap-1 text-[11px] font-medium tracking-wide text-muted-foreground">
         <span>{label}</span>
         {hint ? (
           <Tooltip>
@@ -61,7 +61,7 @@ function StatCard({
         ) : null}
       </div>
       <p
-        className={`mt-1 font-semibold tracking-tight text-foreground ${
+        className={`mt-1.5 tabular-nums font-semibold tracking-tight text-foreground ${
           emphasis ? "text-2xl" : "text-xl"
         }`}
       >
@@ -153,16 +153,18 @@ export function TrackingScreen() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-xs font-semibold text-muted-foreground">
+          <CardTitle className="text-[11px] font-medium tracking-wide text-muted-foreground">
             {td("dashboard.tracking.bySource")}
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex gap-6 text-sm text-foreground">
-          <span>
-            {td("dashboard.tracking.sourceClickOnly")}: {summary.bySource.click_only}
+        <CardContent className="flex gap-8">
+          <span className="flex items-baseline gap-1.5 text-sm text-foreground">
+            <span className="text-muted-foreground">{td("dashboard.tracking.sourceClickOnly")}</span>
+            <span className="tabular-nums font-medium">{summary.bySource.click_only}</span>
           </span>
-          <span>
-            {td("dashboard.tracking.sourcePixel")}: {summary.bySource.pixel}
+          <span className="flex items-baseline gap-1.5 text-sm text-foreground">
+            <span className="text-muted-foreground">{td("dashboard.tracking.sourcePixel")}</span>
+            <span className="tabular-nums font-medium">{summary.bySource.pixel}</span>
           </span>
         </CardContent>
       </Card>

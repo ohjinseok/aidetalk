@@ -202,7 +202,9 @@ export function AgentsScreen() {
                       <span className="font-medium text-foreground">{agent.name}</span>
                       {statusBadge(agent.status)}
                     </div>
-                    <p className="mt-0.5 break-all text-xs text-muted-foreground">{agent.endpointUrl}</p>
+                    <p className="mt-0.5 break-all font-mono text-xs text-muted-foreground">
+                      {agent.endpointUrl}
+                    </p>
                     {agent.status === "auto_disabled" ? (
                       <Link
                         href={`/w/${wsId}/agents/${agent.id}/logs`}
@@ -226,7 +228,7 @@ export function AgentsScreen() {
                   </Button>
                   {tr && tr !== "loading" ? (
                     <span
-                      className={`text-xs ${tr.ok ? "text-green-600 dark:text-green-500" : "text-destructive"}`}
+                      className={`tabular-nums text-xs ${tr.ok ? "text-green-600 dark:text-green-500" : "text-destructive"}`}
                     >
                       {tr.ok
                         ? tf("dashboard.agents.testOk", { latency: tr.latencyMs ?? 0 })

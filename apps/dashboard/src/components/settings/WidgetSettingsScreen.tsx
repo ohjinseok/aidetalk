@@ -318,7 +318,7 @@ export function WidgetSettingsScreen() {
           {td("dashboard.widget.embedCode")}
         </h2>
         <p className="mb-2 text-xs text-muted-foreground">{td("dashboard.widget.embedCodeHint")}</p>
-        <pre className="overflow-x-auto rounded-md border bg-muted p-3 text-xs text-foreground">
+        <pre className="overflow-x-auto rounded-md border bg-muted p-3 font-mono text-xs text-foreground">
           <code>{embedCode}</code>
         </pre>
         <div className="mt-2">

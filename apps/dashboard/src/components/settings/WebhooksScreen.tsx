@@ -153,8 +153,8 @@ export function WebhooksScreen() {
               <Card>
                 <CardContent className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="break-all text-sm font-medium text-foreground">{w.url}</p>
-                    <div className="mt-1 flex flex-wrap gap-1">
+                    <p className="break-all font-mono text-sm text-foreground">{w.url}</p>
+                    <div className="mt-1.5 flex flex-wrap gap-1">
                       {w.events.map((ev) => (
                         <Badge key={ev} variant="secondary">
                           {ev === "agent.auto_disabled"

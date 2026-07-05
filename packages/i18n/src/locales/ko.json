@@ -33,7 +33,9 @@
     "dateYesterday": "어제",
     "offHoursDefault": "지금은 상담 운영 시간이 아닙니다. 메시지를 남겨주시면 확인 후 답변드리겠습니다.",
     "errorGeneric": "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-    "systemLabel": "안내"
+    "systemLabel": "안내",
+    "headerSubtitle": "보통 몇 분 이내에 답변드려요",
+    "aiLabel": "AI"
   },
   "dashboard": {
     "common": {
@@ -237,6 +239,7 @@
       "title": "AI 로그",
       "time": "시각",
       "mode": "모드",
+      "modeAssist": "어시스트",
       "outcome": "결과",
       "latency": "지연",
       "preview": "미리보기",

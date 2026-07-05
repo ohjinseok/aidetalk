@@ -11,6 +11,7 @@ import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { AiChip } from "../inbox/AiChip";
 import { Modal } from "../ui/Modal";
 import {
   Select,
@@ -129,11 +130,21 @@ export function LogsScreen({ agentId }: { agentId: string }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{td("dashboard.logs.time")}</TableHead>
-                <TableHead>{td("dashboard.logs.mode")}</TableHead>
-                <TableHead>{td("dashboard.logs.outcome")}</TableHead>
-                <TableHead>{td("dashboard.logs.latency")}</TableHead>
-                <TableHead>{td("dashboard.logs.preview")}</TableHead>
+                <TableHead className="text-[11px] font-medium tracking-wide text-muted-foreground">
+                  {td("dashboard.logs.time")}
+                </TableHead>
+                <TableHead className="text-[11px] font-medium tracking-wide text-muted-foreground">
+                  {td("dashboard.logs.mode")}
+                </TableHead>
+                <TableHead className="text-[11px] font-medium tracking-wide text-muted-foreground">
+                  {td("dashboard.logs.outcome")}
+                </TableHead>
+                <TableHead className="text-right text-[11px] font-medium tracking-wide text-muted-foreground">
+                  {td("dashboard.logs.latency")}
+                </TableHead>
+                <TableHead className="text-[11px] font-medium tracking-wide text-muted-foreground">
+                  {td("dashboard.logs.preview")}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -142,12 +153,22 @@ export function LogsScreen({ agentId }: { agentId: string }) {
                 const latency = rs && typeof rs.latencyMs === "number" ? `${rs.latencyMs}ms` : "";
                 return (
                   <TableRow key={log.id} className="cursor-pointer" onClick={() => setDetail(log)}>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="tabular-nums text-muted-foreground">
                       {formatMessageTime(log.createdAt)}
                     </TableCell>
-                    <TableCell>{log.mode}</TableCell>
+                    <TableCell>
+                      {log.mode === "reply" ? (
+                        <AiChip />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          {td("dashboard.logs.modeAssist")}
+                        </span>
+                      )}
+                    </TableCell>
                     <TableCell>{td(OUTCOME_KEY[log.outcome])}</TableCell>
-                    <TableCell className="text-muted-foreground">{latency}</TableCell>
+                    <TableCell className="text-right tabular-nums text-muted-foreground">
+                      {latency}
+                    </TableCell>
                     <TableCell className="max-w-xs truncate text-muted-foreground">
                       {preview(log.requestSummary)}
                     </TableCell>
@@ -173,9 +194,9 @@ export function LogsScreen({ agentId }: { agentId: string }) {
         title={td("dashboard.logs.detailTitle")}
       >
         {detail ? (
-          <div className="space-y-3 text-sm">
+          <div className="space-y-4 text-sm">
             <div>
-              <p className="mb-1 text-xs font-medium text-muted-foreground">
+              <p className="mb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground">
                 {td("dashboard.logs.requestSummary")}
               </p>
               <pre className="overflow-x-auto rounded bg-muted p-3 font-mono text-xs text-foreground">
@@ -183,7 +204,7 @@ export function LogsScreen({ agentId }: { agentId: string }) {
               </pre>
             </div>
             <div>
-              <p className="mb-1 text-xs font-medium text-muted-foreground">
+              <p className="mb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground">
                 {td("dashboard.logs.responseSummary")}
               </p>
               <pre className="overflow-x-auto rounded bg-muted p-3 font-mono text-xs text-foreground">

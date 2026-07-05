@@ -126,9 +126,9 @@ export function MembersScreen() {
 
               {inviteUrl ? (
                 <div className="rounded-md bg-primary/5 p-3">
-                  <p className="mb-1 text-xs text-primary">{td("dashboard.members.inviteCreated")}</p>
+                  <p className="mb-1.5 text-xs text-primary">{td("dashboard.members.inviteCreated")}</p>
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 break-all rounded bg-card px-2 py-1 text-xs text-foreground">
+                    <code className="flex-1 break-all rounded bg-muted px-2 py-1 font-mono text-xs text-foreground">
                       {inviteUrl}
                     </code>
                     <CopyButton value={inviteUrl} label={td("dashboard.members.inviteUrlCopy")} />

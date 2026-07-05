@@ -33,7 +33,9 @@
     "dateYesterday": "Yesterday",
     "offHoursDefault": "We're currently outside support hours. Leave a message and we'll get back to you.",
     "errorGeneric": "Something went wrong. Please try again in a moment.",
-    "systemLabel": "Notice"
+    "systemLabel": "Notice",
+    "headerSubtitle": "We usually reply within a few minutes",
+    "aiLabel": "AI"
   },
   "dashboard": {
     "common": {
@@ -237,6 +239,7 @@
       "title": "AI logs",
       "time": "Time",
       "mode": "Mode",
+      "modeAssist": "Assist",
       "outcome": "Outcome",
       "latency": "Latency",
       "preview": "Preview",
