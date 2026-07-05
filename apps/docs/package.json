@@ -1,0 +1,21 @@
+{
+  "name": "@aidetalk/docs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "AideTalk 공개 문서 사이트 (VitePress) — 설치 가이드/Agent Protocol/위젯 임베드 가이드",
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.9.3",
+    "vitepress": "^1.6.4",
+    "vitest": "^2.1.9"
+  }
+}
