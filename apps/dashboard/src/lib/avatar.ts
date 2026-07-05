@@ -31,9 +31,9 @@ const PALETTE: readonly string[] = [
 
 /**
  * FNV-1a 계열의 간단한 결정적 문자열 해시. 항상 32bit 비음수 정수를 반환.
- * 암호학 용도 아님 — 색 분산만 목적.
+ * 암호학 용도 아님 — 색 분산만 목적. 모듈 내부 전용(공개 API는 visitorAvatar).
  */
-export function hashString(input: string): number {
+function hashString(input: string): number {
   let hash = 2166136261;
   for (let i = 0; i < input.length; i++) {
     hash ^= input.charCodeAt(i);
@@ -44,8 +44,8 @@ export function hashString(input: string): number {
   return hash >>> 0;
 }
 
-/** seed 문자열 → 팔레트에서 결정적으로 선택된 단색. */
-export function avatarColor(seed: string): string {
+/** seed 문자열 → 팔레트에서 결정적으로 선택된 단색. 모듈 내부 전용. */
+function avatarColor(seed: string): string {
   return PALETTE[hashString(seed) % PALETTE.length]!;
 }
 

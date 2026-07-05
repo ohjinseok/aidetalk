@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 
-import { workspaceApi } from "../../lib/api/endpoints";
-import { td } from "../../lib/i18n";
-import type { AttributionRule } from "../../lib/api/schemas";
-import { useToast } from "../providers/ToastProvider";
-import { useWorkspace } from "../providers/WorkspaceProvider";
+import { workspaceApi } from "@/lib/api/endpoints";
+import { td } from "@/lib/i18n";
+import type { AttributionRule } from "@/lib/api/schemas";
+import { useToast } from "@/components/providers/ToastProvider";
+import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -59,9 +59,7 @@ export function WorkspaceSettingsScreen() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">
-            {td("dashboard.workspace.title")}
-          </CardTitle>
+          <CardTitle className="text-sm font-medium">{td("dashboard.workspace.title")}</CardTitle>
         </CardHeader>
         <CardContent>
           <FormRow label={td("dashboard.workspace.name")} htmlFor="wsName">
@@ -86,7 +84,9 @@ export function WorkspaceSettingsScreen() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="last_click">{td("dashboard.workspace.lastClick")}</SelectItem>
-                  <SelectItem value="first_click">{td("dashboard.workspace.firstClick")}</SelectItem>
+                  <SelectItem value="first_click">
+                    {td("dashboard.workspace.firstClick")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </FormRow>
@@ -123,8 +123,9 @@ export function WorkspaceSettingsScreen() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* TODO(question): 대화 CSV export 엔드포인트가 04 §2에 없음(Could). API 확정 후 연결. */}
-          <Button variant="outline" size="sm" disabled title="TODO: export endpoint">
+          {/* TODO(question): 대화 CSV export 엔드포인트가 04 §2에 없음(Could). API 확정 후 연결.
+              엔드포인트 확정 전까지 disabled — 상단 exportHint가 미구현 안내를 대신한다. */}
+          <Button variant="outline" size="sm" disabled>
             {td("dashboard.workspace.exportCsv")}
           </Button>
         </CardContent>

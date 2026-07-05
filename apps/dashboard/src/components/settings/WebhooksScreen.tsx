@@ -1,32 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import { webhookApi } from "../../lib/api/endpoints";
-import { td } from "../../lib/i18n";
-import type { Webhook, WebhookEventName } from "../../lib/api/schemas";
-import { SecretModal } from "../agents/SecretModal";
-import { useToast } from "../providers/ToastProvider";
-import { useWorkspace } from "../providers/WorkspaceProvider";
+import { webhookApi } from "@/lib/api/endpoints";
+import { td, type TranslationKey } from "@/lib/i18n";
+import type { Webhook, WebhookEventName } from "@/lib/api/schemas";
+import { useResource } from "@/hooks/useResource";
+import { SecretModal } from "@/components/agents/SecretModal";
+import { useToast } from "@/components/providers/ToastProvider";
+import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ConfirmDialog } from "../ui/ConfirmDialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { FormRow } from "@/components/ui/form-row";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 
 /** 04 §2 웹훅 이벤트 카탈로그 — 새 이벤트 추가 시 서버 http/schemas.ts와 함께 갱신. */
-const EVENT_OPTIONS: { value: WebhookEventName; labelKey: "dashboard.webhooks.eventAutoDisabled" | "dashboard.webhooks.eventHandoff" }[] = [
+const EVENT_OPTIONS: { value: WebhookEventName; labelKey: TranslationKey }[] = [
   { value: "agent.auto_disabled", labelKey: "dashboard.webhooks.eventAutoDisabled" },
   { value: "conversation.handoff", labelKey: "dashboard.webhooks.eventHandoff" },
 ];
+
+/** 이벤트 값 → 라벨 키 조회(등록 폼과 목록 배지에서 공용). */
+const EVENT_LABEL: Record<WebhookEventName, TranslationKey> = Object.fromEntries(
+  EVENT_OPTIONS.map((o) => [o.value, o.labelKey]),
+) as Record<WebhookEventName, TranslationKey>;
 
 /** 웹훅 관리 화면(Should, 07 §5) — 등록/목록/삭제 + secret 1회 노출 모달. */
 export function WebhooksScreen() {
@@ -34,8 +35,11 @@ export function WebhooksScreen() {
   const wsId = workspace.id;
   const toast = useToast();
 
-  const [webhooks, setWebhooks] = useState<Webhook[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: webhooks,
+    loading,
+    reload,
+  } = useResource(() => webhookApi.list(wsId), [] as Webhook[], [wsId]);
   const [secret, setSecret] = useState<string | null>(null);
   const [removeTarget, setRemoveTarget] = useState<Webhook | null>(null);
 
@@ -44,22 +48,10 @@ export function WebhooksScreen() {
   const [events, setEvents] = useState<WebhookEventName[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
-  async function reload() {
-    try {
-      setWebhooks(await webhookApi.list(wsId));
-    } catch (err) {
-      toast.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void reload();
-  }, [wsId]);
-
   function toggleEvent(value: WebhookEventName) {
-    setEvents((prev) => (prev.includes(value) ? prev.filter((e) => e !== value) : [...prev, value]));
+    setEvents((prev) =>
+      prev.includes(value) ? prev.filter((e) => e !== value) : [...prev, value],
+    );
   }
 
   async function onRegister(e: React.FormEvent) {
@@ -120,7 +112,10 @@ export function WebhooksScreen() {
               </span>
               <div className="flex flex-col gap-1">
                 {EVENT_OPTIONS.map((opt) => (
-                  <label key={opt.value} className="flex items-center gap-2 text-sm text-foreground">
+                  <label
+                    key={opt.value}
+                    className="flex items-center gap-2 text-sm text-foreground"
+                  >
                     <input
                       type="checkbox"
                       checked={events.includes(opt.value)}
@@ -157,9 +152,7 @@ export function WebhooksScreen() {
                     <div className="mt-1.5 flex flex-wrap gap-1">
                       {w.events.map((ev) => (
                         <Badge key={ev} variant="secondary">
-                          {ev === "agent.auto_disabled"
-                            ? td("dashboard.webhooks.eventAutoDisabled")
-                            : td("dashboard.webhooks.eventHandoff")}
+                          {td(EVENT_LABEL[ev])}
                         </Badge>
                       ))}
                     </div>

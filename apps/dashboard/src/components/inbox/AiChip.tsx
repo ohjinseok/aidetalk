@@ -1,4 +1,4 @@
-import { td } from "../../lib/i18n";
+import { td } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /**

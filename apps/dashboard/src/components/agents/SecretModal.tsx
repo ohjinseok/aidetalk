@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-import { CopyButton } from "../ui/CopyButton";
-import { Modal } from "../ui/Modal";
-import { td, type TranslationKey } from "../../lib/i18n";
+import { CopyButton } from "@/components/ui/CopyButton";
+import { Modal } from "@/components/ui/Modal";
+import { td, type TranslationKey } from "@/lib/i18n";
 
 const NODE_EXAMPLE = `import crypto from "node:crypto";
 
@@ -69,7 +69,9 @@ export function SecretModal({
                 : "bg-muted text-muted-foreground hover:text-foreground"
             }`}
           >
-            {t === "node" ? td("dashboard.agents.exampleNode") : td("dashboard.agents.examplePython")}
+            {t === "node"
+              ? td("dashboard.agents.exampleNode")
+              : td("dashboard.agents.examplePython")}
           </button>
         ))}
       </div>

@@ -1,18 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import { agentApi } from "../../lib/api/endpoints";
-import { td, tf } from "../../lib/i18n";
-import type { Agent, AgentStatus, AgentTestResult } from "../../lib/api/schemas";
-import { useAgentStatus } from "../providers/AgentStatusProvider";
-import { useToast } from "../providers/ToastProvider";
-import { useWorkspace } from "../providers/WorkspaceProvider";
+import { agentApi } from "@/lib/api/endpoints";
+import { td, tf } from "@/lib/i18n";
+import type { Agent, AgentStatus, AgentTestResult } from "@/lib/api/schemas";
+import { useResource } from "@/hooks/useResource";
+import { useAgentStatus } from "@/components/providers/AgentStatusProvider";
+import { useToast } from "@/components/providers/ToastProvider";
+import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ConfirmDialog } from "../ui/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { FormRow } from "@/components/ui/form-row";
 import { Input } from "@/components/ui/input";
@@ -20,8 +21,10 @@ import { Spinner } from "@/components/ui/spinner";
 import { SecretModal } from "./SecretModal";
 
 function statusBadge(status: AgentStatus) {
-  if (status === "active") return <Badge variant="success">{td("dashboard.agents.statusActive")}</Badge>;
-  if (status === "disabled") return <Badge variant="secondary">{td("dashboard.agents.statusDisabled")}</Badge>;
+  if (status === "active")
+    return <Badge variant="success">{td("dashboard.agents.statusActive")}</Badge>;
+  if (status === "disabled")
+    return <Badge variant="secondary">{td("dashboard.agents.statusDisabled")}</Badge>;
   // auto_disabled는 반드시 destructive(빨강) 유지 — 장애 상태를 눈에 띄게.
   return <Badge variant="destructive">{td("dashboard.agents.statusAutoDisabled")}</Badge>;
 }
@@ -32,8 +35,20 @@ export function AgentsScreen() {
   const toast = useToast();
   const agentStatus = useAgentStatus();
 
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [loading, setLoading] = useState(true);
+  // 목록 로드 시 워크스페이스 셸 배너 상태도 함께 동기화(auto_disabled 즉시 반영/소멸).
+  const {
+    data: agents,
+    loading,
+    reload,
+  } = useResource(
+    async () => {
+      const list = await agentApi.list(wsId);
+      await agentStatus.refresh();
+      return list;
+    },
+    [] as Agent[],
+    [wsId],
+  );
   const [secret, setSecret] = useState<string | null>(null);
   const [rotateTarget, setRotateTarget] = useState<Agent | null>(null);
   const [testResult, setTestResult] = useState<Record<string, AgentTestResult | "loading">>({});
@@ -44,22 +59,6 @@ export function AgentsScreen() {
   const [timeoutMs, setTimeoutMs] = useState("");
   const [assistEnabled, setAssistEnabled] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-
-  async function reload() {
-    try {
-      setAgents(await agentApi.list(wsId));
-      // 목록 갱신 시마다 워크스페이스 셸 배너 상태도 함께 동기화(auto_disabled 즉시 반영/소멸).
-      await agentStatus.refresh();
-    } catch (err) {
-      toast.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void reload();
-  }, [wsId]);
 
   async function onRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -133,11 +132,18 @@ export function AgentsScreen() {
         <Card className="mb-6 shadow-xs">
           <form onSubmit={onRegister}>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">{td("dashboard.agents.registerTitle")}</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {td("dashboard.agents.registerTitle")}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <FormRow label={td("dashboard.agents.name")} htmlFor="agentName">
-                <Input id="agentName" required value={name} onChange={(e) => setName(e.target.value)} />
+                <Input
+                  id="agentName"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
               </FormRow>
               <FormRow label={td("dashboard.agents.endpointUrl")} htmlFor="endpointUrl">
                 <Input
@@ -224,7 +230,9 @@ export function AgentsScreen() {
 
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => void onTest(agent)}>
-                    {tr === "loading" ? td("dashboard.agents.testing") : td("dashboard.agents.test")}
+                    {tr === "loading"
+                      ? td("dashboard.agents.testing")
+                      : td("dashboard.agents.test")}
                   </Button>
                   {tr && tr !== "loading" ? (
                     <span

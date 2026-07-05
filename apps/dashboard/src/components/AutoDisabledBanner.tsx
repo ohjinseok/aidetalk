@@ -3,7 +3,7 @@
 import { TriangleAlert } from "lucide-react";
 import Link from "next/link";
 
-import { td } from "../lib/i18n";
+import { td } from "@/lib/i18n";
 import { useAgentStatus } from "./providers/AgentStatusProvider";
 import { useWorkspace } from "./providers/WorkspaceProvider";
 

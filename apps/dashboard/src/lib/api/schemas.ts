@@ -272,4 +272,10 @@ export const webhookWithSecretSchema = z.object({
 
 // re-export 자주 쓰는 shared 타입
 export { messageSchema, conversationSchema, eventSchema, conversationSummarySchema };
-export type { Message, Conversation, Event, ConversationSummary, Suggestion } from "@aidetalk/shared";
+export type {
+  Message,
+  Conversation,
+  Event,
+  ConversationSummary,
+  Suggestion,
+} from "@aidetalk/shared";

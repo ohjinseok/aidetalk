@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 
-import { agentApi } from "../../lib/api/endpoints";
+import { agentApi } from "@/lib/api/endpoints";
 
 interface AgentStatusCtx {
   /** 워크스페이스에 status=auto_disabled 커넥터가 하나라도 있는지 — 워크스페이스 셸 배너 표시용. */

@@ -43,7 +43,10 @@ describe("upsertMessage", () => {
 
   it("같은 id는 교체(중복 방지)", () => {
     const list = [msg("msg_a", "2026-07-03T10:00:00Z")];
-    const updated = { ...msg("msg_a", "2026-07-03T10:00:00Z"), content: { type: "text" as const, text: "updated" } };
+    const updated = {
+      ...msg("msg_a", "2026-07-03T10:00:00Z"),
+      content: { type: "text" as const, text: "updated" },
+    };
     const out = upsertMessage(list, updated);
     expect(out).toHaveLength(1);
     expect(out[0]!.content.text).toBe("updated");

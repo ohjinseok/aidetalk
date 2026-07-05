@@ -1,22 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import { memberApi } from "../../lib/api/endpoints";
-import { td } from "../../lib/i18n";
-import type { Member, Role } from "../../lib/api/schemas";
-import { useToast } from "../providers/ToastProvider";
-import { useWorkspace } from "../providers/WorkspaceProvider";
+import { memberApi } from "@/lib/api/endpoints";
+import { td } from "@/lib/i18n";
+import type { Member, Role } from "@/lib/api/schemas";
+import { useResource } from "@/hooks/useResource";
+import { useToast } from "@/components/providers/ToastProvider";
+import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ConfirmDialog } from "../ui/ConfirmDialog";
-import { CopyButton } from "../ui/CopyButton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { CopyButton } from "@/components/ui/CopyButton";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { FormRow } from "@/components/ui/form-row";
 import { Input } from "@/components/ui/input";
@@ -34,26 +30,15 @@ export function MembersScreen() {
   const wsId = workspace.id;
   const toast = useToast();
 
-  const [members, setMembers] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: members,
+    loading,
+    reload,
+  } = useResource(() => memberApi.list(wsId), [] as Member[], [wsId]);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<Role>("agent_member");
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [removeTarget, setRemoveTarget] = useState<Member | null>(null);
-
-  async function reload() {
-    try {
-      setMembers(await memberApi.list(wsId));
-    } catch (err) {
-      toast.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void reload();
-  }, [wsId]);
 
   async function onInvite(e: React.FormEvent) {
     e.preventDefault();
@@ -89,7 +74,9 @@ export function MembersScreen() {
         <form onSubmit={onInvite}>
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">{td("dashboard.members.invite")}</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {td("dashboard.members.invite")}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap items-end gap-2">
@@ -111,22 +98,24 @@ export function MembersScreen() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="agent_member">{td("dashboard.members.roleAgent")}</SelectItem>
+                        <SelectItem value="agent_member">
+                          {td("dashboard.members.roleAgent")}
+                        </SelectItem>
                         <SelectItem value="owner">{td("dashboard.members.roleOwner")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormRow>
                 </div>
                 <div className="mb-4">
-                  <Button type="submit">
-                    {td("dashboard.members.invite")}
-                  </Button>
+                  <Button type="submit">{td("dashboard.members.invite")}</Button>
                 </div>
               </div>
 
               {inviteUrl ? (
                 <div className="rounded-md bg-primary/5 p-3">
-                  <p className="mb-1.5 text-xs text-primary">{td("dashboard.members.inviteCreated")}</p>
+                  <p className="mb-1.5 text-xs text-primary">
+                    {td("dashboard.members.inviteCreated")}
+                  </p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 break-all rounded bg-muted px-2 py-1 font-mono text-xs text-foreground">
                       {inviteUrl}
@@ -155,14 +144,24 @@ export function MembersScreen() {
             <li key={m.id} className="flex items-center justify-between gap-2 px-4 py-3">
               <div className="min-w-0">
                 <p className="truncate text-sm text-foreground">{m.name || m.email || m.userId}</p>
-                {m.email ? <p className="truncate text-xs text-muted-foreground">{m.email}</p> : null}
+                {m.email ? (
+                  <p className="truncate text-xs text-muted-foreground">{m.email}</p>
+                ) : null}
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant={m.role === "owner" ? "default" : "secondary"}>
-                  {td(m.role === "owner" ? "dashboard.members.roleOwner" : "dashboard.members.roleAgent")}
+                  {td(
+                    m.role === "owner"
+                      ? "dashboard.members.roleOwner"
+                      : "dashboard.members.roleAgent",
+                  )}
                 </Badge>
                 <Badge variant={m.status === "active" ? "success" : "warning"}>
-                  {td(m.status === "active" ? "dashboard.members.statusActive" : "dashboard.members.statusInvited")}
+                  {td(
+                    m.status === "active"
+                      ? "dashboard.members.statusActive"
+                      : "dashboard.members.statusInvited",
+                  )}
                 </Badge>
                 {isOwner ? (
                   <Button variant="ghost" size="sm" onClick={() => setRemoveTarget(m)}>

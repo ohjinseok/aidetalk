@@ -15,7 +15,7 @@ function isSameDay(a: Date, b: Date): boolean {
 /**
  * 메시지/이벤트 시각 표시.
  * - 오늘: "HH:mm"
- * - 그 외: "M월 d일" (ko), 다른 로케일은 short 날짜.
+ * - 그 외: 로케일 short 날짜(ko는 "8월 15일", en은 "Aug 15").
  */
 export function formatMessageTime(iso: string, now: Date = new Date(), locale = "ko"): string {
   const d = new Date(iso);
@@ -26,9 +26,6 @@ export function formatMessageTime(iso: string, now: Date = new Date(), locale = 
       minute: "2-digit",
       hour12: false,
     }).format(d);
-  }
-  if (locale === "ko") {
-    return `${d.getMonth() + 1}월 ${d.getDate()}일`;
   }
   return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).format(d);
 }

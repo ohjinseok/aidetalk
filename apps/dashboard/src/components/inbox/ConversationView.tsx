@@ -4,17 +4,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { PanelRight } from "lucide-react";
 
-import type { Conversation, Message, Suggestion } from "@aidetalk/shared";
+import type { Conversation, Suggestion } from "@aidetalk/shared";
 
-import { assistApi, inboxApi, memberApi, trackingApi } from "../../lib/api/endpoints";
-import { td, tf } from "../../lib/i18n";
-import type { ConversationDetail, ConversationTracking, Member } from "../../lib/api/schemas";
-import { readReceiptMsgId as computeReadReceiptMsgId } from "../../lib/readReceipt";
-import { mergeTimeline } from "../../lib/timeline";
-import { upsertMessage } from "../../lib/timeline";
-import { useSocketEvent, useSocket } from "../providers/SocketProvider";
-import { useWorkspace } from "../providers/WorkspaceProvider";
-import { useToast } from "../providers/ToastProvider";
+import { inboxApi, assistApi } from "@/lib/api/endpoints";
+import { td, tf } from "@/lib/i18n";
+import { readReceiptMsgId as computeReadReceiptMsgId } from "@/lib/readReceipt";
+import { mergeTimeline, upsertMessage } from "@/lib/timeline";
+import { useConversation } from "@/hooks/useConversation";
+import { useWorkspace } from "@/components/providers/WorkspaceProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 import { AvatarVisitor } from "@/components/ui/avatar-visitor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,147 +24,51 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-
-// Radix Select는 빈 문자열 value를 허용하지 않아 "담당자 미지정"에 센티넬 값을 쓴다.
-const UNASSIGNED = "__unassigned__";
 import { AiChip } from "./AiChip";
 import { AssistPanel } from "./AssistPanel";
 import { Composer } from "./Composer";
 import { Timeline, type TrackedMap } from "./Timeline";
 import { VisitorPanel } from "./VisitorPanel";
 
+// Radix Select는 빈 문자열 value를 허용하지 않아 "담당자 미지정"에 센티넬 값을 쓴다.
+const UNASSIGNED = "__unassigned__";
+
 export function ConversationView({ convId }: { convId: string }) {
   const { workspace } = useWorkspace();
   const wsId = workspace.id;
   const isS1 = workspace.segment === "s1_site";
   const toast = useToast();
-  const { socket } = useSocket();
 
-  const [detail, setDetail] = useState<ConversationDetail | null>(null);
-  const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [tracking, setTracking] = useState<ConversationTracking | null>(null);
+  // 대화 데이터(초기 로드 fetch + 소켓 구독/이벤트)는 useConversation이 소유.
+  const {
+    detail,
+    setDetail,
+    conversation,
+    setConversation,
+    messages,
+    setMessages,
+    members,
+    tracking,
+    suggestions,
+    setSuggestions,
+    visitorLastReadId,
+    visitorTyping,
+    dimmed,
+    loading,
+  } = useConversation(convId, wsId, isS1);
 
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  // 양방향 읽음 표시(read receipts): 손님이 읽은 마지막 메시지 id + 손님 타이핑 상태.
-  const [visitorLastReadId, setVisitorLastReadId] = useState<string | null>(null);
-  const [visitorTyping, setVisitorTyping] = useState(false);
-  const [dimmed, setDimmed] = useState<Set<string>>(new Set());
+  // 컴포저·편집 상태는 화면 로컬 — 대화 전환 시 초기화.
   const [composer, setComposer] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showInfo, setShowInfo] = useState(true);
-  const [loading, setLoading] = useState(true);
 
-  // ---- 초기 로드 ----
   useEffect(() => {
-    let alive = true;
-    setLoading(true);
-    setDetail(null);
-    setMessages([]);
-    setSuggestions([]);
     setComposer("");
     setEditingId(null);
-
-    async function load() {
-      try {
-        const d = await inboxApi.get(wsId, convId);
-        if (!alive) return;
-        setDetail(d);
-        setConversation(d.conversation);
-        setVisitorLastReadId(d.conversation.visitorLastReadMessageId ?? null);
-        setVisitorTyping(false);
-
-        const msgs = await inboxApi.messages(wsId, convId, { limit: 50 });
-        if (!alive) return;
-        setMessages(msgs.items);
-
-        // 담당자 드롭다운용 멤버
-        memberApi
-          .list(wsId)
-          .then((m) => alive && setMembers(m))
-          .catch(() => undefined);
-
-        // 어시스트(사람 모드)
-        if (d.conversation.mode === "human") {
-          assistApi
-            .list(wsId, convId, {})
-            .then((s) => alive && setSuggestions(s.items))
-            .catch(() => undefined);
-        }
-
-        // 전환 트래킹(S1)
-        if (isS1) {
-          trackingApi
-            .conversation(wsId, convId)
-            .then((t) => alive && setTracking(t))
-            .catch(() => undefined);
-        }
-      } catch (err) {
-        if (alive) toast.error(err);
-      } finally {
-        if (alive) setLoading(false);
-      }
-    }
-    void load();
-    return () => {
-      alive = false;
-    };
-  }, [wsId, convId, isS1, toast]);
-
-  // ---- 구독 ----
-  useEffect(() => {
-    socket.subscribeConversation(convId);
-    return () => socket.unsubscribeConversation(convId);
-  }, [socket, convId]);
-
-  // ---- 열람/새 메시지 시 읽음 처리(read.mark) ----
-  // 상담원이 이 대화를 보고 있으면 마지막 메시지를 읽음 처리 → 손님에게 "읽음" 표시.
-  useEffect(() => {
-    const last = messages[messages.length - 1];
-    if (last) socket.markRead(convId, last.id);
-  }, [socket, convId, messages]);
-
-  useSocketEvent((msg) => {
-    if (msg.type === "message.new") {
-      const m = msg.payload.message;
-      if (m.conversationId !== convId) return;
-      setMessages((prev) => upsertMessage(prev, m));
-      // 손님 새 메시지 → 이전 pending 카드 dim(07 §2.3)
-      if (m.role === "visitor") {
-        setVisitorTyping(false);
-        setSuggestions((cur) => {
-          setDimmed((prev) => {
-            const next = new Set(prev);
-            for (const s of cur) if (s.outcome === "pending") next.add(s.id);
-            return next;
-          });
-          return cur;
-        });
-      }
-    } else if (msg.type === "conversation.updated") {
-      if (msg.payload.conversation.id === convId) setConversation(msg.payload.conversation);
-    } else if (msg.type === "suggestion.new") {
-      const s = msg.payload.suggestion;
-      if (s.conversationId === convId) setSuggestions((prev) => [s, ...prev]);
-    } else if (msg.type === "read.update") {
-      // 손님이 읽음 처리 → 상담원 마지막 메시지에 "읽음" 표시(by="agent"는 내 자신 → 무시).
-      if (msg.payload.conversationId === convId && msg.payload.by === "visitor") {
-        setVisitorLastReadId(msg.payload.lastMessageId);
-      }
-    } else if (msg.type === "typing.start" || msg.type === "typing.stop") {
-      // 손님 타이핑만 "입력 중…"으로 표시(ai/human은 상담원 화면에 불필요).
-      if (msg.payload.conversationId === convId && msg.payload.by === "visitor") {
-        setVisitorTyping(msg.type === "typing.start");
-      }
-    }
-  });
+  }, [convId]);
 
   // ---- 파생 ----
-  const timeline = useMemo(
-    () => mergeTimeline(messages, detail?.events ?? []),
-    [messages, detail],
-  );
+  const timeline = useMemo(() => mergeTimeline(messages, detail?.events ?? []), [messages, detail]);
 
   const trackedMap: TrackedMap = useMemo(() => {
     const map: TrackedMap = new Map();
@@ -208,7 +110,7 @@ export function ConversationView({ convId }: { convId: string }) {
           .then((s) => setSuggestions((prev) => prev.map((x) => (x.id === s.id ? s : x))))
           .catch(() => undefined);
       }
-      // ai였다면 서버가 human으로 전환(120줄) — 낙관적 반영
+      // ai였다면 서버가 human으로 전환 — 낙관적 반영
       if (conversation.mode === "ai") {
         setConversation({ ...conversation, mode: "human" });
       }
@@ -319,7 +221,9 @@ export function ConversationView({ convId }: { convId: string }) {
                 detail.visitor.email ||
                 tf("dashboard.inbox.anonymousVisitor", { id: detail.visitor.id.slice(-4) })}
             </span>
-            <Badge variant={conversation.status === "closed" ? "secondary" : "warning"}>{td(statusKey)}</Badge>
+            <Badge variant={conversation.status === "closed" ? "secondary" : "warning"}>
+              {td(statusKey)}
+            </Badge>
             {/* AI 응대 중 — 지금 기계가 응대함을 "AI" 모노그램 칩으로. */}
             {!modeHuman ? <AiChip /> : null}
           </div>

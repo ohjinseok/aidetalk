@@ -37,7 +37,10 @@ afterEach(() => {
 });
 
 function makeSocket() {
-  return new DashboardSocket("ws://test/ws/agent", (u) => new FakeWebSocket(u) as unknown as WebSocket);
+  return new DashboardSocket(
+    "ws://test/ws/agent",
+    (u) => new FakeWebSocket(u) as unknown as WebSocket,
+  );
 }
 
 describe("nextBackoff", () => {

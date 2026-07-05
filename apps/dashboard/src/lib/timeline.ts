@@ -12,12 +12,18 @@ export type TimelineItem =
 /** createdAt 오름차순, 동시각이면 id 오름차순으로 안정 정렬. */
 export function mergeTimeline(messages: Message[], events: Event[]): TimelineItem[] {
   const items: TimelineItem[] = [
-    ...messages.map(
-      (m): TimelineItem => ({ kind: "message", id: m.id, createdAt: m.createdAt, message: m }),
-    ),
-    ...events.map(
-      (e): TimelineItem => ({ kind: "event", id: e.id, createdAt: e.createdAt, event: e }),
-    ),
+    ...messages.map((m): TimelineItem => ({
+      kind: "message",
+      id: m.id,
+      createdAt: m.createdAt,
+      message: m,
+    })),
+    ...events.map((e): TimelineItem => ({
+      kind: "event",
+      id: e.id,
+      createdAt: e.createdAt,
+      event: e,
+    })),
   ];
   items.sort((a, b) => {
     if (a.createdAt < b.createdAt) return -1;

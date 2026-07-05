@@ -1,10 +1,18 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import type { ServerToDashboardMessage } from "@aidetalk/shared";
 
-import { DashboardSocket, type WsStatus } from "../../lib/ws/client";
+import { DashboardSocket, type WsStatus } from "@/lib/ws/client";
 
 interface SocketCtx {
   socket: DashboardSocket;

@@ -3,7 +3,11 @@ import { describe, expect, it } from "vitest";
 import type { InboxItem } from "../api/schemas";
 import { patchInboxConversation, removeInbox, upsertInbox } from "../ws/reducer";
 
-function item(id: string, lastMessageAt: string | null, status: "open" | "pending" | "closed" = "open"): InboxItem {
+function item(
+  id: string,
+  lastMessageAt: string | null,
+  status: "open" | "pending" | "closed" = "open",
+): InboxItem {
   return {
     conversation: {
       id,
@@ -50,7 +54,10 @@ describe("removeInbox / patchInboxConversation", () => {
 
   it("patch는 존재하는 대화만 갱신한다", () => {
     const list = [item("conv_a", "2026-07-03T10:00:00Z")];
-    const patched = { ...item("conv_a", "2026-07-03T10:00:00Z").conversation, mode: "human" as const };
+    const patched = {
+      ...item("conv_a", "2026-07-03T10:00:00Z").conversation,
+      mode: "human" as const,
+    };
     const out = patchInboxConversation(list, patched);
     expect(out[0]!.conversation.mode).toBe("human");
   });

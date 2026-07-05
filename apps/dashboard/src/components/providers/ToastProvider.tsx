@@ -3,9 +3,9 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { toast as sonnerToast } from "sonner";
 
-import { ApiError } from "../../lib/api/client";
-import { errorMessage } from "../../lib/errors";
-import { td } from "../../lib/i18n";
+import { ApiError } from "@/lib/api/client";
+import { errorMessage } from "@/lib/errors";
+import { td } from "@/lib/i18n";
 
 type ToastKind = "success" | "error";
 

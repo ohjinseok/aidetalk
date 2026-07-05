@@ -1,4 +1,4 @@
-import { SettingsTabs } from "../../../../../components/settings/SettingsTabs";
+import { SettingsTabs } from "@/components/settings/SettingsTabs";
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -10,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { td } from "../../lib/i18n";
+import { td } from "@/lib/i18n";
 
 /**
  * 파괴적 액션 확인(07 §6) — 내부는 shadcn AlertDialog. 콜사이트 props는 유지한다.
@@ -47,10 +47,7 @@ export function ConfirmDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{td("dashboard.confirm.cancel")}</AlertDialogCancel>
-          <AlertDialogAction
-            variant={danger ? "destructive" : "default"}
-            onClick={onConfirm}
-          >
+          <AlertDialogAction variant={danger ? "destructive" : "default"} onClick={onConfirm}>
             {confirmLabel ?? td("dashboard.confirm.confirm")}
           </AlertDialogAction>
         </AlertDialogFooter>

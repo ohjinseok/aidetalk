@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { agentApi } from "../../lib/api/endpoints";
-import { formatMessageTime } from "../../lib/format";
-import { td, type TranslationKey } from "../../lib/i18n";
-import type { AgentLog, AgentLogOutcome } from "../../lib/api/schemas";
-import { useToast } from "../providers/ToastProvider";
-import { useWorkspace } from "../providers/WorkspaceProvider";
+import { agentApi } from "@/lib/api/endpoints";
+import { formatMessageTime } from "@/lib/format";
+import { td, type TranslationKey } from "@/lib/i18n";
+import type { AgentLog, AgentLogOutcome } from "@/lib/api/schemas";
+import { useToast } from "@/components/providers/ToastProvider";
+import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { AiChip } from "../inbox/AiChip";
-import { Modal } from "../ui/Modal";
+import { AiChip } from "@/components/inbox/AiChip";
+import { Modal } from "@/components/ui/Modal";
 import {
   Select,
   SelectContent,
@@ -99,9 +99,7 @@ export function LogsScreen({ agentId }: { agentId: string }) {
         <span className="text-xs text-muted-foreground">{td("dashboard.logs.filterOutcome")}</span>
         <Select
           value={outcomeFilter || ALL_OUTCOMES}
-          onValueChange={(v) =>
-            setOutcomeFilter(v === ALL_OUTCOMES ? "" : (v as AgentLogOutcome))
-          }
+          onValueChange={(v) => setOutcomeFilter(v === ALL_OUTCOMES ? "" : (v as AgentLogOutcome))}
         >
           <SelectTrigger className="w-40" aria-label={td("dashboard.logs.filterOutcome")}>
             <SelectValue />

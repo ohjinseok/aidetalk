@@ -91,8 +91,9 @@ export async function apiFetch<T>(
 
   const result = schema.safeParse(json);
   if (!result.success) {
-    // 계약 위반: 서버 응답이 스키마와 불일치. 통합 단계에서 잡아야 할 문제.
-    throw new ApiError("agent/bad_response", res.status, "응답 스키마 불일치", result.error);
+    // 계약 위반: 서버 응답이 스키마와 불일치. 통합 단계에서 잡아야 할 개발자용 메시지
+    // (사용자 노출은 code→errors.* 매핑으로 처리하므로 message는 영어 디버그 문자열로 통일).
+    throw new ApiError("agent/bad_response", res.status, "response schema mismatch", result.error);
   }
   return result.data;
 }

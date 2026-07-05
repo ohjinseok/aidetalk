@@ -1,21 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { avatarColor, avatarInitial, hashString, visitorAvatar } from "../avatar";
+import { avatarInitial, visitorAvatar } from "../avatar";
+
+// 색 유도(hashString/avatarColor)는 모듈 내부 구현 — 공개 API visitorAvatar로 검증한다.
+const seedColor = (seed: string) => visitorAvatar(seed).color;
 
 describe("avatar", () => {
-  it("hashString은 결정적이고 비음수", () => {
-    expect(hashString("conv_abc")).toBe(hashString("conv_abc"));
-    expect(hashString("conv_abc")).toBeGreaterThanOrEqual(0);
-    // 서로 다른 입력은 (일반적으로) 다른 해시
-    expect(hashString("conv_abc")).not.toBe(hashString("conv_xyz"));
-  });
-
-  it("avatarColor는 유효한 hsl 단색을 만들고 seed마다 고정", () => {
-    const a = avatarColor("visitor_1");
-    expect(a).toBe(avatarColor("visitor_1"));
+  it("색은 seed마다 결정적이고 유효한 hsl 단색", () => {
+    const a = seedColor("visitor_1");
+    expect(a).toBe(seedColor("visitor_1"));
     expect(a).toMatch(/^hsl\(\d+ \d+% \d+%\)$/);
     // 팔레트 분산 — 여러 seed 중 최소 둘 이상은 다른 색이어야 한다
-    const colors = new Set(["v1", "v2", "v3", "v4", "v5", "v6"].map(avatarColor));
+    const colors = new Set(["v1", "v2", "v3", "v4", "v5", "v6"].map(seedColor));
     expect(colors.size).toBeGreaterThan(1);
   });
 
@@ -31,7 +27,7 @@ describe("avatar", () => {
   it("visitorAvatar는 label로 이니셜, seed로 색을 유도", () => {
     const av = visitorAvatar("conv_42", "박지현");
     expect(av.initial).toBe("박");
-    expect(av.color).toBe(avatarColor("conv_42"));
+    expect(av.color).toBe(seedColor("conv_42"));
     // label 생략 시 seed에서 이니셜
     expect(visitorAvatar("conv_42").initial).toBe("C");
   });

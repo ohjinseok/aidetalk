@@ -44,6 +44,20 @@ import {
   type Workspace,
 } from "./schemas";
 
+/**
+ * 쿼리스트링 빌드 헬퍼 — undefined/null/빈 문자열 값은 생략한다.
+ * 값이 하나도 없으면 빈 문자열, 있으면 "?a=1&b=2" 형태를 반환(그대로 경로에 이어붙임).
+ */
+function buildQuery(params: Record<string, string | number | undefined | null>): string {
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null || value === "") continue;
+    qs.set(key, String(value));
+  }
+  const q = qs.toString();
+  return q ? `?${q}` : "";
+}
+
 // ---------- 인증/계정 ----------
 export const authApi = {
   signup: (body: { email: string; password: string; name: string }) =>
@@ -91,9 +105,7 @@ export const memberApi = {
 // ---------- 에이전트 커넥터 ----------
 export const agentApi = {
   list: (wsId: string, opts?: ApiFetchOptions): Promise<Agent[]> =>
-    apiFetch(`/v1/workspaces/${wsId}/agents`, listEnvelope(agentSchema), opts).then(
-      (r) => r.items,
-    ),
+    apiFetch(`/v1/workspaces/${wsId}/agents`, listEnvelope(agentSchema), opts).then((r) => r.items),
   create: (wsId: string, body: { name: string; endpointUrl: string; timeoutMs?: number }) =>
     apiFetch(`/v1/workspaces/${wsId}/agents`, agentWithSecretSchema, { method: "POST", body }),
   update: (
@@ -121,12 +133,9 @@ export const agentApi = {
     params: { agentId?: string; cursor?: string },
     opts?: ApiFetchOptions,
   ): Promise<{ items: AgentLog[]; nextCursor: string | null }> => {
-    const qs = new URLSearchParams();
-    if (params.agentId) qs.set("agentId", params.agentId);
-    if (params.cursor) qs.set("cursor", params.cursor);
-    const q = qs.toString();
+    const query = buildQuery({ agentId: params.agentId, cursor: params.cursor });
     return apiFetch(
-      `/v1/workspaces/${wsId}/agent-logs${q ? `?${q}` : ""}`,
+      `/v1/workspaces/${wsId}/agent-logs${query}`,
       listEnvelope(agentLogSchema),
       opts,
     );
@@ -140,35 +149,24 @@ export const inboxApi = {
     params: { status?: string; cursor?: string; q?: string },
     opts?: ApiFetchOptions,
   ): Promise<{ items: InboxItem[]; nextCursor: string | null }> => {
-    const qs = new URLSearchParams();
-    if (params.status) qs.set("status", params.status);
-    if (params.cursor) qs.set("cursor", params.cursor);
-    if (params.q) qs.set("q", params.q);
-    const q = qs.toString();
+    const query = buildQuery({ status: params.status, cursor: params.cursor, q: params.q });
     return apiFetch(
-      `/v1/workspaces/${wsId}/conversations${q ? `?${q}` : ""}`,
+      `/v1/workspaces/${wsId}/conversations${query}`,
       listEnvelope(inboxItemSchema),
       opts,
     );
   },
   get: (wsId: string, convId: string, opts?: ApiFetchOptions): Promise<ConversationDetail> =>
-    apiFetch(
-      `/v1/workspaces/${wsId}/conversations/${convId}`,
-      conversationDetailSchema,
-      opts,
-    ),
+    apiFetch(`/v1/workspaces/${wsId}/conversations/${convId}`, conversationDetailSchema, opts),
   messages: (
     wsId: string,
     convId: string,
     params: { after?: string; limit?: number },
     opts?: ApiFetchOptions,
   ): Promise<{ items: Message[]; nextCursor: string | null }> => {
-    const qs = new URLSearchParams();
-    if (params.after) qs.set("after", params.after);
-    if (params.limit) qs.set("limit", String(params.limit));
-    const q = qs.toString();
+    const query = buildQuery({ after: params.after, limit: params.limit });
     return apiFetch(
-      `/v1/workspaces/${wsId}/conversations/${convId}/messages${q ? `?${q}` : ""}`,
+      `/v1/workspaces/${wsId}/conversations/${convId}/messages${query}`,
       listEnvelope(messageSchema),
       opts,
     );
@@ -214,11 +212,9 @@ export const assistApi = {
     params: { after?: string },
     opts?: ApiFetchOptions,
   ): Promise<{ items: Suggestion[]; nextCursor: string | null }> => {
-    const qs = new URLSearchParams();
-    if (params.after) qs.set("after", params.after);
-    const q = qs.toString();
+    const query = buildQuery({ after: params.after });
     return apiFetch(
-      `/v1/workspaces/${wsId}/conversations/${convId}/suggestions${q ? `?${q}` : ""}`,
+      `/v1/workspaces/${wsId}/conversations/${convId}/suggestions${query}`,
       listEnvelope(suggestionSchema),
       opts,
     );
@@ -242,15 +238,8 @@ export const trackingApi = {
     params: { from?: string; to?: string },
     opts?: ApiFetchOptions,
   ): Promise<TrackingSummary> => {
-    const qs = new URLSearchParams();
-    if (params.from) qs.set("from", params.from);
-    if (params.to) qs.set("to", params.to);
-    const q = qs.toString();
-    return apiFetch(
-      `/v1/workspaces/${wsId}/tracking/summary${q ? `?${q}` : ""}`,
-      trackingSummarySchema,
-      opts,
-    );
+    const query = buildQuery({ from: params.from, to: params.to });
+    return apiFetch(`/v1/workspaces/${wsId}/tracking/summary${query}`, trackingSummarySchema, opts);
   },
   conversation: (wsId: string, convId: string, opts?: ApiFetchOptions) =>
     apiFetch(

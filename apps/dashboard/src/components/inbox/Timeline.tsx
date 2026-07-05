@@ -4,9 +4,9 @@ import Link from "next/link";
 
 import type { MessageRole } from "@aidetalk/shared";
 
-import { formatHm, formatMessageTime } from "../../lib/format";
-import { td, tf, type TranslationKey } from "../../lib/i18n";
-import type { TimelineItem } from "../../lib/timeline";
+import { formatHm, formatMessageTime } from "@/lib/format";
+import { td, tf, type TranslationKey } from "@/lib/i18n";
+import type { TimelineItem } from "@/lib/timeline";
 import { AiChip } from "./AiChip";
 
 /** 링크 클릭 상태(트래킹, S1). */
@@ -55,9 +55,9 @@ export function Timeline({
         if (item.kind === "event") {
           const ev = item.event;
           const key = `dashboard.event.${ev.type}` as TranslationKey;
-          const reason = typeof ev.payload?.reason === "string" ? (ev.payload.reason as string) : "";
-          const label =
-            td(key) + (reason ? tf("dashboard.event.reasonSuffix", { reason }) : "");
+          const reason =
+            typeof ev.payload?.reason === "string" ? (ev.payload.reason as string) : "";
+          const label = td(key) + (reason ? tf("dashboard.event.reasonSuffix", { reason }) : "");
           return (
             <div key={item.id} className="my-2 text-center text-xs text-muted-foreground">
               <span>
@@ -130,7 +130,9 @@ export function Timeline({
                       }
                     >
                       {link.clickedAt
-                        ? tf("dashboard.conversation.linkClickedAt", { time: formatHm(link.clickedAt) })
+                        ? tf("dashboard.conversation.linkClickedAt", {
+                            time: formatHm(link.clickedAt),
+                          })
                         : td("dashboard.conversation.linkNotClicked")}
                     </span>
                   ) : null}

@@ -3,34 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { useToast } from "../../components/providers/ToastProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormRow } from "@/components/ui/form-row";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { workspaceApi } from "../../lib/api/endpoints";
-import { td } from "../../lib/i18n";
-import type { Segment } from "../../lib/api/schemas";
-
-const SEGMENTS: { value: Segment; title: string; desc: string }[] = [
-  {
-    value: "s1_site",
-    title: td("dashboard.onboarding.segmentS1Title"),
-    desc: td("dashboard.onboarding.segmentS1Desc"),
-  },
-  {
-    value: "s2_no_site",
-    title: td("dashboard.onboarding.segmentS2Title"),
-    desc: td("dashboard.onboarding.segmentS2Desc"),
-  },
-];
+import { workspaceApi } from "@/lib/api/endpoints";
+import { td } from "@/lib/i18n";
+import type { Segment } from "@/lib/api/schemas";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -38,6 +19,20 @@ export default function OnboardingPage() {
   const [name, setName] = useState("");
   const [segment, setSegment] = useState<Segment>("s1_site");
   const [busy, setBusy] = useState(false);
+
+  // 렌더 시점에 td() 조회 — 모듈 로드 시점 조회를 피한다(다른 화면과 동일 패턴).
+  const SEGMENTS: { value: Segment; title: string; desc: string }[] = [
+    {
+      value: "s1_site",
+      title: td("dashboard.onboarding.segmentS1Title"),
+      desc: td("dashboard.onboarding.segmentS1Desc"),
+    },
+    {
+      value: "s2_no_site",
+      title: td("dashboard.onboarding.segmentS2Title"),
+      desc: td("dashboard.onboarding.segmentS2Desc"),
+    },
+  ];
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -84,7 +79,7 @@ export default function OnboardingPage() {
                       "cursor-pointer rounded-lg border p-4 transition-colors",
                       segment === s.value
                         ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
+                        : "border-border hover:border-primary/50",
                     )}
                   >
                     <input

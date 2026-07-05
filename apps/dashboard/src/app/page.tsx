@@ -4,8 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
-import { authApi } from "../lib/api/endpoints";
-import { ApiError } from "../lib/api/client";
+import { authApi } from "@/lib/api/endpoints";
 
 /**
  * 루트 진입 — 세션 확인 후 라우팅.
@@ -23,10 +22,9 @@ export default function HomePage() {
         const first = me.memberships[0];
         router.replace(first ? `/w/${first.workspaceId}/inbox` : "/onboarding");
       })
-      .catch((err) => {
-        if (!alive) return;
-        if (err instanceof ApiError && err.httpStatus === 401) router.replace("/login");
-        else router.replace("/login");
+      .catch(() => {
+        // 미인증(401)이든 그 외 오류든 로그인으로 보낸다.
+        if (alive) router.replace("/login");
       });
     return () => {
       alive = false;

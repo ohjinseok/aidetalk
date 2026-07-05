@@ -2,7 +2,7 @@
 
 import type { Suggestion } from "@aidetalk/shared";
 
-import { td, tf } from "../../lib/i18n";
+import { td, tf } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { AiChip } from "./AiChip";
@@ -30,8 +30,7 @@ export function AssistPanel({
   onIgnore: (s: Suggestion) => void;
   onInsertLink: (url: string) => void;
 }) {
-  const rateLabel =
-    acceptRate == null ? "—" : `${Math.round(acceptRate * 100)}%`;
+  const rateLabel = acceptRate == null ? "—" : `${Math.round(acceptRate * 100)}%`;
 
   return (
     <aside className="flex w-80 shrink-0 flex-col border-l border-border bg-background">
@@ -101,7 +100,11 @@ export function AssistPanel({
                   <p className="mt-2 text-xs text-muted-foreground">
                     {s.outcome === "ignored"
                       ? td("dashboard.assist.ignored")
-                      : td(s.outcome === "accepted" ? "dashboard.assist.sendAsIs" : "dashboard.assist.editAndSend")}
+                      : td(
+                          s.outcome === "accepted"
+                            ? "dashboard.assist.sendAsIs"
+                            : "dashboard.assist.editAndSend",
+                        )}
                   </p>
                 )}
               </div>

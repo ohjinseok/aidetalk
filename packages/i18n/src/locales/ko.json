@@ -5,12 +5,10 @@
     "welcome": "AideTalk에 오신 것을 환영합니다"
   },
   "widget": {
-    "launcherLabel": "채팅 시작하기",
     "launcherAriaOpen": "채팅 열기",
     "launcherAriaClose": "채팅 닫기",
     "headerTitle": "고객 상담",
     "headerClose": "닫기",
-    "headerMenu": "메뉴",
     "connectAgent": "상담원 연결",
     "composerPlaceholder": "메시지를 입력하세요",
     "composerSend": "보내기",
@@ -33,11 +31,16 @@
     "dateYesterday": "어제",
     "offHoursDefault": "지금은 상담 운영 시간이 아닙니다. 메시지를 남겨주시면 확인 후 답변드리겠습니다.",
     "errorGeneric": "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-    "systemLabel": "안내",
+    "errorConnection": "서버에 연결하지 못했습니다. 잠시 후 다시 시도해주세요.",
+    "errorRateLimited": "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
+    "errorDismiss": "닫기",
     "headerSubtitle": "보통 몇 분 이내에 답변드려요",
     "aiLabel": "AI"
   },
   "dashboard": {
+    "meta": {
+      "description": "한국 SMB를 위한 오픈소스 CS 메신저"
+    },
     "common": {
       "save": "저장",
       "cancel": "취소",

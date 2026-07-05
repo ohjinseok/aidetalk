@@ -4,7 +4,7 @@ import { useState, type KeyboardEvent } from "react";
 
 import { SendHorizontal } from "lucide-react";
 
-import { td } from "../../lib/i18n";
+import { td } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AiChip } from "./AiChip";

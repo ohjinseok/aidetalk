@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 
-import { td, type TranslationKey } from "../../lib/i18n";
+import { td, type TranslationKey } from "@/lib/i18n";
 
 const TABS: { seg: string; labelKey: TranslationKey }[] = [
   { seg: "widget", labelKey: "dashboard.nav.widget" },
@@ -19,7 +19,10 @@ export function SettingsTabs() {
   const base = `/w/${params.wsId}/settings`;
 
   return (
-    <nav className="flex gap-1 border-b border-border bg-background px-6" aria-label={td("dashboard.nav.settings")}>
+    <nav
+      className="flex gap-1 border-b border-border bg-background px-6"
+      aria-label={td("dashboard.nav.settings")}
+    >
       {TABS.map((tab) => {
         const href = `${base}/${tab.seg}`;
         const active = pathname.startsWith(href);

@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 
-import { visitorApi } from "../../lib/api/endpoints";
-import { formatKrw } from "../../lib/format";
-import { td } from "../../lib/i18n";
-import type { Conversation, ConversationTracking, VisitorDetail } from "../../lib/api/schemas";
-import { useToast } from "../providers/ToastProvider";
-import { useWorkspace } from "../providers/WorkspaceProvider";
+import { visitorApi } from "@/lib/api/endpoints";
+import { formatKrw } from "@/lib/format";
+import { td } from "@/lib/i18n";
+import type { Conversation, ConversationTracking, VisitorDetail } from "@/lib/api/schemas";
+import { useToast } from "@/components/providers/ToastProvider";
+import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "../ui/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 /**
  * 방문자 정보 패널(우측, 접이식) — 07 §2.2.
@@ -70,7 +70,9 @@ export function VisitorPanel({
         <Field label={td("dashboard.conversation.visitorEmail")} value={visitor.email} breakAll />
         {startPage ? (
           <div>
-            <dt className="text-xs text-muted-foreground">{td("dashboard.conversation.startPage")}</dt>
+            <dt className="text-xs text-muted-foreground">
+              {td("dashboard.conversation.startPage")}
+            </dt>
             <dd className="truncate text-[13px] text-foreground" title={startPage}>
               {startPage}
             </dd>

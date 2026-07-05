@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
-import { useToast } from "../../../components/providers/ToastProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { authApi, memberApi } from "../../../lib/api/endpoints";
-import { td } from "../../../lib/i18n";
+import { authApi, memberApi } from "@/lib/api/endpoints";
+import { td } from "@/lib/i18n";
 
 function AcceptInner() {
   const router = useRouter();

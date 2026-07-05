@@ -20,9 +20,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { avatarInitial } from "../lib/avatar";
-import { authApi } from "../lib/api/endpoints";
-import { td, type TranslationKey } from "../lib/i18n";
+import { avatarInitial } from "@/lib/avatar";
+import { authApi } from "@/lib/api/endpoints";
+import { td, type TranslationKey } from "@/lib/i18n";
 import { AutoDisabledBanner } from "./AutoDisabledBanner";
 import { AgentStatusProvider } from "./providers/AgentStatusProvider";
 import { useSocket } from "./providers/SocketProvider";
@@ -78,15 +78,24 @@ function ThemeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-36">
-        <DropdownMenuCheckboxItem checked={theme === "system"} onCheckedChange={() => setTheme("system")}>
+        <DropdownMenuCheckboxItem
+          checked={theme === "system"}
+          onCheckedChange={() => setTheme("system")}
+        >
           <Monitor className="size-4" />
           {td("dashboard.theme.system")}
         </DropdownMenuCheckboxItem>
-        <DropdownMenuCheckboxItem checked={theme === "light"} onCheckedChange={() => setTheme("light")}>
+        <DropdownMenuCheckboxItem
+          checked={theme === "light"}
+          onCheckedChange={() => setTheme("light")}
+        >
           <Sun className="size-4" />
           {td("dashboard.theme.light")}
         </DropdownMenuCheckboxItem>
-        <DropdownMenuCheckboxItem checked={theme === "dark"} onCheckedChange={() => setTheme("dark")}>
+        <DropdownMenuCheckboxItem
+          checked={theme === "dark"}
+          onCheckedChange={() => setTheme("dark")}
+        >
           <Moon className="size-4" />
           {td("dashboard.theme.dark")}
         </DropdownMenuCheckboxItem>
@@ -246,7 +255,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </span>
                 <span className="text-sm text-foreground">{me.user.name}</span>
                 <Badge variant="secondary">
-                  {td(membership.role === "owner" ? "dashboard.members.roleOwner" : "dashboard.members.roleAgent")}
+                  {td(
+                    membership.role === "owner"
+                      ? "dashboard.members.roleOwner"
+                      : "dashboard.members.roleAgent",
+                  )}
                 </Badge>
                 <ThemeToggle />
               </div>

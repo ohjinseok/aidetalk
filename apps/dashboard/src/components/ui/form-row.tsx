@@ -1,6 +1,6 @@
-import type { ReactNode } from "react"
+import type { ReactNode } from "react";
 
-import { Label } from "@/components/ui/label"
+import { Label } from "@/components/ui/label";
 
 /**
  * 폼 한 줄 — 라벨 + 입력 + 선택적 힌트.
@@ -12,10 +12,10 @@ export function FormRow({
   hint,
   children,
 }: {
-  label: string
-  htmlFor?: string
-  hint?: string
-  children: ReactNode
+  label: string;
+  htmlFor?: string;
+  hint?: string;
+  children: ReactNode;
 }) {
   return (
     <div className="mb-4 flex flex-col gap-1.5">
@@ -23,5 +23,5 @@ export function FormRow({
       {children}
       {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
     </div>
-  )
+  );
 }

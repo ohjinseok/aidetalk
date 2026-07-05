@@ -3,24 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { trackingApi } from "../../lib/api/endpoints";
-import { formatKrw } from "../../lib/format";
-import { td } from "../../lib/i18n";
-import type { TrackingSummary } from "../../lib/api/schemas";
-import { useWorkspace } from "../providers/WorkspaceProvider";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { trackingApi } from "@/lib/api/endpoints";
+import { formatKrw } from "@/lib/format";
+import { td } from "@/lib/i18n";
+import type { TrackingSummary } from "@/lib/api/schemas";
+import { useWorkspace } from "@/components/providers/WorkspaceProvider";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
 
 /** 이번 달 [from, to] ISO. */
@@ -48,11 +39,7 @@ function StatCard({
         {hint ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <button
-                type="button"
-                className="cursor-help text-muted-foreground"
-                aria-label={hint}
-              >
+              <button type="button" className="cursor-help text-muted-foreground" aria-label={hint}>
                 <Info className="size-3.5" />
               </button>
             </TooltipTrigger>
@@ -159,7 +146,9 @@ export function TrackingScreen() {
         </CardHeader>
         <CardContent className="flex gap-8">
           <span className="flex items-baseline gap-1.5 text-sm text-foreground">
-            <span className="text-muted-foreground">{td("dashboard.tracking.sourceClickOnly")}</span>
+            <span className="text-muted-foreground">
+              {td("dashboard.tracking.sourceClickOnly")}
+            </span>
             <span className="tabular-nums font-medium">{summary.bySource.click_only}</span>
           </span>
           <span className="flex items-baseline gap-1.5 text-sm text-foreground">

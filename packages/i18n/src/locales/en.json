@@ -5,12 +5,10 @@
     "welcome": "Welcome to AideTalk"
   },
   "widget": {
-    "launcherLabel": "Start chat",
     "launcherAriaOpen": "Open chat",
     "launcherAriaClose": "Close chat",
     "headerTitle": "Support",
     "headerClose": "Close",
-    "headerMenu": "Menu",
     "connectAgent": "Talk to a person",
     "composerPlaceholder": "Type a message",
     "composerSend": "Send",
@@ -33,11 +31,16 @@
     "dateYesterday": "Yesterday",
     "offHoursDefault": "We're currently outside support hours. Leave a message and we'll get back to you.",
     "errorGeneric": "Something went wrong. Please try again in a moment.",
-    "systemLabel": "Notice",
+    "errorConnection": "Couldn't reach the server. Please try again in a moment.",
+    "errorRateLimited": "Too many requests. Please try again in a moment.",
+    "errorDismiss": "Dismiss",
     "headerSubtitle": "We usually reply within a few minutes",
     "aiLabel": "AI"
   },
   "dashboard": {
+    "meta": {
+      "description": "Open-source customer support messenger for Korean SMBs"
+    },
     "common": {
       "save": "Save",
       "cancel": "Cancel",

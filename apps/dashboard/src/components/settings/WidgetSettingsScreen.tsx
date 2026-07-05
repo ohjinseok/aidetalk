@@ -2,19 +2,14 @@
 
 import { useMemo, useState } from "react";
 
-import { workspaceApi } from "../../lib/api/endpoints";
-import { td, type TranslationKey } from "../../lib/i18n";
-import type { LauncherPosition, OfficeHoursRule, Tone, WidgetSettings } from "../../lib/api/schemas";
-import { useToast } from "../providers/ToastProvider";
-import { useWorkspace } from "../providers/WorkspaceProvider";
+import { workspaceApi } from "@/lib/api/endpoints";
+import { td, type TranslationKey } from "@/lib/i18n";
+import type { LauncherPosition, OfficeHoursRule, Tone, WidgetSettings } from "@/lib/api/schemas";
+import { useToast } from "@/components/providers/ToastProvider";
+import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { CopyButton } from "../ui/CopyButton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CopyButton } from "@/components/ui/CopyButton";
 import { FormRow } from "@/components/ui/form-row";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -304,14 +299,18 @@ export function WidgetSettingsScreen() {
             {td("dashboard.common.save")}
           </Button>
           {!isOwner ? (
-            <p className="mt-2 text-xs text-muted-foreground">{td("dashboard.members.ownerOnly")}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {td("dashboard.members.ownerOnly")}
+            </p>
           ) : null}
         </div>
       </div>
 
       {/* 프리뷰 + 임베드 */}
       <div>
-        <h2 className="mb-2 text-sm font-medium text-foreground">{td("dashboard.widget.preview")}</h2>
+        <h2 className="mb-2 text-sm font-medium text-foreground">
+          {td("dashboard.widget.preview")}
+        </h2>
         <WidgetPreview settings={form} />
 
         <h2 className="mb-2 mt-6 text-sm font-medium text-foreground">

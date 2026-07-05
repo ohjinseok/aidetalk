@@ -8,13 +8,13 @@ import type { ConversationStatus } from "@aidetalk/shared";
 
 import { Search } from "lucide-react";
 
-import { inboxApi } from "../../lib/api/endpoints";
-import { formatRelativeTime } from "../../lib/format";
-import { td, tf, type TranslationKey } from "../../lib/i18n";
-import type { InboxItem } from "../../lib/api/schemas";
-import { patchInboxConversation, upsertInbox } from "../../lib/ws/reducer";
-import { useSocketEvent } from "../providers/SocketProvider";
-import { useWorkspace } from "../providers/WorkspaceProvider";
+import { inboxApi } from "@/lib/api/endpoints";
+import { formatRelativeTime } from "@/lib/format";
+import { td, tf, type TranslationKey } from "@/lib/i18n";
+import type { InboxItem } from "@/lib/api/schemas";
+import { patchInboxConversation, upsertInbox } from "@/lib/ws/reducer";
+import { useSocketEvent } from "@/components/providers/SocketProvider";
+import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { AiChip } from "./AiChip";
 import { AvatarVisitor } from "@/components/ui/avatar-visitor";
 import { Button } from "@/components/ui/button";
@@ -158,10 +158,7 @@ export function InboxList() {
       </div>
       {/* 필터 탭 */}
       <div className="border-b border-border px-2 py-2">
-        <Tabs
-          value={status}
-          onValueChange={(v) => setStatus(v as ConversationStatus)}
-        >
+        <Tabs value={status} onValueChange={(v) => setStatus(v as ConversationStatus)}>
           <TabsList className="w-full">
             {TABS.map((tab) => (
               <TabsTrigger key={tab.status} value={tab.status} className="text-xs">

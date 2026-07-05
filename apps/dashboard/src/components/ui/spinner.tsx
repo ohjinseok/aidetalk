@@ -1,7 +1,7 @@
-import { Loader2Icon } from "lucide-react"
+import { Loader2Icon } from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import { td } from "@/lib/i18n"
+import { cn } from "@/lib/utils";
+import { td } from "@/lib/i18n";
 
 /**
  * 로딩 스피너 — lucide Loader 기반.
@@ -16,7 +16,7 @@ function Spinner({ label, className }: { label?: string; className?: string }) {
       <Loader2Icon className="size-4 animate-spin" aria-hidden="true" />
       <span className="sr-only">{label ?? td("dashboard.common.loading")}</span>
     </span>
-  )
+  );
 }
 
-export { Spinner }
+export { Spinner };

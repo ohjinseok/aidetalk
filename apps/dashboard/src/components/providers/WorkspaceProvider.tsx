@@ -3,10 +3,10 @@
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-import { ApiError } from "../../lib/api/client";
-import { authApi, workspaceApi } from "../../lib/api/endpoints";
-import { td } from "../../lib/i18n";
-import type { Me, Membership, Workspace } from "../../lib/api/schemas";
+import { ApiError } from "@/lib/api/client";
+import { authApi, workspaceApi } from "@/lib/api/endpoints";
+import { td } from "@/lib/i18n";
+import type { Me, Membership, Workspace } from "@/lib/api/schemas";
 import { Spinner } from "@/components/ui/spinner";
 
 interface WorkspaceCtx {
@@ -75,7 +75,7 @@ export function WorkspaceProvider({ wsId, children }: { wsId: string; children: 
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-red-600">
+      <div className="flex min-h-screen items-center justify-center text-sm text-destructive">
         {error}
       </div>
     );
