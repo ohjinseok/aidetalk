@@ -34,3 +34,20 @@ describe("encryptSecret/decryptSecret 왕복", () => {
     expect(verifySecret("wrong", hash)).toBe(false);
   });
 });
+
+describe("verifySecret — timing-safe 비교(08_SECURITY.md §1 남은 리스크 3)", () => {
+  it("일치하는 secret/hash는 true", () => {
+    const secret = "whsec_" + "a".repeat(32);
+    expect(verifySecret(secret, hashSecret(secret))).toBe(true);
+  });
+
+  it("불일치하는 secret은 false(같은 길이 hash와 비교)", () => {
+    const hash = hashSecret("adt_" + "a".repeat(32));
+    expect(verifySecret("adt_" + "b".repeat(32), hash)).toBe(false);
+  });
+
+  it("storedHash 길이가 다르면(변조/오염) timingSafeEqual 비교 없이 false", () => {
+    expect(verifySecret("adt_abcdefg", "not_a_valid_hex_hash")).toBe(false);
+    expect(verifySecret("adt_abcdefg", "")).toBe(false);
+  });
+});

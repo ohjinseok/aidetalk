@@ -2,6 +2,10 @@
  * 서버 부팅 엔트리 — env 검증 → DB 연결(+옵션 마이그레이션) → 어댑터 조립 → HTTP+WS 기동.
  * 10_DEPLOYMENT.md §1/§2. 시크릿 값은 로그에 남기지 않는다(CLAUDE.md 규칙 5).
  */
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { serve } from "@hono/node-server";
 import { createDbConnection, createRepos, runMigrations } from "@aidetalk/db";
 
@@ -12,7 +16,21 @@ import { createLogger } from "./logger.js";
 import { createPubSub } from "./pubsub/index.js";
 import { createRateLimiter } from "./ratelimit/index.js";
 import { createSessionStore } from "./session/store.js";
+import { createTelemetryReporter } from "./services/telemetry.js";
 import { createGateway } from "./ws/gateway.js";
+
+/** apps/server/package.json의 version — dist/index.js와 src/index.ts 양쪽에서 동일한 상대 위치. */
+function readServerVersion(): string {
+  try {
+    const here = dirname(fileURLToPath(import.meta.url));
+    const pkg = JSON.parse(readFileSync(join(here, "..", "package.json"), "utf8")) as {
+      version?: string;
+    };
+    return pkg.version ?? "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+}
 
 async function main(): Promise<void> {
   // 1) env 검증 — 실패 시 사유 출력 후 종료(값은 출력하지 않음).
@@ -51,6 +69,16 @@ async function main(): Promise<void> {
   const sessionStore = createSessionStore(env.REDIS_URL);
   const ctx = createContext({ env, db: conn.db, pubsub, rateLimiter, sessionStore, logger });
 
+  // 5-1) 텔레메트리(opt-in, 기본 OFF) — TELEMETRY_ENABLED=true일 때만 주 1회 익명 통계 전송.
+  const telemetry = createTelemetryReporter({
+    enabled: env.TELEMETRY_ENABLED,
+    endpoint: env.TELEMETRY_ENDPOINT,
+    version: readServerVersion(),
+    repos: ctx.repos,
+    logger,
+  });
+  telemetry.start();
+
   // 6) HTTP + WS 기동.
   const app = createApp(ctx);
   const gateway = createGateway(ctx);
@@ -66,6 +94,7 @@ async function main(): Promise<void> {
   // 7) graceful shutdown.
   const shutdown = async () => {
     logger.info("종료 중...");
+    telemetry.stop();
     await gateway.close();
     await pubsub.close();
     await rateLimiter.close();

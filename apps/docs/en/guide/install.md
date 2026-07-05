@@ -74,10 +74,25 @@ Items marked `(ee)` are cloud-edition only and aren't needed for self-hosting.
 | `ALLOW_INSECURE_AGENT_ENDPOINT` | `false` | | Whether to allow `http://` Agent endpoints (e.g. for local dev). Keep `false` in production |
 | `SMTP_URL` | (none) | | If unset, all email sending is skipped and logged instead (default self-hosting behavior) |
 | `LOG_LEVEL` | `info` | | pino log level |
-| `TELEMETRY` | `false` | | Opt-in anonymous telemetry. Collects: install UUID, version, workspace count — nothing beyond that |
+| `TELEMETRY_ENABLED` | `false` | | **Opt-in** anonymous telemetry. Off by default; only runs when explicitly set to `true` |
+| `TELEMETRY_ENDPOINT` | placeholder domain | | Telemetry destination URL. Marked as TODO in code until a real collection domain is confirmed |
 
 Never commit secrets (`VISITOR_TOKEN_SECRET`, `SESSION_SECRET`, `SECRET_ENC_KEY`, etc.) to
 code or logs. Logs always mask them (e.g. `sk_live_ab****`).
+
+### Telemetry (opt-in) collected fields
+
+Off by default (`TELEMETRY_ENABLED=false`). Even when enabled, no conversation content,
+messages, emails, or other PII is collected — the fields below are the entire payload. Sent
+once a week; send failures are silently ignored.
+
+| Field | Description |
+|---|---|
+| Instance anonymous ID | Randomly generated on first send and stored in the DB. A fresh install generates a new one |
+| Version | Server version |
+| Workspace count | Total workspace *count* only |
+| Conversation count | Total conversation *count* only (no message bodies) |
+| Agent (connector) count | Registered AI connector *count* only (no endpoint URLs) |
 
 ## 5. Reverse proxy (Caddy example)
 

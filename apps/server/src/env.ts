@@ -40,7 +40,18 @@ export const envSchema = z
     LOG_LEVEL: z
       .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
       .default("info"),
-    TELEMETRY: boolish(false),
+    /**
+     * opt-in 익명 텔레메트리(기본 OFF) — 10_DEPLOYMENT.md 텔레메트리 표.
+     * true일 때만 주 1회 익명 통계(인스턴스 익명 ID/버전/워크스페이스·대화·에이전트 개수)를 전송한다.
+     * 내용/PII는 절대 수집하지 않으며, 전송 실패는 조용히 무시한다(services/telemetry.ts).
+     */
+    TELEMETRY_ENABLED: boolish(false),
+    /**
+     * 텔레메트리 전송 대상 URL.
+     * TODO(action): placeholder 도메인이다 — 실제 수집 서버 도메인이 확정되면 이 기본값과
+     * 10_DEPLOYMENT.md/apps/docs/guide/install.md의 환경변수 표를 함께 갱신할 것.
+     */
+    TELEMETRY_ENDPOINT: z.string().default("https://telemetry.aidetalk.invalid/v1/ping"),
     /** 부팅 시 마이그레이션 자동 실행 여부(도커 엔트리포인트 대체용). */
     RUN_MIGRATIONS_ON_BOOT: boolish(false),
   })

@@ -341,6 +341,7 @@
     "handoffDefaultMessage": "Let me connect you with an agent. One moment, please.",
     "autoHandoffNotice": "We're connecting you with an agent now. Please hold on a moment.",
     "handoffRequestedReason": "The visitor requested to be connected with an agent.",
-    "handoffAutoReason": "A problem occurred while processing the AI response, so the conversation was automatically handed off to an agent."
+    "handoffAutoReason": "A problem occurred while processing the AI response, so the conversation was automatically handed off to an agent.",
+    "messageRedacted": "[Deleted message]"
   }
 }

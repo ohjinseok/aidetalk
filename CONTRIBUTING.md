@@ -140,7 +140,7 @@ merge하지 않습니다**:
 
 ## 문서-코드 동기화 규칙
 
-README의 단일 출처(source of truth) 규칙을 그대로 따릅니다:
+이 프로젝트는 다음 단일 출처(source of truth) 규칙을 따릅니다:
 
 - **API 계약**의 최종 출처는 `packages/shared`의 zod 스키마입니다. 코드와
   `docs/04_API_SPEC.md` / `docs/05_AGENT_PROTOCOL.md`가 어긋나면 코드를 신뢰하되,

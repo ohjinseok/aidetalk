@@ -8,6 +8,7 @@ import {
   createDecipheriv,
   createHash,
   randomBytes,
+  timingSafeEqual,
 } from "node:crypto";
 
 import { argon2id, argon2Verify } from "hash-wasm";
@@ -51,9 +52,17 @@ export function decryptSecret(payload: string, keyMaterial: string): string {
   ]).toString("utf8");
 }
 
-/** 저장된 secretHash와 원문 secret이 일치하는지 상수시간에 준하는 비교(hex 동등). */
+/**
+ * 저장된 secretHash와 원문 secret이 일치하는지 timing-safe 비교(08 §1 "비교는 항상 timing-safe").
+ * sha256 해시는 항상 32바이트 고정 길이이므로, 길이가 다르면(변조/오염된 storedHash) 비교 없이 false.
+ * 길이 불일치 조기 반환은 storedHash(공격자가 제어할 수 없는 DB 값)의 형식 문제일 뿐이라 타이밍 누출로
+ * 이어지지 않는다 — 공격자가 관찰 가능한 것은 비밀 secret 자체의 정오답 여부다.
+ */
 export function verifySecret(secret: string, storedHash: string): boolean {
-  return hashSecret(secret) === storedHash;
+  const computed = Buffer.from(hashSecret(secret), "hex");
+  const stored = Buffer.from(storedHash, "hex");
+  if (computed.length !== stored.length) return false;
+  return timingSafeEqual(computed, stored);
 }
 
 /** 평문 비밀번호 → argon2id 인코딩 문자열(salt 포함). users.passwordHash에 저장. */

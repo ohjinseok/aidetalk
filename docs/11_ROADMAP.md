@@ -8,7 +8,7 @@
 
 - [ ] 고객 인터뷰 5건 (Persona A) — H1~H5 가설 검증, 결과를 PRD §6에 기록
 - [x] 제품명 확정: **AideTalk** (문서 전체 반영 완료, 2026-07-02)
-- [ ] 네이밍 선점: `aidetalk` GitHub org·npm 스코프, 도메인(aidetalk.io/.chat + 오타 방어 aidtalk.io), 키프리스 상표 확인 — README §브랜드 표 기준
+- [ ] 네이밍 선점: `aidetalk` GitHub org·npm 스코프, 도메인(aidetalk.io/.chat + 오타 방어 aidtalk.io), 키프리스 상표 확인 — `docs/internal/DEV_README.md` §브랜드 표 기준
 - [ ] 라이선스 확정 — 기본안(AGPL+ee) 유지 여부. n8n/Cal.com/Chatwoot 구조 비교 메모 남기기
 - [x] 모노레포 스캐폴드 — 「기준」 CLAUDE.md 레포 구조 그대로 생성, `pnpm dev`로 3개 앱 빈 화면 기동, `pnpm lint/typecheck/test` 통과 (2026-07-03)
 - [x] `packages/shared` v1 — 「기준」 id 유틸(newId), plans.ts, AppError, 에러 코드 상수(04 §7), Agent Protocol zod(05와 1:1), WS 봉투/타입 union(04 §5), adapters 인터페이스(02 §1-1) (2026-07-03)
@@ -66,8 +66,8 @@
 - [ ] examples/agent-python
 - [ ] 카페24/아임웹 실사이트 임베드 실측 → edge case 수정 + 06 §6 갱신
 - [ ] 보안 점검 — 「기준」 08 문서 전 항목 체크 감사
-- [ ] 텔레메트리 opt-in (수집 항목 문서 명시)
-- [ ] README(스크린샷/데모 GIF/"왜 만들었나") + 이슈 템플릿 + CONTRIBUTING(DCO)
+- [x] 텔레메트리 opt-in (수집 항목 문서 명시) (2026-07-05, 기본 OFF·`TELEMETRY_ENABLED`, 수집 항목 표는 10_DEPLOYMENT.md §1-1 + apps/docs/guide(en)/install.md)
+- [x] README(스크린샷/데모 GIF/"왜 만들었나") + 이슈 템플릿 + CONTRIBUTING(DCO) (2026-07-05, README 재작성 — 스크린샷/데모 GIF는 TODO 주석으로 자리만 마련. 이슈 템플릿/CONTRIBUTING(DCO)은 이전 세션에서 이미 완료)
 
 ## M3 — 클라우드 알파 & 런칭 (3주)
 **목표: 유료 10팀 + 공개 런칭**

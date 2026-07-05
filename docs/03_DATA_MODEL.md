@@ -5,7 +5,10 @@
 ## 0. 공통 규칙
 - ID: 전부 `text`, `prefix_` + nanoid(16). 예 `ws_V1StGXR8Z5jdHi6B`. **serial/uuid 금지.** 생성 유틸: `packages/shared/src/id.ts`의 `newId(prefix)`.
 - 모든 테이블에 `created_at timestamptz not null default now()`. 변경 가능한 테이블은 `updated_at`도.
-- soft delete 없음(v1). closed 상태로 충분. GDPR류 삭제는 hard delete repo 함수만 별도 제공.
+- soft delete 없음(v1). closed 상태로 충분. GDPR류 파기 요청은 **행 삭제가 아니라 익명화**로 대응한다 —
+  `visitorRepo.hardDeletePii`가 visitor의 PII 필드(email/name/phone/attributes)를 null/{}로 지우고
+  해당 visitor가 작성한 메시지 content를 삭제 표시 상수로 치환한다. conversations/messages 등 대화
+  구조 자체는 보존한다(FK 연쇄 삭제 시 상담 기록 감사가 불가능해지므로). 08 §6 참고.
 - 카운터 비정규화 안 함(v1). 미읽음 수 등은 쿼리로.
 - `ee/` 전용 테이블(subscriptions, invoices, billing_keys, usage_counters)은 `ee/db/`의 별도 마이그레이션 세트 — 코어 스키마와 섞지 않는다.
 
@@ -241,7 +244,7 @@ userRepo:       create / getByEmail / verifyPassword
 memberRepo:     addActive / invite / acceptInvite / getByInviteToken / listByUser / list / remove / getRole
 inviteRepo:     create / getByTokenHash / markAccepted(원자적·재수락 거부) / listPending   // 미가입 이메일 초대
 agentRepo:      create(secret 해시화) / update / setStatus / bumpFailure(성공시 reset) / getActive
-visitorRepo:    getOrCreateByToken / updateProfile / mergeByEmail / touchLastSeen
+visitorRepo:    getOrCreateByToken / updateProfile / mergeByEmail / touchLastSeen / hardDeletePii(익명화, mergedInto 클러스터 포함)
 conversationRepo: create / getById / listForInbox(status, cursor) / setMode / assign / setStatus / setReadMarker(by) / touchLastMessage
 messageRepo:    append(clientMsgId 중복 시 기존 행 반환) / listAfter(cursor) / listRecent(n)
 eventRepo:      append / listByConversation
@@ -255,7 +258,7 @@ webhookRepo:    create(secret 해시화+enc 저장) / list / getById / listSubsc
 ## 4. 설계 결정 기록
 1. **prefix+nanoid 텍스트 ID** — 디버깅 가독성 + 노출 안전. serial 금지.
 2. **content jsonb** — quick_replies/이미지/카드 확장을 마이그레이션 없이 수용.
-3. **soft delete 없음(v1)** — closed로 충분. GDPR 대응은 hard delete 함수.
+3. **soft delete 없음(v1)** — closed로 충분. GDPR 대응은 `visitorRepo.hardDeletePii` 익명화 함수(행 삭제 아님 — PII 필드 null화 + 방문자 메시지 본문 치환, 대화 구조는 보존).
 4. **repo 함수 workspaceId 필수** — 테넌트 격리를 타입 레벨 강제.
 5. **전환은 원본 이벤트 보존 + 조회 시 귀속** — 규칙이 바뀌어도 재해석 가능. "기여 추정" 정직성을 스키마(source 등급)에 반영.
 6. **conversions는 매출/행동 공용** — S2 예약도 같은 테이블(source=booking, amount=null). 세그먼트 늘어도 테이블 안 쪼갬.

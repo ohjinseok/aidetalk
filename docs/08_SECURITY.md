@@ -37,7 +37,14 @@
 
 ## 6. 전송/저장
 - 클라우드: TLS 종단(리버스 프록시), HSTS. 셀프호스팅 문서에 리버스 프록시(Caddy 예시) 가이드.
-- PII(visitors.email/name/phone): v1은 평문 저장(검색 필요) — 접근은 repo 계층 경유만. hard delete 함수(`visitorRepo.hardDelete`)로 파기 요청 대응. 개인정보처리방침 문서에 수집 항목 명시(M2).
+- PII(visitors.email/name/phone): v1은 평문 저장(검색 필요) — 접근은 repo 계층 경유만. 파기 요청은
+  `visitorRepo.hardDeletePii`(익명화)로 대응한다 — 이름과 달리 **행 삭제가 아니다**: FK 연쇄 삭제로
+  conversations/messages가 함께 사라지면 상담 기록 감사가 불가능해지므로, 대화 구조는 보존하고
+  visitor의 email/name/phone/attributes만 null/{}로 지우고 해당 visitor가 작성한 메시지 content를
+  `server.messageRedacted` i18n 상수로 치환한다. 이메일 병합(`mergedInto`) 클러스터 전체를 함께
+  처리한다. tracked_links/conversions/assist_suggestions/conversation_events는 visitorId를 참조로만
+  가지므로(PII 값 자체가 아님) 구조 보존을 위해 그대로 둔다. API로는 노출하지 않음(repo 함수만 —
+  대시보드 트리거 UI는 TODO(question), 오너 결정 필요). 개인정보처리방침 문서에 수집 항목 명시(M2).
 - 백업(클라우드, ee): pg_dump 일 1회 + 오브젝트 스토리지 암호화 보관 30일.
 
 ## 7. 웹훅(아웃바운드)도 Agent와 동일 규약

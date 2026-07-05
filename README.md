@@ -1,78 +1,91 @@
-# AideTalk — 개발 문서 세트 v1.0
+# AideTalk
 
-> **한국 SMB를 위한 오픈소스 CS 메신저 + AI Agent BYO 플랫폼.**
-> 채널톡의 오픈소스 대안이자, "내가 만든 AI Agent를 5분 만에 내 사이트 채팅에 연결"하는 제품.
->
-> 이 문서 세트는 **구현 담당 AI(Claude Code 등)가 추가 판단 없이 코드를 작성할 수 있는 수준의 상세도**를 목표로 작성되었다.
-> 모호한 부분이 나오면 코드를 짓지 말고 TODO로 남기고 질문할 것.
+**한국 SMB를 위한 오픈소스 CS 메신저 — 내가 만든 AI Agent를 5분 만에 내 사이트 채팅에 연결.**
 
-## 비즈니스 한 줄 요약 (돈 버는 구조)
+[![License: AGPL v3](https://img.shields.io/badge/core-AGPL--3.0-blue.svg)](./LICENSE)
+[![ee License](https://img.shields.io/badge/ee-commercial-lightgrey.svg)](./ee/LICENSE)
 
-**Open Core 모델.** 코어(위젯+인박스+커넥터)는 AGPL-3.0 오픈소스로 무료 셀프호스팅 → GitHub/커뮤니티로 유입 → 운영이 귀찮아진 팀이 **유료 클라우드(SaaS)로 전환**하는 것이 주 수익. LLM 비용은 유저가 부담(BYO Key)하므로 우리 원가는 서버비뿐 → 고마진. 상세는 `docs/internal/01_BUSINESS_MODEL.md`.
+<!-- TODO: 스크린샷/데모 GIF (인박스 화면, 위젯 임베드, 어시스트 패널) -->
 
-## 브랜드 & 네이밍 규칙 (확정)
+## 왜 만들었나
 
-제품명은 **AideTalk**로 확정. aide(곁에서 돕는 사람) + talk. 모든 코드/문서/UI에서 아래 표기를 따른다. 다른 변형(Aidetalk, AideTalk.io, 에이드톡 단독 영문 표기 등)을 새로 만들지 말 것.
+채널톡 같은 국내 CS 메신저는 훌륭하지만 전부 폐쇄형 SaaS다. 반면 요즘 팀들은 이미 자기 손으로
+LLM Agent를 만들어봤거나 만들 수 있다 — 그런데 그 Agent를 실제 고객 채팅에 연결하려면
+매번 위젯, 인박스, 핸드오프, 권한 격리 같은 인프라를 처음부터 다시 만들어야 한다.
 
-| 용도 | 표기 | 비고 |
-|---|---|---|
-| 제품명(문장 내, UI, 마케팅) | `AideTalk` | 카멜케이스 고정. 한국어 표기는 "에이드톡" |
-| GitHub org / repo | `aidetalk` / `aidetalk/aidetalk` | 전부 소문자 |
-| npm 스코프 | `@aidetalk/*` | 예: `@aidetalk/widget`, `@aidetalk/shared` |
-| 도메인 1순위 | `aidetalk.io` (제품), `aidetalk.chat` (위젯 CDN/문서 후보) | **TODO(action): 가용 여부 확인 후 즉시 등록** |
-| 오타 방어 도메인 | `aidtalk.io` | aide/aid 동음 오타 → 리다이렉트 |
-| JS 전역 (위젯 설치 스니펫) | `window.AideTalk` | 06 §1 |
-| Agent secret prefix | `adt_` | 08 §1 |
-| 트래킹 URL 파라미터 | `at_l` | 02 §트래킹, 04 `/t/*` |
-| 환경변수 prefix | 없음(범용 이름 사용) | 10 §환경변수 표 기준 |
-| DB/Docker 기본 이름 | `aidetalk` | 10 docker compose |
+AideTalk는 그 인프라만 오픈소스로 제공한다. **LLM 호출은 여러분이 만든 외부 Agent 서버가
+직접 처리**하고(BYO Key — 우리는 OpenAI/Claude 키를 절대 보관하지 않는다), AideTalk는
+HTTP 커넥터로 그 Agent를 위젯·인박스와 연결하는 릴레이 역할만 한다. 셀프호스팅은 무료이며,
+운영이 귀찮아지면 클라우드로 전환할 수 있다(Open Core — 자세히는 [라이선스](#라이선스) 참고).
 
-> **TODO(action)** — 코드 착수 전 창업자가 직접: ① `aidetalk` GitHub org·npm 스코프 선점, ② 도메인 등록(오타 도메인 포함), ③ 키프리스에서 "에이드톡/AideTalk" 상표 출원 여부 확인 후 출원.
+## 핵심 기능
 
-## 문서 구성 & 읽는 순서
+- **채팅 위젯** — Preact 기반, 50KB 이하 gzip, Shadow DOM 격리. 카페24/아임웹 등 국내 커머스
+  플랫폼 임베드를 상정해 만들었다.
+- **AI Agent BYO 커넥터** — HTTP + HMAC 서명 계약(Agent Protocol)만 지키면 어떤 언어/런타임의
+  Agent 서버든 연결 가능. Claude API 예제가 Node/Python 둘 다 준비되어 있다.
+- **핸드오프 & 상담 인박스** — AI가 답하다가 막히면(또는 손님이 요청하면) 실시간으로 사람
+  상담원에게 넘어간다. 대화 목록/검색/실시간 알림을 갖춘 인박스 대시보드 포함.
+- **실시간 상담 어시스트** — 상담원이 응대 중일 때 AI가 답변 초안을 제안한다. 제안은 상담원에게만
+  보이며 손님에게는 절대 노출되지 않는다.
+- **상담 기여 매출(추정) 트래킹** — 링크 클릭/전환을 추적해 "이 상담이 매출로 이어졌는지"를
+  추정치로 보여준다(사이트가 있는 워크스페이스 전용). 인과관계를 확정하는 것이 아니라 기여를
+  추정하는 도구임을 항상 명시한다.
+- **셀프호스팅 = 클라우드와 동일 이미지** — Docker Compose 한 번으로 PostgreSQL + Redis +
+  서버 + 대시보드가 뜬다. 환경변수(`EDITION`) 하나만 다르다.
 
-| # | 파일 | 역할 | 누가 언제 읽나 |
-|---|---|---|---|
-| - | `CLAUDE.md` | Claude Code 작업 규칙 (레포 루트 배치) | 매 세션 자동 로드 |
-| 00 | `docs/internal/00_PRD.md` | 제품 요구사항 — 무엇을 왜 | 기능 추가/변경 판단 시 |
-| 01 | `docs/internal/01_BUSINESS_MODEL.md` | 과금 모델 + plan 제한의 **코드 명세** | 결제/plan 관련 작업 시 |
-| 02 | `docs/02_ARCHITECTURE.md` | 시스템 설계 — 어떻게 | 구조 결정 시 |
-| 03 | `docs/03_DATA_MODEL.md` | DB 스키마 (**Drizzle 코드 포함**) | 스키마 작업 시 |
-| 04 | `docs/04_API_SPEC.md` | REST + WebSocket **전체 API 명세** | 서버/클라이언트 구현 시 상시 |
-| 05 | `docs/05_AGENT_PROTOCOL.md` | AideTalk ↔ 유저 Agent HTTP 계약 (외부 공개용) | 커넥터 구현 시 |
-| 06 | `docs/06_WIDGET_SPEC.md` | 위젯 구현 명세 (상태머신, UI, 재연결) | 위젯 작업 시 |
-| 07 | `docs/07_DASHBOARD_SPEC.md` | 대시보드 화면·라우트·컴포넌트 명세 | 대시보드 작업 시 |
-| 08 | `docs/08_SECURITY.md` | 보안 요구사항 체크리스트 | 인증/커넥터/배포 작업 시 |
-| 09 | `docs/09_TESTING.md` | 테스트 전략 + 필수 테스트 케이스 목록 | 모든 기능 작업 시 |
-| 10 | `docs/10_DEPLOYMENT.md` | Docker/환경변수/셀프호스팅·클라우드 배포 | M2/M3 작업 시 |
-| 11 | `docs/11_ROADMAP.md` | 마일스톤 작업 분해 (수용 기준 포함) | 매 세션 작업 선정 |
+## 30분 셀프호스팅 Quickstart
 
-**단일 출처(source of truth) 규칙:**
-- API 계약 → `packages/shared`의 zod 스키마가 최종. 문서(04, 05)와 어긋나면 코드를 따르되 같은 커밋에서 문서 갱신.
-- DB → `packages/db/src/schema/`가 최종. 03 문서 동일 규칙.
-- 우선순위 충돌 시: CLAUDE.md 절대 규칙 > PRD Non-goals > 각 명세 문서.
-
-## Claude Code로 개발 시작하는 법
+요구사항: Docker + Docker Compose v2.
 
 ```bash
-mkdir aidetalk && cd aidetalk
-# CLAUDE.md는 레포 루트에, docs/*.md는 docs/에 배치
-claude
-# 첫 프롬프트:
-# "docs/11_ROADMAP.md의 M0에서 '모노레포 스캐폴드' 항목을 진행해줘.
-#  CLAUDE.md의 스택과 레포 구조를 따르고, 구현 전 계획을 먼저 보여줘."
+git clone https://github.com/aidetalk/aidetalk.git && cd aidetalk/docker
+cp .env.example .env
+# .env를 열어 시크릿을 채운다 — 생성: openssl rand -hex 32
+
+docker compose up -d
+curl http://localhost:4000/healthz   # {"ok":true} 확인
 ```
 
-### 운영 원칙 (1인 + AI 개발)
-1. **세션 = ROADMAP 체크박스 1~2개.** 더 큰 단위로 시키면 품질이 떨어진다. 완료 시 체크박스에 날짜 기입.
-2. **계획 먼저.** 큰 작업은 "구현하지 말고 계획만"으로 시작 → 검토 → 진행.
-3. **문서가 어긋나면 같은 커밋에서 문서를 고친다.** 문서가 썩으면 AI의 판단도 썩는다.
-4. **테스트 강제 영역**(메시징 신뢰성, 권한 격리, plan 제한)은 테스트 없는 PR 금지 — 09 문서 참조.
-5. **위젯 주간은 실기기 테스트 병행.** iOS Safari는 코드 리뷰로 못 잡는다.
+브라우저에서 `http://localhost:3000` 접속 → 가입 → 워크스페이스 생성 → 위젯 설정 화면에서
+임베드 코드를 복사해 여러분의 사이트에 붙여넣으면 첫 대화를 받을 준비가 끝난다.
 
-## 시작 전 결정할 것 (Open Questions)
-- [ ] 제품명 확정 (→ 전 문서에서 AideTalk 일괄 치환) + 도메인/GitHub org
-- [ ] 라이선스 최종 확정 (본 문서 세트는 **AGPL-3.0 코어 + `ee/` 디렉토리 상용 라이선스**를 기본안으로 작성 — 01 문서 §5)
-- [ ] 클라우드 인프라 벤더
-- [ ] 텔레메트리 opt-in 항목 확정
-- [ ] M0 인터뷰 대상 5명
+더 자세한 절차(환경변수 표, 리버스 프록시, 백업)는 [설치 가이드](#문서)를 참고.
+
+## 내 AI Agent 연결하기
+
+이미 Agent가 있다면 [Agent Protocol](#문서) 계약(HTTP + HMAC 서명)만 구현하면 된다. 아직
+없다면 저장소에 바로 실행 가능한 예제가 두 언어로 준비되어 있다 — 둘 다 Claude API로 FAQ에
+답하고, 처리 못 하는 요청은 사람에게 핸드오프한다.
+
+```bash
+cd examples/agent-node        # 또는 examples/agent-python
+# README 첫 줄이 이렇게 되어 있다:
+# "이 레포를 Claude Code에 열고 '우리 쇼핑몰 정책에 맞게 고쳐줘'라고 하세요."
+```
+
+연결 방법: 대시보드 > Agent 커넥터에서 새 Agent 등록 → Endpoint URL 입력 → 발급된 secret을
+예제의 `.env`에 붙여넣기 → "연결 테스트"로 확인. 자세한 절차는 [예제 에이전트 가이드](#문서) 참고.
+
+## 문서
+
+- 설치 가이드, Agent Protocol(외부 공개 계약), 위젯 임베드/CSP 가이드, 예제 에이전트 안내는
+  문서 사이트에서 볼 수 있다: **https://docs.aidetalk.io** (TODO(action): 도메인 확정/배포 후 연결 — 그 전까지는 `apps/docs/`를 로컬에서 `pnpm --filter @aidetalk/docs dev`로 직접 볼 수 있다)
+- 아키텍처/데이터 모델/API 명세 등 구현 상세 문서는 이 저장소의 `docs/` 아래에 공개되어 있다
+  (`docs/02_ARCHITECTURE.md` ~ `docs/12_GIT_STRATEGY.md`).
+
+## 라이선스
+
+**Open Core.** 코어(위젯 + 인박스 + Agent 커넥터 + 셀프호스팅에 필요한 모든 것)는
+**[AGPL-3.0](./LICENSE)**으로 무료 오픈소스다. 셀프호스팅에 기능 제한은 없다.
+
+클라우드 전용 코드(결제, 플랜 한도, 자동 백업 등)는 `ee/` 디렉토리 아래 별도
+**[상용 라이선스](./ee/LICENSE)**를 따른다. `ee/` 없이도 코어는 완전히 빌드·구동된다 —
+`ee/`는 우리가 운영하는 클라우드 서비스를 위한 선택적 확장일 뿐이다.
+
+## 기여하기
+
+버그 제보, 기능 제안, 코드 기여 모두 환영한다. 시작하기 전에 **[CONTRIBUTING.md](./CONTRIBUTING.md)**를
+읽어보길 권한다 — 개발 환경 셋업, 브랜치/PR 규칙, 테스트 필수 영역, DCO(Developer Certificate
+of Origin) 서명 방법이 정리되어 있다. 행동 강령은 **[CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)**,
+보안 취약점 제보는 **[SECURITY.md](./SECURITY.md)**를 참고.

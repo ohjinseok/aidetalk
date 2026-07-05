@@ -17,6 +17,7 @@
     "db:migrate": "tsx src/migrate.ts"
   },
   "dependencies": {
+    "@aidetalk/i18n": "workspace:*",
     "@aidetalk/shared": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "hash-wasm": "^4.12.0",

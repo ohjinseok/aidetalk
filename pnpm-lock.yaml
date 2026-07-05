@@ -188,6 +188,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@aidetalk/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       '@aidetalk/shared':
         specifier: workspace:*
         version: link:../shared

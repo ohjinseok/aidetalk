@@ -62,7 +62,8 @@ services:
       ALLOW_INSECURE_AGENT_ENDPOINT: ${ALLOW_INSECURE_AGENT_ENDPOINT:-false}
       SMTP_URL: ${SMTP_URL:-}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      TELEMETRY: ${TELEMETRY:-false}
+      TELEMETRY_ENABLED: ${TELEMETRY_ENABLED:-false}
+      TELEMETRY_ENDPOINT: ${TELEMETRY_ENDPOINT:-https://telemetry.aidetalk.invalid/v1/ping}
     ports:
       - "4000:4000"
     volumes:

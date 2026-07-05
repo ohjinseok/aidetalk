@@ -12,6 +12,7 @@ import { makeAssistRepo } from "./assist";
 import { makeConversationRepo } from "./conversation";
 import { makeConversionRepo } from "./conversion";
 import { makeEventRepo } from "./event";
+import { makeInstanceRepo } from "./instance";
 import { makeInviteRepo } from "./invite";
 import { makeMemberRepo } from "./member";
 import { makeMessageRepo } from "./message";
@@ -31,6 +32,7 @@ export * from "./visitor";
 export * from "./conversation";
 export * from "./message";
 export * from "./event";
+export * from "./instance";
 export * from "./agent-log";
 export * from "./tracked-link";
 export * from "./conversion";
@@ -49,6 +51,7 @@ export function createRepos(db: Database) {
     conversation: makeConversationRepo(db),
     message: makeMessageRepo(db),
     event: makeEventRepo(db),
+    instance: makeInstanceRepo(db),
     agentLog: makeAgentLogRepo(db),
     trackedLink: makeTrackedLinkRepo(db),
     conversion: makeConversionRepo(db),

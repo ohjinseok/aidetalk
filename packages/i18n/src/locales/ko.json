@@ -341,6 +341,7 @@
     "handoffDefaultMessage": "상담원을 연결해 드릴게요. 잠시만 기다려 주세요.",
     "autoHandoffNotice": "지금 상담원을 연결하고 있어요. 잠시만 기다려 주세요.",
     "handoffRequestedReason": "손님이 상담원 연결을 요청했습니다.",
-    "handoffAutoReason": "AI 응답 처리 중 문제가 발생해 자동으로 상담원에게 연결했습니다."
+    "handoffAutoReason": "AI 응답 처리 중 문제가 발생해 자동으로 상담원에게 연결했습니다.",
+    "messageRedacted": "[삭제된 메시지]"
   }
 }

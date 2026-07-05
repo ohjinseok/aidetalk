@@ -12,6 +12,7 @@ describe("repo 시그니처 타입 강제", () => {
     expectTypeOf<Parameters<Repos["member"]["invite"]>[0]>().toEqualTypeOf<string>();
     expectTypeOf<Parameters<Repos["agent"]["create"]>[0]>().toEqualTypeOf<string>();
     expectTypeOf<Parameters<Repos["visitor"]["getOrCreateByToken"]>[0]>().toEqualTypeOf<string>();
+    expectTypeOf<Parameters<Repos["visitor"]["hardDeletePii"]>[0]>().toEqualTypeOf<string>();
     expectTypeOf<Parameters<Repos["conversation"]["create"]>[0]>().toEqualTypeOf<string>();
     expectTypeOf<Parameters<Repos["message"]["append"]>[0]>().toEqualTypeOf<string>();
     expectTypeOf<Parameters<Repos["event"]["append"]>[0]>().toEqualTypeOf<string>();
@@ -42,5 +43,7 @@ describe("repo 시그니처 타입 강제", () => {
     expectTypeOf<Parameters<Repos["workspace"]["create"]>[0]>().toEqualTypeOf<CreateWorkspaceInput>();
     // userRepo는 전역(auth) 리소스 — getByEmail 첫 인자는 email.
     expectTypeOf<Parameters<Repos["user"]["getByEmail"]>[0]>().toEqualTypeOf<string>();
+    // instanceRepo는 워크스페이스에 속하지 않는 인스턴스 전역 메타데이터(텔레메트리 익명 ID/개수) — 인자 없음.
+    expectTypeOf<Parameters<Repos["instance"]["getOrCreateAnonymousId"]>>().toEqualTypeOf<[]>();
   });
 });

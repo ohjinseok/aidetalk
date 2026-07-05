@@ -16,9 +16,9 @@
   - `docs/짧은-설명` — 문서만
   - `chore/짧은-설명` — 빌드/설정/잡무
   - `refactor/짧은-설명` — 동작 변화 없는 구조 개선
-- 브랜치 수명은 원칙적으로 **2~3일 이내**(하나의 ROADMAP 체크박스 단위, README
-  "세션 = 체크박스 1~2개" 원칙과 동일한 크기). 오래 걸리는 작업은 더 작은 단위로
-  쪼개서 여러 PR로 나눈다.
+- 브랜치 수명은 원칙적으로 **2~3일 이내**(하나의 ROADMAP 체크박스 단위,
+  `docs/internal/DEV_README.md` "세션 = 체크박스 1~2개" 원칙과 동일한 크기). 오래 걸리는
+  작업은 더 작은 단위로 쪼개서 여러 PR로 나눈다.
 - **머지 방식은 squash merge 고정.** `main`의 커밋 히스토리는 "PR 1개 = 커밋 1개"로
   선형 유지한다. 브랜치 안에서의 커밋 개수/메시지 품질은 자유롭게 실험해도 되고,
   PR 제목이 최종 커밋 메시지가 되므로 PR 제목만 Conventional Commits 형식을 지키면
@@ -148,7 +148,7 @@ M2("공개 준비") 종료 시점부터 정식 버전을 매긴다.
 ### 기타
 - [ ] About 섹션: 짧은 한 줄 설명 + 토픽 태그(`customer-support`, `chat-widget`,
       `open-source`, `agpl`, `korean` 등) + 홈페이지 URL(도메인 확정 후)
-- [ ] Social preview 이미지 (README §브랜드 표 확정 후 M2에서 준비)
+- [ ] Social preview 이미지 (`docs/internal/DEV_README.md` §브랜드 표 확정 후 M2에서 준비)
 
 ## 5. 오픈소스 공개 전 체크리스트 (M2 시점)
 
@@ -188,7 +188,7 @@ M2("공개 준비") 종료 시점부터 정식 버전을 매긴다.
   - [x] LICENSE / ee/LICENSE / CONTRIBUTING.md / CODE_OF_CONDUCT.md / SECURITY.md /
         이슈·PR 템플릿 초안 작성 완료 (2026-07-03)
 - [ ] `docs/08_SECURITY.md` 전 항목 감사(ROADMAP M2 "보안 점검" 항목과 동일 작업).
-- [ ] 상표/도메인(README §브랜드 표 TODO) 확정 여부 재확인 — 미확정이어도 공개 자체를
+- [ ] 상표/도메인(`docs/internal/DEV_README.md` §브랜드 표 TODO) 확정 여부 재확인 — 미확정이어도 공개 자체를
       막을 필요는 없으나, 오타 도메인 등 방어 조치는 공개 전 완료 권장.
 - [ ] GitHub org(`aidetalk`) 2단계 인증 활성화, 저장소 관리자 계정 보안 점검.
 - [ ] 이슈/PR 템플릿, Discussions, branch protection(§4) 적용 확인.

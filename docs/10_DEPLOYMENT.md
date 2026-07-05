@@ -23,11 +23,27 @@
 | `ALLOW_INSECURE_AGENT_ENDPOINT` | `false` | | 셀프호스팅에서 http 에이전트 허용 |
 | `SMTP_URL` | (없음) | | 없으면 이메일 발송 전부 skip + 로그 (셀프호스팅 기본 동작) |
 | `LOG_LEVEL` | `info` | | pino |
-| `TELEMETRY` | `false` | | opt-in 익명 텔레메트리 (수집 항목: 설치 UUID, 버전, 워크스페이스 수 — 문서에 명시) |
+| `TELEMETRY_ENABLED` | `false` | | **opt-in** 익명 텔레메트리. `true`일 때만 동작(기본 OFF) — 수집 항목은 아래 §1-1 표 참고 |
+| `TELEMETRY_ENDPOINT` | placeholder 도메인(`https://telemetry.aidetalk.invalid/v1/ping`) | | 텔레메트리 전송 대상 URL. **TODO(action): 실제 수집 서버 도메인 확정 후 교체** |
 | (ee) `BILLING_PROVIDER` + 해당 시크릿 | - | cloud | PG 미정(TODO) — 01 §6 BillingProvider 구현체 선택 |
 | (ee) `BILLING_KEY_ENC_KEY` | - | cloud | billingKey 암호화 키 |
 
 부팅 시 zod로 env 검증(`apps/server/src/env.ts`) — 누락 시 어떤 변수가 왜 필요한지 출력 후 종료.
+
+### 1-1. 텔레메트리 수집 항목 (opt-in, 기본 OFF)
+
+`TELEMETRY_ENABLED=true`로 명시적으로 켰을 때만 동작한다. 대화 내용·메시지·이메일 등 어떤 PII도
+수집하지 않으며, 아래 항목이 전부다. 주 1회 `TELEMETRY_ENDPOINT`로 전송하고, 전송 실패는 조용히
+무시한다(서버 동작에 영향 없음). 구현: `apps/server/src/services/telemetry.ts`,
+`packages/db/src/repos/instance.ts`.
+
+| 항목 | 설명 |
+|---|---|
+| 인스턴스 익명 ID | 최초 전송 시 랜덤 생성해 DB(`instance_settings` 단일 행)에 저장. 재설치 시 새로 생성됨 — 사람/조직 식별 불가 |
+| 버전 | 서버 버전(`apps/server/package.json`) |
+| 워크스페이스 개수 | 인스턴스 전체 워크스페이스 "수"만 (이름/설정 등 내용 없음) |
+| 대화 개수 | 인스턴스 전체 대화 "수"만 (메시지 본문/방문자 정보 없음) |
+| 에이전트(커넥터) 개수 | 등록된 AI 커넥터 "수"만 (엔드포인트 URL/시크릿 등 없음) |
 
 ## 2. 셀프호스팅 (docker/compose.yml)
 

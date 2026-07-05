@@ -70,10 +70,24 @@ curl http://localhost:4000/healthz
 | `ALLOW_INSECURE_AGENT_ENDPOINT` | `false` | | 로컬 개발 등에서 `http://` Agent 엔드포인트를 허용할지 여부. 프로덕션에서는 `false` 권장 |
 | `SMTP_URL` | (없음) | | 비워두면 이메일 발송이 전부 스킵되고 로그만 남습니다(셀프호스팅 기본 동작) |
 | `LOG_LEVEL` | `info` | | pino 로그 레벨 |
-| `TELEMETRY` | `false` | | opt-in 익명 텔레메트리. 수집 항목: 설치 UUID, 버전, 워크스페이스 수 — 그 이상은 수집하지 않습니다 |
+| `TELEMETRY_ENABLED` | `false` | | **opt-in** 익명 텔레메트리. 기본은 꺼져 있으며, `true`로 명시적으로 켰을 때만 동작합니다 |
+| `TELEMETRY_ENDPOINT` | placeholder 도메인 | | 텔레메트리 전송 대상 URL. 실제 수집 서버 도메인이 아직 확정 전이라 코드에 TODO로 표시되어 있습니다 |
 
 시크릿(`VISITOR_TOKEN_SECRET`, `SESSION_SECRET`, `SECRET_ENC_KEY` 등)은 절대 코드나 로그에
 남기지 마세요. 로그에는 항상 마스킹된 형태(`sk_live_ab****`)로만 남습니다.
+
+### 텔레메트리(opt-in) 수집 항목
+
+기본은 꺼져 있습니다(`TELEMETRY_ENABLED=false`). 켜더라도 대화 내용·메시지·이메일 등 어떤 개인정보도
+수집하지 않으며, 아래 항목이 전부입니다. 주 1회 전송하고 전송 실패는 조용히 무시합니다.
+
+| 항목 | 설명 |
+|---|---|
+| 인스턴스 익명 ID | 최초 전송 시 랜덤 생성해 DB에 저장. 재설치하면 새로 생성됩니다 |
+| 버전 | 서버 버전 |
+| 워크스페이스 개수 | 전체 워크스페이스 "수"만 |
+| 대화 개수 | 전체 대화 "수"만 (메시지 본문 없음) |
+| 에이전트(커넥터) 개수 | 등록된 AI 커넥터 "수"만 (엔드포인트 URL 없음) |
 
 ## 5. 리버스 프록시 (Caddy 예시)
 
