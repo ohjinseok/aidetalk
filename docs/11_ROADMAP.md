@@ -60,12 +60,12 @@
 
 ## M2 — 셀프호스팅 패키징 & 공개 준비 (3주)
 **목표: 모르는 사람이 README만 보고 30분 안에 띄운다**
-- [ ] compose 원커맨드 검증 (맨 우분투 VM) — 「기준」 10 §2 절차 그대로 30분 내 대화 성립
-- [ ] .env.example + env zod 검증 + 부팅 마이그레이션 엔트리포인트
-- [ ] 문서 사이트: 설치 가이드 + AGENT_PROTOCOL 공개판 + CSP/임베드 가이드 (한국어 우선, 영어 병행)
-- [ ] examples/agent-python
-- [ ] 카페24/아임웹 실사이트 임베드 실측 → edge case 수정 + 06 §6 갱신
-- [ ] 보안 점검 — 「기준」 08 문서 전 항목 체크 감사
+- [ ] compose 원커맨드 검증 (맨 우분투 VM) — 「기준」 10 §2 절차 그대로 30분 내 대화 성립 (로컬 macOS에서 build→up→healthz/dashboard 확인 완료 2026-07-05 — **맨 우분투 VM 실측은 오너와 함께 남음**)
+- [x] .env.example + env zod 검증 + 부팅 마이그레이션 엔트리포인트 (2026-07-05, docker/.env.example + apps/server env.ts zod + RUN_MIGRATIONS_ON_BOOT)
+- [x] 문서 사이트: 설치 가이드 + AGENT_PROTOCOL 공개판 + CSP/임베드 가이드 (한국어 우선, 영어 병행) (2026-07-05, apps/docs VitePress — 배포는 도메인 확정 후)
+- [x] examples/agent-python (2026-07-04, M1 W5에서 agent-node와 함께 완료)
+- [ ] 카페24/아임웹 실사이트 임베드 실측 → edge case 수정 + 06 §6 갱신 (**실사이트 필요 — 오너와 함께**)
+- [x] 보안 점검 — 「기준」 08 문서 전 항목 체크 감사 (2026-07-05, 준수 21/수정 8/잔여 리스크 5 — docs/internal/SECURITY_AUDIT_2026-07.md)
 - [x] 텔레메트리 opt-in (수집 항목 문서 명시) (2026-07-05, 기본 OFF·`TELEMETRY_ENABLED`, 수집 항목 표는 10_DEPLOYMENT.md §1-1 + apps/docs/guide(en)/install.md)
 - [x] README(스크린샷/데모 GIF/"왜 만들었나") + 이슈 템플릿 + CONTRIBUTING(DCO) (2026-07-05, README 재작성 — 스크린샷/데모 GIF는 TODO 주석으로 자리만 마련. 이슈 템플릿/CONTRIBUTING(DCO)은 이전 세션에서 이미 완료)
 
