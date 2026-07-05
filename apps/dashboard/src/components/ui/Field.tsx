@@ -11,7 +11,7 @@ export function Label({ htmlFor, children }: { htmlFor?: string; children: React
 }
 
 const base =
-  "w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand disabled:bg-gray-100";
+  "w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-xs focus:border-brand focus:outline-hidden focus:ring-1 focus:ring-brand disabled:bg-gray-100";
 
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
   const { className = "", ...rest } = props;

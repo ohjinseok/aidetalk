@@ -51,7 +51,7 @@ export function AssistPanel({
             return (
               <div
                 key={s.id}
-                className={`rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-opacity ${
+                className={`rounded-lg border border-gray-200 bg-white p-3 shadow-xs transition-opacity ${
                   isDim ? "opacity-50" : ""
                 }`}
               >

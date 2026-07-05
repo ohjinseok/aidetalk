@@ -14,7 +14,7 @@ export function WidgetPreview({ settings }: { settings: WidgetSettings }) {
   const right = (settings.launcherPosition ?? "right") === "right";
 
   return (
-    <div className="relative h-80 overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="relative h-80 overflow-hidden rounded-lg border border-gray-200 bg-linear-to-b from-gray-50 to-gray-100">
       <div className={`absolute bottom-4 flex w-72 flex-col ${right ? "right-4" : "left-4"}`}>
         <div className="overflow-hidden rounded-xl bg-white shadow-lg">
           <div className="px-4 py-3 text-sm font-semibold text-white" style={{ background: color }}>

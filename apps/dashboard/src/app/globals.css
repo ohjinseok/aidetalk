@@ -1,6 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* 브랜드 토큰 — shadcn 토큰 도입(다음 커밋) 전 과도기 정의 */
+  --color-brand: #4f46e5;
+  --color-brand-fg: #ffffff;
+}
 
 :root {
   color-scheme: light;
@@ -13,4 +17,12 @@ body {
 
 body {
   @apply bg-gray-50 text-gray-900 antialiased;
+}
+
+/* Tailwind v4는 button 커서 기본값이 default — v3의 pointer 동작 유지 */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
 }

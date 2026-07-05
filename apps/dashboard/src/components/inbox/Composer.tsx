@@ -54,7 +54,7 @@ export function Composer({
         <textarea
           aria-label={td("dashboard.conversation.composerPlaceholder")}
           placeholder={td("dashboard.conversation.composerPlaceholder")}
-          className="max-h-40 min-h-[44px] w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+          className="max-h-40 min-h-[44px] w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-hidden focus:ring-1 focus:ring-brand"
           rows={2}
           value={value}
           disabled={disabled}

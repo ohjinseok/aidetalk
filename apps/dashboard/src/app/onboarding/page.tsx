@@ -46,7 +46,7 @@ export default function OnboardingPage() {
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-lg rounded-lg bg-white p-6 shadow-sm"
+        className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xs"
         aria-label={td("dashboard.onboarding.title")}
       >
         <h1 className="text-xl font-semibold">{td("dashboard.onboarding.title")}</h1>

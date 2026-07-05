@@ -45,7 +45,7 @@ function AcceptInner() {
 
   if (!token) {
     return (
-      <div className="w-full max-w-sm rounded-lg bg-white p-6 text-center shadow-sm">
+      <div className="w-full max-w-sm rounded-lg bg-white p-6 text-center shadow-xs">
         <h1 className="mb-2 text-xl font-semibold">{td("dashboard.invite.acceptTitle")}</h1>
         <p className="text-sm text-red-600">{td("dashboard.invite.missingToken")}</p>
       </div>
@@ -55,7 +55,7 @@ function AcceptInner() {
   const tokenQs = `inviteToken=${encodeURIComponent(token)}`;
 
   return (
-    <div className="w-full max-w-sm rounded-lg bg-white p-6 text-center shadow-sm">
+    <div className="w-full max-w-sm rounded-lg bg-white p-6 text-center shadow-xs">
       <h1 className="mb-2 text-xl font-semibold">{td("dashboard.invite.acceptTitle")}</h1>
       {authState === "checking" ? (
         <Spinner />

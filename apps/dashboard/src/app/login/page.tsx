@@ -53,7 +53,7 @@ function LoginInner() {
     <main className="flex min-h-screen items-center justify-center px-4">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-sm rounded-lg bg-white p-6 shadow-sm"
+        className="w-full max-w-sm rounded-lg bg-white p-6 shadow-xs"
         aria-label={td("dashboard.auth.loginTitle")}
       >
         <h1 className="mb-5 text-xl font-semibold">{td("dashboard.auth.loginTitle")}</h1>
