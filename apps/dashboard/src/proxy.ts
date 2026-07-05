@@ -1,5 +1,5 @@
 /**
- * 인증 가드 미들웨어 — 07_DASHBOARD_SPEC §1.
+ * 인증 가드 프록시(구 middleware, Next 16에서 proxy로 개명) — 07_DASHBOARD_SPEC §1.
  * od_session 쿠키(04 §0.1)가 없으면 보호 경로 접근 시 /login으로.
  * membership(wsId) 검증은 (app) 레이아웃에서 /v1/me로 수행한다.
  *
@@ -12,7 +12,7 @@ const SESSION_COOKIE = "od_session";
 /** 인증 없이 접근 가능한 경로. */
 const PUBLIC_PREFIXES = ["/login", "/signup", "/invites/accept"];
 
-export function middleware(req: NextRequest): NextResponse {
+export function proxy(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
   const hasSession = Boolean(req.cookies.get(SESSION_COOKIE)?.value);
   const isPublic = PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));

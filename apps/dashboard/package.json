@@ -2,7 +2,7 @@
   "name": "@aidetalk/dashboard",
   "version": "0.0.0",
   "private": true,
-  "description": "상담 인박스 + 설정 대시보드 (Next.js 15 App Router + Tailwind)",
+  "description": "상담 인박스 + 설정 대시보드 (Next.js 16 App Router + Tailwind)",
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
@@ -14,9 +14,9 @@
   "dependencies": {
     "@aidetalk/i18n": "workspace:*",
     "@aidetalk/shared": "workspace:*",
-    "next": "^15.5.20",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "next": "^16.2.10",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "zod": "^3.24.1"
   },
   "devDependencies": {
