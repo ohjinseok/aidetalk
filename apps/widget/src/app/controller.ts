@@ -5,6 +5,7 @@
  * 순수 로직(파이프라인/백오프/폴백/트래킹)은 lib/*에 분리해 단위 테스트하고,
  * 여기서는 그것들을 조립한다.
  */
+import { DEFAULT_PRIMARY } from "./constants";
 import * as api from "./lib/api";
 import { ApiError } from "./lib/api";
 import {
@@ -28,6 +29,25 @@ import type { ServerToWidgetMessage, Visitor } from "./shared";
 const ACK_TIMEOUT_MS = 5000;
 const POLL_INTERVAL_MS = 2000;
 
+/** Web Storage 접근은 private 모드/차단 환경에서 throw할 수 있어 항상 안전하게 감싼다. */
+function storageOf(kind: "local" | "session"): Storage {
+  return kind === "local" ? localStorage : sessionStorage;
+}
+function safeStorageGet(kind: "local" | "session", key: string): string | null {
+  try {
+    return storageOf(kind).getItem(key);
+  } catch {
+    return null;
+  }
+}
+function safeStorageSet(kind: "local" | "session", key: string, value: string): void {
+  try {
+    storageOf(kind).setItem(key, value);
+  } catch {
+    /* private 모드 등 — 무시 */
+  }
+}
+
 /** 렌더용 불변 스냅샷 — 컴포넌트는 이것만 본다. */
 export interface WidgetSnapshot {
   phase: WidgetPhase;
@@ -49,8 +69,6 @@ export interface WidgetSnapshot {
   readReceiptMsgId: string | null;
   error: string | null;
 }
-
-const DEFAULT_PRIMARY = "#4F46E5";
 
 export class WidgetController {
   private phase: WidgetPhase = "idle";
@@ -109,12 +127,11 @@ export class WidgetController {
     const primaryColor =
       (typeof this.settings?.primaryColor === "string" && this.settings.primaryColor) ||
       DEFAULT_PRIMARY;
-    const workspaceName = this.workspaceName;
     return {
       phase: this.phase,
       open: this.open,
       settings: this.settings,
-      workspaceName,
+      workspaceName: this.workspaceName,
       primaryColor,
       visitor: this.visitor,
       conversationId: this.conversationId,
@@ -273,16 +290,13 @@ export class WidgetController {
         /* boot 실패는 아래 token 체크에서 걸러진다 */
       }
     }
-    if (!this.token) return; // 부팅 실패 등으로 세션이 없으면 전송 불가.
+    const token = this.token;
+    if (!token) return; // 부팅 실패 등으로 세션이 없으면 전송 불가.
 
     // 대화 없으면 첫 전송 시점에 생성(§3).
     if (!this.conversationId) {
       try {
-        const created = await api.postConversation(
-          this.config.serverUrl,
-          this.token!,
-          location.href,
-        );
+        const created = await api.postConversation(this.config.serverUrl, token, location.href);
         this.conversationId = created.conversation.id;
         this.localSystemLines = [];
         // 대화 생성 직후 구독 — 첫 메시지가 REST로 나가도 AI 응답을 실시간 수신.
@@ -367,24 +381,25 @@ export class WidgetController {
     }
   }
 
+  /** pending 항목을 pending 상태로 복구하고 재전송(수동 재시도·재연결 flush 공통). */
+  private redispatch(clientMsgId: string, text: string): void {
+    this.store.addPending(clientMsgId, text); // 상태 pending 복구
+    this.dispatchSend(clientMsgId, text);
+  }
+
   private resendPending(): void {
     for (const { clientMsgId, text } of this.store.pendingIds()) {
-      this.store.addPending(clientMsgId, text); // 상태 pending 복구
-      this.dispatchSend(clientMsgId, text);
+      this.redispatch(clientMsgId, text);
     }
     this.emit();
   }
 
   /** 실패한 pending 수동 재시도. */
   retry(clientMsgId: string): void {
-    for (const { clientMsgId: id, text } of this.store.pendingIds()) {
-      if (id === clientMsgId) {
-        this.store.addPending(id, text);
-        this.dispatchSend(id, text);
-        this.emit();
-        return;
-      }
-    }
+    const found = this.store.pendingIds().find((p) => p.clientMsgId === clientMsgId);
+    if (!found) return;
+    this.redispatch(found.clientMsgId, found.text);
+    this.emit();
   }
 
   // ---------- 수신 §5.2 ----------
@@ -545,32 +560,16 @@ export class WidgetController {
     return `od_open_${this.config.workspaceId}`;
   }
   private readToken(): string | null {
-    try {
-      return localStorage.getItem(this.tokenKey());
-    } catch {
-      return null;
-    }
+    return safeStorageGet("local", this.tokenKey());
   }
   private writeToken(token: string): void {
-    try {
-      localStorage.setItem(this.tokenKey(), token);
-    } catch {
-      /* private 모드 등 — 무시 */
-    }
+    safeStorageSet("local", this.tokenKey(), token);
   }
   private persistOpen(open: boolean): void {
-    try {
-      sessionStorage.setItem(this.openKey(), open ? "1" : "0");
-    } catch {
-      /* 무시 */
-    }
+    safeStorageSet("session", this.openKey(), open ? "1" : "0");
   }
   wasOpen(): boolean {
-    try {
-      return sessionStorage.getItem(this.openKey()) === "1";
-    } catch {
-      return false;
-    }
+    return safeStorageGet("session", this.openKey()) === "1";
   }
 
   private wsUrl(token: string): string {

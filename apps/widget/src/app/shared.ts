@@ -11,13 +11,12 @@ import {
   serverToWidgetMessageSchema,
   type Message,
   type ServerToWidgetMessage,
-  type WidgetToServerMessage,
 } from "@aidetalk/shared";
 
 import { widgetSettingsSchema } from "./types";
 
-export { messageSchema, serverToWidgetMessageSchema };
-export type { Message, ServerToWidgetMessage, WidgetToServerMessage };
+export { serverToWidgetMessageSchema };
+export type { Message, ServerToWidgetMessage };
 
 /** 방문자 요약 — 04 §1 session/profile 응답. shared에 정본이 없어 위젯 로컬 정의. */
 export const visitorSchema = z.object({

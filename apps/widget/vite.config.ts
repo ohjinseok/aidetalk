@@ -1,6 +1,8 @@
 import preact from "@preact/preset-vite";
 import { defineConfig } from "vite";
 
+import { WIDGET_VERSION } from "./version";
+
 /**
  * 본체(app.js) 빌드 + 데모 dev 서버.
  * IIFE 단일 파일로 번들 — 로더가 <script src="/widget/v{n}/app.js">로 로드(06 §1).
@@ -9,7 +11,12 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [preact()],
   define: {
-    __WIDGET_VERSION__: JSON.stringify("1"),
+    __WIDGET_VERSION__: JSON.stringify(WIDGET_VERSION),
+  },
+  // json.stringify=false로 named export를 보존 → @aidetalk/i18n/widget이 로케일 json의
+  // widget 섹션만 남기고 나머지(dashboard/errors/server)를 트리셰이킹으로 제거할 수 있게 한다.
+  json: {
+    stringify: false,
   },
   server: {
     port: 5173,

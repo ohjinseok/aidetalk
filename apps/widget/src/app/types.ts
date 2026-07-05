@@ -9,7 +9,7 @@ import {
   type EvaluatedWidgetSettings,
 } from "@aidetalk/shared";
 
-import type { Message, Visitor } from "./shared";
+import type { Message } from "./shared";
 
 /** 세션 응답에 실리는 widgetSettings(평가 결과 isOfficeHours 포함). shared 정본 재노출. */
 export const widgetSettingsSchema = evaluatedWidgetSettingsSchema;
@@ -47,23 +47,4 @@ export type WidgetPhase = "idle" | "booting" | "ready" | "error";
 export interface TypingState {
   ai: boolean;
   human: boolean;
-}
-
-export interface WidgetState {
-  phase: WidgetPhase;
-  open: boolean;
-  settings: WidgetSettings | null;
-  visitor: Visitor | null;
-  conversationId: string | null;
-  /** 확정 메시지(서버) — id 기준 upsert, createdAt 정렬. */
-  confirmed: Message[];
-  /** 미확정 로컬 메시지 — 항상 목록 맨 아래. */
-  pending: PendingMessage[];
-  connection: ConnectionStatus;
-  typing: TypingState;
-  unread: number;
-  /** 이메일 프롬프트: 첫 메시지 전송 후 1회 노출. */
-  emailPromptVisible: boolean;
-  emailCaptured: boolean;
-  error: string | null;
 }

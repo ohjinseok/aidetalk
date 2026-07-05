@@ -1,7 +1,8 @@
-import { t } from "@aidetalk/i18n";
+import { t } from "@aidetalk/i18n/widget";
 
 import type { WidgetController, WidgetSnapshot } from "../controller";
 import { ChatWindowBody } from "./ChatWindowBody";
+import { ErrorBanner } from "./ErrorBanner";
 import { Header } from "./Header";
 
 interface Props {
@@ -39,6 +40,9 @@ export function ChatWindow({ snap, controller, windowRef }: Props) {
         onHandoff={() => void controller.requestHandoff()}
         onClose={() => controller.close()}
       />
+      {snap.error ? (
+        <ErrorBanner code={snap.error} onDismiss={() => controller.dismissError()} />
+      ) : null}
       {status ? <div class="od-statusbar">{status}</div> : null}
       <ChatWindowBody snap={snap} controller={controller} />
     </div>

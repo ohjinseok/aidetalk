@@ -1,4 +1,4 @@
-import { t } from "@aidetalk/i18n";
+import { t } from "@aidetalk/i18n/widget";
 import { useRef, useState } from "preact/hooks";
 
 import { SendIcon } from "./icons";

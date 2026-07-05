@@ -1,4 +1,4 @@
-import { t } from "@aidetalk/i18n";
+import { t } from "@aidetalk/i18n/widget";
 import { useEffect, useRef } from "preact/hooks";
 
 import type { DisplayItem, TypingState } from "../types";

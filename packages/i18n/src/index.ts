@@ -4,12 +4,12 @@
  * 기본 로케일은 ko. 모든 사용자 노출 문자열은 반드시 여기 등록된 키를 통해서만 노출한다
  * (CLAUDE.md 절대 규칙 4). 하드코딩 문자열 금지.
  */
+import { defaultLocale, locales, type Locale } from "./locale";
 import en from "./locales/en.json";
 import ko from "./locales/ko.json";
 
-export const locales = ["ko", "en"] as const;
-export type Locale = (typeof locales)[number];
-export const defaultLocale: Locale = "ko";
+export { defaultLocale, locales };
+export type { Locale };
 
 const messages = { ko, en } satisfies Record<Locale, unknown>;
 

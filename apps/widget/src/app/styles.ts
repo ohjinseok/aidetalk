@@ -7,10 +7,12 @@
  * AI 화자는 타이포그래피 "AI" 모노그램 칩 + primary 아웃라인 버블로 투명하게 표기.
  * primary 반투명(아웃라인 배경/보더)은 color-mix로 계산하되, 미지원 브라우저용 고정 폴백을 먼저 선언한다.
  */
+import { DEFAULT_PRIMARY } from "./constants";
+
 export const WIDGET_CSS = `
 :host, * { box-sizing: border-box; }
 .od-root {
-  --od-primary: #4F46E5;
+  --od-primary: ${DEFAULT_PRIMARY};
   --od-bg: #ffffff;
   --od-fg: #18181b;
   --od-muted: #71717a;
@@ -123,6 +125,24 @@ export const WIDGET_CSS = `
   border-bottom: 1px solid #fde68a;
   flex: 0 0 auto;
 }
+
+/* ── 에러 배너(dismissible) ────────────────────────────── */
+.od-errorbar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px 8px 16px; font-size: 12.5px;
+  background: #fef2f2; color: #991b1b;
+  border-bottom: 1px solid #fecaca;
+  flex: 0 0 auto;
+}
+.od-errorbar-text { flex: 1 1 auto; }
+.od-errorbar-close {
+  flex: 0 0 auto; background: transparent; border: none; color: #991b1b;
+  cursor: pointer; padding: 4px; border-radius: 6px;
+  display: flex; align-items: center;
+}
+.od-errorbar-close:hover { background: rgba(153, 27, 27, 0.08); }
+.od-errorbar-close:focus-visible { outline: 2px solid #991b1b; outline-offset: 1px; }
+.od-errorbar-close svg { width: 16px; height: 16px; }
 
 /* ── 대화 영역 ────────────────────────────────────────── */
 .od-list {
