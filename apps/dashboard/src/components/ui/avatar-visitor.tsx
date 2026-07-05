@@ -2,8 +2,8 @@ import { visitorAvatar } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
 
 /**
- * 방문자 아바타 — seed(방문자/대화 id)로 색이 고정되는 원형 그라디언트 마크.
- * 옆에 항상 이름 텍스트가 함께 놓이므로 aria-hidden(장식).
+ * 방문자 아바타 — seed(방문자/대화 id)로 색이 고정되는 원형 플랫 단색 마크.
+ * 그라데이션 금지(디자인 방침). 옆에 항상 이름 텍스트가 함께 놓이므로 aria-hidden(장식).
  */
 interface AvatarVisitorProps {
   /** 색을 결정하는 안정적 키(방문자/대화 id). */
@@ -20,7 +20,7 @@ const SIZE_CLASS = {
 } as const;
 
 export function AvatarVisitor({ seed, label, size = "md", className }: AvatarVisitorProps) {
-  const { from, to, initial } = visitorAvatar(seed, label);
+  const { color, initial } = visitorAvatar(seed, label);
   return (
     <span
       aria-hidden
@@ -29,7 +29,7 @@ export function AvatarVisitor({ seed, label, size = "md", className }: AvatarVis
         SIZE_CLASS[size],
         className,
       )}
-      style={{ backgroundImage: `linear-gradient(135deg, ${from}, ${to})` }}
+      style={{ backgroundColor: color }}
     >
       {initial}
     </span>

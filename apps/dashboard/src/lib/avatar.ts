@@ -1,25 +1,33 @@
 /**
  * 방문자 아바타 색 유도 — id/이름 문자열을 결정적 해시로 변환해
- * 톤이 일관된 HSL 그라디언트 색 쌍과 이니셜을 만든다.
+ * 큐레이션된 플랫 단색 팔레트에서 하나를 고르고 이니셜을 만든다.
  *
- * 순수 함수만 둔다(테스트 대상). 렌더는 components/ui/avatar-visitor.tsx.
+ * 그라데이션은 쓰지 않는다(디자인 방침). 순수 함수만 둔다(테스트 대상).
+ * 렌더는 components/ui/avatar-visitor.tsx.
  * 방문자마다 색이 고정되면 인박스에서 "같은 손님"을 색으로 식별할 수 있다.
  */
 
-/** 톤 일관성을 위해 채도·명도는 고정하고 hue만 회전시킨다(선명-차분 사이). */
-const SATURATION = 68; // %
-const LIGHT_FROM = 60; // %
-const LIGHT_TO = 52; // % — to를 조금 어둡게 해 그라디언트에 깊이
-const HUE_ROTATE = 30; // deg — from→to 회전각
-
 export interface VisitorAvatar {
-  /** linear-gradient 시작색 (hsl 문자열) */
-  from: string;
-  /** linear-gradient 끝색 (hsl 문자열) */
-  to: string;
+  /** 배경 단색 (hsl 문자열) */
+  color: string;
   /** 표시용 1글자 이니셜(대문자화된 라틴 또는 첫 글자) */
   initial: string;
 }
+
+/**
+ * 큐레이션된 플랫 팔레트 — 채도를 낮춘 차분한 8색(hue만 분산, 톤 고정).
+ * 흰 이니셜 대비를 위해 명도는 중간 이하로 유지.
+ */
+const PALETTE: readonly string[] = [
+  "hsl(216 55% 52%)", // blue
+  "hsl(255 45% 58%)", // violet
+  "hsl(174 45% 40%)", // teal
+  "hsl(150 40% 42%)", // green
+  "hsl(24 60% 50%)", // orange
+  "hsl(340 50% 55%)", // rose
+  "hsl(196 55% 44%)", // cyan
+  "hsl(45 55% 44%)", // amber
+];
 
 /**
  * FNV-1a 계열의 간단한 결정적 문자열 해시. 항상 32bit 비음수 정수를 반환.
@@ -36,14 +44,9 @@ export function hashString(input: string): number {
   return hash >>> 0;
 }
 
-/** seed 문자열 → 고정 톤의 { from, to } HSL 그라디언트 색 쌍. */
-export function avatarColors(seed: string): { from: string; to: string } {
-  const hue = hashString(seed) % 360;
-  const hue2 = (hue + HUE_ROTATE) % 360;
-  return {
-    from: `hsl(${hue} ${SATURATION}% ${LIGHT_FROM}%)`,
-    to: `hsl(${hue2} ${SATURATION}% ${LIGHT_TO}%)`,
-  };
+/** seed 문자열 → 팔레트에서 결정적으로 선택된 단색. */
+export function avatarColor(seed: string): string {
+  return PALETTE[hashString(seed) % PALETTE.length]!;
 }
 
 /**
@@ -64,6 +67,5 @@ export function avatarInitial(label: string): string {
  * label을 생략하면 seed에서 이니셜을 뽑는다.
  */
 export function visitorAvatar(seed: string, label?: string): VisitorAvatar {
-  const { from, to } = avatarColors(seed);
-  return { from, to, initial: avatarInitial(label ?? seed) };
+  return { color: avatarColor(seed), initial: avatarInitial(label ?? seed) };
 }
