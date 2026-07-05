@@ -43,8 +43,11 @@
   visitor의 email/name/phone/attributes만 null/{}로 지우고 해당 visitor가 작성한 메시지 content를
   `server.messageRedacted` i18n 상수로 치환한다. 이메일 병합(`mergedInto`) 클러스터 전체를 함께
   처리한다. tracked_links/conversions/assist_suggestions/conversation_events는 visitorId를 참조로만
-  가지므로(PII 값 자체가 아님) 구조 보존을 위해 그대로 둔다. API로는 노출하지 않음(repo 함수만 —
-  대시보드 트리거 UI는 TODO(question), 오너 결정 필요). 개인정보처리방침 문서에 수집 항목 명시(M2).
+  가지므로(PII 값 자체가 아님) 구조 보존을 위해 그대로 둔다. **트리거(오너 결정 완료):** 대시보드
+  방문자 정보 패널 하단 위험 구역에 **owner 전용** "개인정보 삭제" 버튼을 노출한다. 2단계 확인
+  (버튼 → "되돌릴 수 없음/대화 기록은 남음" 경고 ConfirmDialog)을 거치고, `DELETE
+  /v1/workspaces/:wsId/visitors/:visitorId/pii`(owner 검증 + 감사 로그)로 처리한다. 비owner·타
+  워크스페이스는 403/404. 개인정보처리방침 문서에 수집 항목 명시(M2).
 - 백업(클라우드, ee): pg_dump 일 1회 + 오브젝트 스토리지 암호화 보관 30일.
 
 ## 7. 웹훅(아웃바운드)도 Agent와 동일 규약

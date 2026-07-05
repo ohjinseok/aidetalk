@@ -413,6 +413,22 @@ export function ConversationView({ convId }: { convId: string }) {
           conversation={conversation}
           tracking={tracking}
           isS1={isS1}
+          onPiiDeleted={() =>
+            setDetail((d) =>
+              d
+                ? {
+                    ...d,
+                    visitor: {
+                      ...d.visitor,
+                      name: null,
+                      email: null,
+                      phone: null,
+                      attributes: {},
+                    },
+                  }
+                : d,
+            )
+          }
         />
       ) : null}
     </div>

@@ -335,6 +335,13 @@
       "title": "확인",
       "confirm": "확인",
       "cancel": "취소"
+    },
+    "visitor": {
+      "deletePii": "개인정보 삭제",
+      "deletePiiTitle": "이 방문자의 개인정보를 삭제할까요?",
+      "deletePiiConfirm": "이름·이메일·연락처가 완전히 삭제되며 되돌릴 수 없습니다. 대화 기록은 그대로 남습니다.",
+      "deletePiiConfirmLabel": "삭제",
+      "deletePiiDone": "개인정보를 삭제했습니다"
     }
   },
   "errors": {

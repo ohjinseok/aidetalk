@@ -89,8 +89,10 @@ POST  /v1/workspaces/:wsId/members       { email, role } → 201 { member?, invi
 POST  /v1/invites/accept                  { inviteToken } → { member }  // 로그인 상태에서
 GET   /v1/workspaces/:wsId/members       → { items }
 DELETE /v1/workspaces/:wsId/members/:id  → 204  // owner만
+DELETE /v1/workspaces/:wsId/visitors/:visitorId/pii → { visitorIds, redactedConversationIds }  // owner만, PII 파기(익명화)
 ```
 - 이후 모든 `/v1/workspaces/:wsId/...`는 미들웨어에서 membership 검증 → 아니면 `403 auth/forbidden`.
+- **DELETE /visitors/:visitorId/pii(owner만)** — 개인정보보호법 파기 의무 대응. `visitorRepo.hardDeletePii` 호출(08 §6): 이름과 달리 행 삭제가 아니라 **익명화**다. 대화/메시지 구조는 보존하고 visitor의 email/name/phone/attributes만 지우고 방문자 메시지 본문을 치환한다. 이메일 병합(`mergedInto`) 클러스터 전체를 함께 처리. **되돌릴 수 없다.** 방문자 없음/타 워크스페이스면 `404 not_found`. owner 아니면 `403 auth/forbidden`.
 - **POST /members 분기(owner만, planEnforcer.assertCanAddSeat는 초대 행 생성 전에):**
   - 기가입 이메일 → 기존 members 초대 흐름 유지: `member(status=invited)` 생성 + `inviteUrl` 반환. res `{ member, inviteUrl }`.
   - 미가입 이메일 → `invites` 행 생성(토큰은 sha256만 저장, raw는 inviteUrl 1회 노출). res `{ member: null, invite, inviteUrl }`.

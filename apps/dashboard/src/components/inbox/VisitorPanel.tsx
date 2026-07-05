@@ -1,25 +1,55 @@
 "use client";
 
+import { useState } from "react";
+
+import { visitorApi } from "../../lib/api/endpoints";
 import { formatKrw } from "../../lib/format";
 import { td } from "../../lib/i18n";
 import type { Conversation, ConversationTracking, VisitorDetail } from "../../lib/api/schemas";
+import { useToast } from "../providers/ToastProvider";
+import { useWorkspace } from "../providers/WorkspaceProvider";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 
 /**
  * 방문자 정보 패널(우측, 접이식) — 07 §2.2.
  * TODO(question): 04 §2에 상담원용 방문자 프로필 수정 엔드포인트가 없어 현재는 조회 전용.
  * (위젯 PATCH /v1/widget/profile은 visitor 전용.) 편집 지원 시 API 추가 필요.
+ * 하단 위험 구역: owner에게만 PII 파기(익명화) 버튼을 노출한다(08 §6, 되돌릴 수 없음).
  */
 export function VisitorPanel({
   visitor,
   conversation,
   tracking,
   isS1,
+  onPiiDeleted,
 }: {
   visitor: VisitorDetail;
   conversation: Conversation;
   tracking?: ConversationTracking | null;
   isS1: boolean;
+  /** PII 파기 성공 시 부모가 패널 데이터를 '없음'으로 갱신하도록 알린다. */
+  onPiiDeleted?: () => void;
 }) {
+  const { workspace, isOwner } = useWorkspace();
+  const toast = useToast();
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function onDeletePii() {
+    setDeleting(true);
+    try {
+      await visitorApi.deletePii(workspace.id, visitor.id);
+      toast.success(td("dashboard.visitor.deletePiiDone"));
+      onPiiDeleted?.();
+    } catch (err) {
+      toast.error(err);
+    } finally {
+      setDeleting(false);
+      setConfirming(false);
+    }
+  }
+
   const startPage =
     typeof conversation.metadata?.startPageUrl === "string"
       ? (conversation.metadata.startPageUrl as string)
@@ -75,6 +105,30 @@ export function VisitorPanel({
           <p className="text-lg font-semibold tabular-nums tracking-tight text-foreground">
             {formatKrw(revenue)}
           </p>
+        </div>
+      ) : null}
+
+      {/* 위험 구역 — owner 전용 PII 파기(익명화). 되돌릴 수 없다(08 §6). */}
+      {isOwner ? (
+        <div className="mt-6 border-t border-border pt-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-2 text-destructive hover:text-destructive"
+            disabled={deleting}
+            onClick={() => setConfirming(true)}
+          >
+            {td("dashboard.visitor.deletePii")}
+          </Button>
+          <ConfirmDialog
+            open={confirming}
+            danger
+            title={td("dashboard.visitor.deletePiiTitle")}
+            message={td("dashboard.visitor.deletePiiConfirm")}
+            confirmLabel={td("dashboard.visitor.deletePiiConfirmLabel")}
+            onConfirm={() => void onDeletePii()}
+            onCancel={() => setConfirming(false)}
+          />
         </div>
       ) : null}
     </aside>

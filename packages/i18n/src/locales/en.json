@@ -335,6 +335,13 @@
       "title": "Confirm",
       "confirm": "Confirm",
       "cancel": "Cancel"
+    },
+    "visitor": {
+      "deletePii": "Delete personal data",
+      "deletePiiTitle": "Delete this visitor's personal data?",
+      "deletePiiConfirm": "Name, email, and phone number will be permanently deleted and cannot be recovered. The conversation history is kept.",
+      "deletePiiConfirmLabel": "Delete",
+      "deletePiiDone": "Personal data deleted"
     }
   },
   "errors": {

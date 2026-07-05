@@ -199,6 +199,13 @@ export const inboxApi = {
     }).then((r) => r.conversation),
 };
 
+// ---------- 방문자 (owner 전용) ----------
+export const visitorApi = {
+  // PII 파기(익명화) — owner만. 되돌릴 수 없음(08 §6). 응답 본문은 사용하지 않아 파싱 생략.
+  deletePii: (wsId: string, visitorId: string): Promise<void> =>
+    apiFetch(`/v1/workspaces/${wsId}/visitors/${visitorId}/pii`, null, { method: "DELETE" }),
+};
+
 // ---------- 어시스트 (상담원 전용 — 규칙 9) ----------
 export const assistApi = {
   list: (
