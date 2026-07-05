@@ -132,10 +132,6 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-
-  /* 과도기 별칭 — 기존 화면의 bg-brand/text-brand가 새 primary 토큰을 따라간다 */
-  --color-brand: var(--color-primary);
-  --color-brand-fg: var(--color-primary-foreground);
 }
 
 html,

@@ -33,7 +33,7 @@
 - DB: PostgreSQL 16 + Drizzle ORM
 - 실시간 전파: `PubSubAdapter` (기본 Redis, in-memory 옵션)
 - 파일: `StorageAdapter` (기본 로컬 디스크, S3/R2 옵션)
-- 대시보드: Next.js 15 App Router + Tailwind
+- 대시보드: Next.js 16 App Router + Tailwind v4(CSS-first 토큰) + shadcn/ui(zinc + primary 인디고, 다크모드)
 - 위젯: Preact + vanilla CSS(Shadow DOM 내부) + Vite
 - 테스트: Vitest / Playwright(위젯 E2E)
 - 배포: Docker Compose (셀프호스팅 = 클라우드 동일 이미지)
