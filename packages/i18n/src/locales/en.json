@@ -129,6 +129,8 @@
       "modeAi": "AI",
       "modeHuman": "Human",
       "unread": "Unread",
+      "aiSuggestion": "AI suggestion",
+      "suggestionLabel": "Suggestion",
       "newHandoffTitle": "Handoff requested",
       "selectConversation": "Select a conversation on the left"
     },

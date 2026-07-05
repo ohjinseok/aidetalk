@@ -30,36 +30,36 @@ export function VisitorPanel({
   const revenue = (tracking?.conversions ?? []).reduce((sum, c) => sum + (c.amount ?? 0), 0);
 
   return (
-    <aside className="w-64 shrink-0 overflow-y-auto border-l border-border bg-card p-4 text-sm">
-      <h3 className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+    <aside className="w-64 shrink-0 overflow-y-auto border-l border-border bg-background p-4">
+      <h3 className="mb-3 text-[11px] font-medium tracking-wide text-muted-foreground">
         {td("dashboard.conversation.infoTitle")}
       </h3>
 
-      <dl className="space-y-2">
-        <div>
-          <dt className="text-xs text-muted-foreground">{td("dashboard.conversation.visitorName")}</dt>
-          <dd className="text-foreground">{visitor.name || td("dashboard.common.none")}</dd>
-        </div>
-        <div>
-          <dt className="text-xs text-muted-foreground">{td("dashboard.conversation.visitorEmail")}</dt>
-          <dd className="break-all text-foreground">{visitor.email || td("dashboard.common.none")}</dd>
-        </div>
+      <dl className="space-y-2.5">
+        <Field label={td("dashboard.conversation.visitorName")} value={visitor.name} />
+        <Field label={td("dashboard.conversation.visitorEmail")} value={visitor.email} breakAll />
         {startPage ? (
           <div>
             <dt className="text-xs text-muted-foreground">{td("dashboard.conversation.startPage")}</dt>
-            <dd className="break-all text-foreground">{startPage}</dd>
+            <dd className="truncate text-[13px] text-foreground" title={startPage}>
+              {startPage}
+            </dd>
           </div>
         ) : null}
       </dl>
 
       {attrEntries.length > 0 ? (
-        <div className="mt-4">
-          <h4 className="mb-1 text-xs text-muted-foreground">{td("dashboard.conversation.attributes")}</h4>
-          <dl className="space-y-1">
+        <div className="mt-5">
+          <h4 className="mb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground">
+            {td("dashboard.conversation.attributes")}
+          </h4>
+          <dl className="space-y-1.5">
             {attrEntries.map(([k, v]) => (
               <div key={k} className="flex justify-between gap-2">
-                <dt className="text-muted-foreground">{k}</dt>
-                <dd className="text-foreground">{String(v)}</dd>
+                <dt className="shrink-0 text-xs text-muted-foreground">{k}</dt>
+                <dd className="truncate text-[13px] text-foreground" title={String(v)}>
+                  {String(v)}
+                </dd>
               </div>
             ))}
           </dl>
@@ -67,13 +67,42 @@ export function VisitorPanel({
       ) : null}
 
       {isS1 && tracking ? (
-        <div className="mt-4 border-t border-border pt-3">
-          <h4 className="mb-1 text-xs text-muted-foreground">
+        <div className="mt-5 border-t border-border pt-4">
+          {/* 상담 기여 매출(추정) — 스탯 블록. 라벨 위, 금액 아래. */}
+          <p className="mb-1 text-[11px] font-medium tracking-wide text-muted-foreground">
             {td("dashboard.conversation.conversionSummary")}
-          </h4>
-          <p className="text-foreground">{formatKrw(revenue)}</p>
+          </p>
+          <p className="text-lg font-semibold tabular-nums tracking-tight text-foreground">
+            {formatKrw(revenue)}
+          </p>
         </div>
       ) : null}
     </aside>
+  );
+}
+
+/** 정의 리스트 한 줄 — 값 없으면 "없음"을 흐리게. */
+function Field({
+  label,
+  value,
+  breakAll,
+}: {
+  label: string;
+  value?: string | null;
+  breakAll?: boolean;
+}) {
+  return (
+    <div>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd
+        className={
+          value
+            ? `text-[13px] text-foreground${breakAll ? " break-all" : ""}`
+            : "text-[13px] text-muted-foreground/70"
+        }
+      >
+        {value || td("dashboard.common.none")}
+      </dd>
+    </div>
   );
 }

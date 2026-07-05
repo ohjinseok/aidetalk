@@ -129,6 +129,8 @@
       "modeAi": "AI",
       "modeHuman": "사람",
       "unread": "안읽음",
+      "aiSuggestion": "AI 제안",
+      "suggestionLabel": "제안",
       "newHandoffTitle": "상담원 연결 요청",
       "selectConversation": "왼쪽에서 대화를 선택하세요"
     },
