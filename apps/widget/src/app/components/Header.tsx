@@ -9,17 +9,28 @@ interface Props {
   onClose: () => void;
 }
 
-/** 워크스페이스 이름 + "상담원 연결" + 닫기(06 §2). */
+/**
+ * 워크스페이스 이름(15px semibold) + 부제(응답시간 안내) + "상담원 연결" + 닫기(06 §2).
+ * primary가 동적이라 대비를 보장하기 어려우므로 헤더는 흰 배경 + 보더로 두고 primary는 포인트로만 쓴다.
+ */
 export function Header({ title, canHandoff, onHandoff, onClose }: Props) {
   return (
     <div class="od-header">
-      <span class="od-title">{title}</span>
+      <div class="od-header-main">
+        <span class="od-title">{title}</span>
+        <span class="od-subtitle">{t("widget.headerSubtitle")}</span>
+      </div>
       {canHandoff ? (
-        <button type="button" onClick={onHandoff}>
+        <button type="button" class="od-header-action" onClick={onHandoff}>
           {t("widget.connectAgent")}
         </button>
       ) : null}
-      <button type="button" aria-label={t("widget.headerClose")} onClick={onClose}>
+      <button
+        type="button"
+        class="od-iconbtn"
+        aria-label={t("widget.headerClose")}
+        onClick={onClose}
+      >
         <CloseIcon />
       </button>
     </div>
