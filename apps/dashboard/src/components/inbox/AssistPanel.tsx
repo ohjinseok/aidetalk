@@ -33,10 +33,10 @@ export function AssistPanel({
     acceptRate == null ? "—" : `${Math.round(acceptRate * 100)}%`;
 
   return (
-    <aside className="flex w-80 shrink-0 flex-col border-l border-gray-200 bg-gray-50">
-      <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-2.5">
-        <h3 className="text-sm font-semibold">{td("dashboard.assist.panelTitle")}</h3>
-        <span className="text-xs text-gray-500">
+    <aside className="flex w-80 shrink-0 flex-col border-l border-border bg-background">
+      <div className="flex items-center justify-between border-b border-border bg-card px-4 py-2.5">
+        <h3 className="text-sm font-medium">{td("dashboard.assist.panelTitle")}</h3>
+        <span className="text-xs text-muted-foreground">
           {tf("dashboard.assist.acceptRate", { rate: rateLabel })}
         </span>
       </div>
@@ -55,13 +55,13 @@ export function AssistPanel({
             return (
               <div
                 key={s.id}
-                className={`rounded-lg border border-gray-200 bg-white p-3 shadow-xs transition-opacity ${
+                className={`rounded-lg border border-border bg-card p-3 shadow-xs transition-opacity ${
                   isDim ? "opacity-50" : ""
                 }`}
               >
-                <p className="whitespace-pre-wrap text-sm text-gray-800">{s.draft}</p>
+                <p className="whitespace-pre-wrap text-sm text-foreground">{s.draft}</p>
                 {s.rationale ? (
-                  <p className="mt-1.5 text-xs italic text-gray-400">{s.rationale}</p>
+                  <p className="mt-1.5 text-xs italic text-muted-foreground">{s.rationale}</p>
                 ) : null}
 
                 {s.actions && s.actions.length > 0 ? (
@@ -92,7 +92,7 @@ export function AssistPanel({
                     </Button>
                   </div>
                 ) : (
-                  <p className="mt-2 text-xs text-gray-400">
+                  <p className="mt-2 text-xs text-muted-foreground">
                     {s.outcome === "ignored"
                       ? td("dashboard.assist.ignored")
                       : td(s.outcome === "accepted" ? "dashboard.assist.sendAsIs" : "dashboard.assist.editAndSend")}

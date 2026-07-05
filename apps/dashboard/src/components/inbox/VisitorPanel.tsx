@@ -30,36 +30,36 @@ export function VisitorPanel({
   const revenue = (tracking?.conversions ?? []).reduce((sum, c) => sum + (c.amount ?? 0), 0);
 
   return (
-    <aside className="w-64 shrink-0 overflow-y-auto border-l border-gray-200 bg-white p-4 text-sm">
-      <h3 className="mb-3 text-xs font-semibold uppercase text-gray-400">
+    <aside className="w-64 shrink-0 overflow-y-auto border-l border-border bg-card p-4 text-sm">
+      <h3 className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {td("dashboard.conversation.infoTitle")}
       </h3>
 
       <dl className="space-y-2">
         <div>
-          <dt className="text-xs text-gray-400">{td("dashboard.conversation.visitorName")}</dt>
-          <dd className="text-gray-800">{visitor.name || td("dashboard.common.none")}</dd>
+          <dt className="text-xs text-muted-foreground">{td("dashboard.conversation.visitorName")}</dt>
+          <dd className="text-foreground">{visitor.name || td("dashboard.common.none")}</dd>
         </div>
         <div>
-          <dt className="text-xs text-gray-400">{td("dashboard.conversation.visitorEmail")}</dt>
-          <dd className="break-all text-gray-800">{visitor.email || td("dashboard.common.none")}</dd>
+          <dt className="text-xs text-muted-foreground">{td("dashboard.conversation.visitorEmail")}</dt>
+          <dd className="break-all text-foreground">{visitor.email || td("dashboard.common.none")}</dd>
         </div>
         {startPage ? (
           <div>
-            <dt className="text-xs text-gray-400">{td("dashboard.conversation.startPage")}</dt>
-            <dd className="break-all text-gray-800">{startPage}</dd>
+            <dt className="text-xs text-muted-foreground">{td("dashboard.conversation.startPage")}</dt>
+            <dd className="break-all text-foreground">{startPage}</dd>
           </div>
         ) : null}
       </dl>
 
       {attrEntries.length > 0 ? (
         <div className="mt-4">
-          <h4 className="mb-1 text-xs text-gray-400">{td("dashboard.conversation.attributes")}</h4>
+          <h4 className="mb-1 text-xs text-muted-foreground">{td("dashboard.conversation.attributes")}</h4>
           <dl className="space-y-1">
             {attrEntries.map(([k, v]) => (
               <div key={k} className="flex justify-between gap-2">
-                <dt className="text-gray-500">{k}</dt>
-                <dd className="text-gray-800">{String(v)}</dd>
+                <dt className="text-muted-foreground">{k}</dt>
+                <dd className="text-foreground">{String(v)}</dd>
               </div>
             ))}
           </dl>
@@ -67,11 +67,11 @@ export function VisitorPanel({
       ) : null}
 
       {isS1 && tracking ? (
-        <div className="mt-4 border-t border-gray-100 pt-3">
-          <h4 className="mb-1 text-xs text-gray-400">
+        <div className="mt-4 border-t border-border pt-3">
+          <h4 className="mb-1 text-xs text-muted-foreground">
             {td("dashboard.conversation.conversionSummary")}
           </h4>
-          <p className="text-gray-800">{formatKrw(revenue)}</p>
+          <p className="text-foreground">{formatKrw(revenue)}</p>
         </div>
       ) : null}
     </aside>

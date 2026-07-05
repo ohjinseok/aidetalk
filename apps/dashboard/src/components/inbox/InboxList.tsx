@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TABS: { status: ConversationStatus; labelKey: TranslationKey }[] = [
   { status: "open", labelKey: "dashboard.inbox.filterOpen" },
@@ -132,11 +133,11 @@ export function InboxList() {
 
   return (
     <div
-      className="flex h-full w-80 shrink-0 flex-col border-r border-gray-200 bg-white"
+      className="flex h-full w-80 shrink-0 flex-col border-r border-border bg-card"
       onKeyDown={onKeyDown}
     >
       {/* 검색 */}
-      <div className="border-b border-gray-100 p-2">
+      <div className="border-b border-border p-2">
         <Input
           type="search"
           aria-label={td("dashboard.common.search")}
@@ -146,22 +147,19 @@ export function InboxList() {
         />
       </div>
       {/* 필터 탭 */}
-      <div className="flex border-b border-gray-100" role="tablist">
-        {TABS.map((tab) => (
-          <button
-            key={tab.status}
-            role="tab"
-            aria-selected={status === tab.status}
-            onClick={() => setStatus(tab.status)}
-            className={`flex-1 py-2 text-xs font-medium ${
-              status === tab.status
-                ? "border-b-2 border-brand text-brand"
-                : "text-gray-500 hover:text-gray-800"
-            }`}
-          >
-            {td(tab.labelKey)}
-          </button>
-        ))}
+      <div className="border-b border-border px-2 py-2">
+        <Tabs
+          value={status}
+          onValueChange={(v) => setStatus(v as ConversationStatus)}
+        >
+          <TabsList className="w-full">
+            {TABS.map((tab) => (
+              <TabsTrigger key={tab.status} value={tab.status} className="text-xs">
+                {td(tab.labelKey)}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </div>
 
       {/* 목록 */}
@@ -172,7 +170,10 @@ export function InboxList() {
               <EmptyHeader>
                 <EmptyTitle>{td("dashboard.inbox.empty")}</EmptyTitle>
                 <EmptyDescription>
-                  <Link href={`/w/${wsId}/settings/widget`} className="text-brand hover:underline">
+                  <Link
+                    href={`/w/${wsId}/settings/widget`}
+                    className="text-primary hover:underline"
+                  >
                     {td("dashboard.inbox.emptyHint")}
                   </Link>
                 </EmptyDescription>
@@ -189,15 +190,19 @@ export function InboxList() {
                 <Link
                   href={`/w/${wsId}/inbox/${conv.id}`}
                   aria-current={active ? "page" : undefined}
-                  className={`block border-b border-gray-50 px-3 py-2.5 transition-colors ${
-                    hl ? "bg-yellow-100" : active ? "bg-indigo-50" : "hover:bg-gray-50"
+                  className={`block border-b border-border px-3 py-2.5 transition-colors ${
+                    hl
+                      ? "bg-yellow-100 dark:bg-yellow-500/15"
+                      : active
+                        ? "bg-accent text-primary"
+                        : "hover:bg-accent/50"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-medium text-gray-800">
+                    <span className="truncate text-sm font-medium text-foreground">
                       {visitorLabel(item)}
                     </span>
-                    <span className="shrink-0 text-[11px] text-gray-400">
+                    <span className="shrink-0 text-[11px] text-muted-foreground">
                       {conv.lastMessageAt ? formatRelativeTime(conv.lastMessageAt) : ""}
                     </span>
                   </div>
@@ -205,7 +210,7 @@ export function InboxList() {
                     <Badge variant={conv.mode === "ai" ? "default" : "success"}>
                       {conv.mode === "ai" ? td("dashboard.inbox.modeAi") : td("dashboard.inbox.modeHuman")}
                     </Badge>
-                    <span className="truncate text-xs text-gray-500">
+                    <span className="truncate text-xs text-muted-foreground">
                       {item.lastMessage?.textPreview ?? ""}
                     </span>
                   </div>

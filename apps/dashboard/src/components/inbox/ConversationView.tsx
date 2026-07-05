@@ -303,7 +303,7 @@ export function ConversationView({ convId }: { convId: string }) {
       {/* 중앙 컬럼 */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* 헤더 */}
-        <header className="flex items-center justify-between gap-2 border-b border-gray-200 bg-white px-4 py-2">
+        <header className="flex items-center justify-between gap-2 border-b border-border bg-card px-4 py-2">
           <div className="flex min-w-0 items-center gap-2">
             <span className="truncate text-sm font-semibold">
               {detail.visitor.name || detail.visitor.email || convId.slice(-6)}
@@ -356,7 +356,7 @@ export function ConversationView({ convId }: { convId: string }) {
         </header>
 
         {/* 스레드 */}
-        <div className="min-h-0 flex-1 overflow-y-auto bg-gray-50">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-background">
           <Timeline
             items={timeline}
             wsId={wsId}
@@ -367,7 +367,7 @@ export function ConversationView({ convId }: { convId: string }) {
 
         {/* 손님 입력 중 표시 */}
         {visitorTyping ? (
-          <div className="px-4 py-1 text-xs text-gray-400">
+          <div className="px-4 py-1 text-xs text-muted-foreground">
             {td("dashboard.conversation.visitorTyping")}
           </div>
         ) : null}

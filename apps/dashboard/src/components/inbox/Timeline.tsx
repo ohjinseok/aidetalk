@@ -20,13 +20,13 @@ function bubbleAlign(role: MessageRole): "left" | "right" | "center" {
 function bubbleStyle(role: MessageRole): string {
   switch (role) {
     case "visitor":
-      return "bg-white border border-gray-200 text-gray-800";
+      return "bg-muted text-foreground";
     case "agent_ai":
-      return "bg-indigo-50 text-indigo-900";
+      return "bg-primary/10 text-foreground";
     case "agent_human":
-      return "bg-brand text-white";
+      return "bg-primary text-primary-foreground";
     default:
-      return "bg-gray-100 text-gray-500";
+      return "bg-muted text-muted-foreground";
   }
 }
 
@@ -54,7 +54,7 @@ export function Timeline({
             td(key) + (reason ? tf("dashboard.event.reasonSuffix", { reason }) : "");
           return (
             <div key={item.id} className="my-1 text-center">
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-500">
+              <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
                 {label} · {formatMessageTime(ev.createdAt)}
               </span>
             </div>
@@ -76,25 +76,31 @@ export function Timeline({
                 <p className="whitespace-pre-wrap break-words">{m.content.text}</p>
               </div>
               <div
-                className={`mt-0.5 flex items-center gap-2 text-[11px] text-gray-400 ${
+                className={`mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground ${
                   align === "right" ? "justify-end" : "justify-start"
                 }`}
               >
                 <span>{formatMessageTime(m.createdAt)}</span>
                 {m.role === "agent_ai" ? (
-                  <Link href={`/w/${wsId}/agents`} className="text-brand hover:underline">
+                  <Link href={`/w/${wsId}/agents`} className="text-primary hover:underline">
                     {td("dashboard.conversation.viewLog")}
                   </Link>
                 ) : null}
                 {link ? (
-                  <span className={link.clickedAt ? "text-green-600" : "text-gray-400"}>
+                  <span
+                    className={
+                      link.clickedAt
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-muted-foreground"
+                    }
+                  >
                     {link.clickedAt
                       ? tf("dashboard.conversation.linkClickedAt", { time: formatHm(link.clickedAt) })
                       : td("dashboard.conversation.linkNotClicked")}
                   </span>
                 ) : null}
                 {readReceiptMsgId && m.id === readReceiptMsgId ? (
-                  <span className="text-brand">{td("dashboard.conversation.readReceipt")}</span>
+                  <span className="text-primary">{td("dashboard.conversation.readReceipt")}</span>
                 ) : null}
               </div>
             </div>

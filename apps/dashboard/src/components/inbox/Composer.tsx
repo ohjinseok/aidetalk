@@ -4,6 +4,7 @@ import { useState, type KeyboardEvent } from "react";
 
 import { td } from "../../lib/i18n";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 /**
  * 답장 컴포저 — 07 §2.2.
@@ -44,17 +45,17 @@ export function Composer({
   }
 
   return (
-    <div className="border-t border-gray-200 bg-white p-3">
+    <div className="border-t border-border bg-card p-3">
       {showModeHint ? (
-        <p className="mb-1.5 rounded bg-amber-50 px-2 py-1 text-xs text-amber-700">
+        <p className="mb-1.5 rounded bg-amber-50 px-2 py-1 text-xs text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">
           {td("dashboard.conversation.modeSwitchHint")}
         </p>
       ) : null}
       <div className="flex items-end gap-2">
-        <textarea
+        <Textarea
           aria-label={td("dashboard.conversation.composerPlaceholder")}
           placeholder={td("dashboard.conversation.composerPlaceholder")}
-          className="max-h-40 min-h-[44px] w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-hidden focus:ring-1 focus:ring-brand"
+          className="max-h-40 min-h-[44px] resize-y"
           rows={2}
           value={value}
           disabled={disabled}
