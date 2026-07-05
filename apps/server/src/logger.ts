@@ -11,17 +11,23 @@ export function createLogger(level: string): Logger {
   return pino({
     level,
     // 시크릿/토큰 계열 필드는 로그 직렬화 단계에서 마스킹(방어적 기본값).
+    // 08_SECURITY.md §1: secret/password/authorization/cookie 경로 자동 마스킹.
     redact: {
       paths: [
         "password",
         "passwordHash",
         "secret",
+        "secretEnc",
         "token",
         "visitorToken",
         "authorization",
+        "cookie",
         "*.password",
         "*.secret",
+        "*.secretEnc",
         "*.token",
+        "*.authorization",
+        "*.cookie",
       ],
       censor: "[redacted]",
     },

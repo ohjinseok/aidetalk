@@ -39,6 +39,11 @@ jobs:
       - name: 의존성 설치 (lockfile 고정)
         run: pnpm install --frozen-lockfile
 
+      # 08_SECURITY.md §8: 공급망 감사 — 프로덕션 의존성에 high 이상 취약점이 있으면 머지 차단.
+      # (devDependencies는 런타임에 배포되지 않으므로 --prod로 범위를 좁힌다.)
+      - name: 의존성 취약점 감사 (pnpm audit --prod, high 이상 실패)
+        run: pnpm audit --prod --audit-level high
+
       - name: Lint
         run: pnpm lint
 

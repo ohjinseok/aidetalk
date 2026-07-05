@@ -47,6 +47,51 @@ export interface AgentDispatcher {
 /** reply 연속 실패 auto_disable 임계 — 05/08 문서. */
 const AUTO_DISABLE_THRESHOLD = 5;
 
+/** 워크스페이스별 dispatch 동시성 상한 — 08_SECURITY.md §5(에이전트 서버 보호 + 우리 자원 보호). */
+export const DISPATCH_CONCURRENCY_PER_WORKSPACE = 10;
+
+/**
+ * 워크스페이스 키별 동시성 세마포어. 각 키에 대해 limit개까지 동시 실행,
+ * 초과 요청은 FIFO로 대기하다 슬롯이 나면 진행한다(슬롯 수는 유지되며 대기자에게 이양).
+ */
+export class KeyedSemaphore {
+  private active = new Map<string, number>();
+  private waiters = new Map<string, Array<() => void>>();
+
+  constructor(private readonly limit: number) {}
+
+  async acquire(key: string): Promise<void> {
+    const n = this.active.get(key) ?? 0;
+    if (n < this.limit) {
+      this.active.set(key, n + 1);
+      return;
+    }
+    await new Promise<void>((resolve) => {
+      const q = this.waiters.get(key) ?? [];
+      q.push(resolve);
+      this.waiters.set(key, q);
+    });
+  }
+
+  release(key: string): void {
+    const q = this.waiters.get(key);
+    if (q && q.length > 0) {
+      const next = q.shift()!;
+      if (q.length === 0) this.waiters.delete(key);
+      next(); // 슬롯을 대기자에게 이양(active 카운트 유지).
+      return;
+    }
+    const n = (this.active.get(key) ?? 1) - 1;
+    if (n <= 0) this.active.delete(key);
+    else this.active.set(key, n);
+  }
+
+  /** 테스트용 — 특정 키의 현재 활성 슬롯 수. */
+  activeCount(key: string): number {
+    return this.active.get(key) ?? 0;
+  }
+}
+
 /** 셀프호스팅/테스트 기본 구현 — 아무 동작도 하지 않는다. */
 export class NoopAgentDispatcher implements AgentDispatcher {
   async onVisitorMessage(_ctx: VisitorMessageContext): Promise<void> {
@@ -57,16 +102,28 @@ export class NoopAgentDispatcher implements AgentDispatcher {
 /** 실제 HTTP 릴레이 구현. */
 export class HttpAgentDispatcher implements AgentDispatcher {
   private inflight = new Set<Promise<void>>();
+  /** 워크스페이스별 dispatch 동시성 상한(08 §5). */
+  private readonly semaphore = new KeyedSemaphore(DISPATCH_CONCURRENCY_PER_WORKSPACE);
 
   constructor(private readonly app: AppContext) {}
 
   async onVisitorMessage(vmCtx: VisitorMessageContext): Promise<void> {
-    const p = this.run(vmCtx).catch((err) => {
+    const p = this.runGuarded(vmCtx).catch((err) => {
       this.app.logger.error({ err: (err as Error).message }, "agent dispatch 실패");
     });
     this.inflight.add(p);
     void p.finally(() => this.inflight.delete(p));
     await p;
+  }
+
+  /** 워크스페이스 동시성 슬롯을 확보한 뒤 run을 실행한다(초과분은 대기). */
+  private async runGuarded(vmCtx: VisitorMessageContext): Promise<void> {
+    await this.semaphore.acquire(vmCtx.workspaceId);
+    try {
+      await this.run(vmCtx);
+    } finally {
+      this.semaphore.release(vmCtx.workspaceId);
+    }
   }
 
   /** 진행 중 모든 dispatch 완료 대기(테스트 결정성). */

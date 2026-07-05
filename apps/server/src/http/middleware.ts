@@ -72,6 +72,43 @@ export function validated<T>(c: Context<HonoEnv>): T {
   return c.get("valid") as T;
 }
 
+/** CSRF 안전 메서드(본문 상태 변경 없음) — Origin 검증 제외. */
+const CSRF_SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+/**
+ * CSRF Origin 화이트리스트 검증 — 08_SECURITY.md §3(쿠키 인증 경로 한정).
+ * 상태 변경 메서드(POST/PATCH/PUT/DELETE)에서 `Origin` 헤더가 있으면 허용 목록에 포함돼야 한다.
+ * - 허용 목록: DASHBOARD_URL / SERVER_URL의 origin(대시보드는 이 두 곳에서만 호출).
+ * - Origin 헤더 부재(서버측·비브라우저 클라이언트)는 통과 — 브라우저는 교차 출처 상태 변경 시 항상 Origin을 실어 보낸다.
+ * 쿠키 인증(od_session) 라우터에만 마운트한다. Bearer 인증 위젯/트래킹에는 적용하지 않는다.
+ */
+export const csrfOriginGuard: MiddlewareHandler<HonoEnv> = async (c, next) => {
+  if (!CSRF_SAFE_METHODS.has(c.req.method)) {
+    const origin = c.req.header("origin");
+    if (origin) {
+      const ctx = c.get("ctx");
+      const allowed = allowedOrigins(ctx.env.DASHBOARD_URL, ctx.env.SERVER_URL);
+      if (!allowed.has(origin)) {
+        throw AppError.of("auth/forbidden", "허용되지 않은 Origin에서의 요청이다.");
+      }
+    }
+  }
+  await next();
+};
+
+/** URL 문자열들에서 origin(scheme+host+port)만 추출한 집합. 파싱 불가한 값은 무시. */
+function allowedOrigins(...urls: string[]): Set<string> {
+  const set = new Set<string>();
+  for (const u of urls) {
+    try {
+      set.add(new URL(u).origin);
+    } catch {
+      /* 무시 */
+    }
+  }
+  return set;
+}
+
 /**
  * 방문자 인증 — Authorization: Bearer vt.... 검증.
  * 위조/누락 → auth/invalid(401). 08 §3 불변식.

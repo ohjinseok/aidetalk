@@ -15,6 +15,8 @@ export interface MockAgentBehavior {
   response?: unknown;
   /** 원시 응답 본문(스키마 불일치/빈 body/오버사이즈 주입용). response보다 우선. */
   raw?: string;
+  /** 응답 Content-Type 헤더 override(기본 application/json) — Content-Type 검증 테스트용. */
+  contentType?: string;
 }
 
 export interface CapturedRequest {
@@ -62,7 +64,7 @@ export async function startMockAgent(initial: MockAgentBehavior = {}): Promise<M
           behavior.raw !== undefined
             ? behavior.raw
             : JSON.stringify(behavior.response ?? { type: "reply", text: "pong" });
-        res.writeHead(status, { "content-type": "application/json" });
+        res.writeHead(status, { "content-type": behavior.contentType ?? "application/json" });
         res.end(body);
       };
       if (behavior.delayMs && behavior.delayMs > 0) {

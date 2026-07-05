@@ -9,6 +9,7 @@
 #   build   - 전체 워크스페이스 설치 + apps/server 빌드 + pnpm deploy로 해당 앱만 추출
 #   runtime - 추출된 결과물만 담은 최소 실행 이미지 (non-root)
 
+# 베이스 이미지: node:22-alpine (08_SECURITY.md §8에서 확정 — 크기·공격 표면 최소, healthcheck는 busybox wget 사용).
 FROM node:22-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"

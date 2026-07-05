@@ -23,7 +23,7 @@
   2. member라도 소속 아닌 workspace 자원 접근 불가 — 403.
   3. `suggestion.new` WS 이벤트는 agent 소켓에만 fan-out (`conv:{id}:agents` 채널 분리).
 - 대시보드 세션: httpOnly + SameSite=Lax(+prod Secure). CSRF: 상태 변경 요청은 `Origin` 헤더 화이트리스트 검증(쿠키 인증 경로 한정).
-- 비밀번호: argon2id (memory 19MiB, iterations 2), 최소 8자.
+- 비밀번호: argon2id (memory 19MiB, iterations 3, parallelism 1 — OWASP 권장 하한), 최소 8자. 구현: `packages/db/src/crypto.ts` `hashPassword`, 스키마: `apps/server/src/http/schemas.ts`(signup `password.min(8)`).
 
 ## 4. 입력 검증 / 출력 안전
 - 모든 요청 body는 zod parse 후 사용. 실패 → 400 validation/failed.
@@ -46,5 +46,6 @@
 - ⚠️ v1 한계: 재시도는 in-process `setTimeout`으로 예약한다 — 서버 재시작 시 예약된 재시도는 유실된다(내구성 있는 큐는 후속 웨이브).
 
 ## 8. 의존성/공급망
-- pnpm lockfile 커밋 필수, CI에서 `pnpm audit --prod` (high 이상 실패).
-- Dockerfile: non-root 유저, 멀티스테이지, `node:22-slim`.
+- pnpm lockfile 커밋 필수, CI에서 `pnpm audit --prod --audit-level high` (high 이상 실패). `.github/workflows/ci.yml`.
+- Dockerfile: non-root 유저(`USER node`), 멀티스테이지, `node:22-alpine`.
+  - 베이스 이미지는 `node:22-alpine`을 쓴다(문서 초안의 `node:22-slim`에서 확정). 근거: 이미지 크기·공격 표면이 더 작고, healthcheck가 busybox `wget`으로 외부 패키지 추가 없이 동작한다. server/dashboard 두 Dockerfile 모두 동일 베이스를 쓴다(`docker/server.Dockerfile`, `docker/dashboard.Dockerfile`).

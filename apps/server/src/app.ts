@@ -8,6 +8,7 @@ import { Hono } from "hono";
 
 import type { AppContext } from "./context";
 import {
+  csrfOriginGuard,
   errorHandler,
   injectContext,
   requestIdMiddleware,
@@ -32,6 +33,11 @@ export function createApp(ctx: AppContext): Hono<HonoEnv> {
   app.use("*", injectContext(ctx));
 
   app.get("/healthz", (c) => c.json({ ok: true, version: SERVER_VERSION }));
+
+  // 쿠키 인증(od_session) 경로는 CSRF Origin 화이트리스트 검증(08 §3). 위젯/트래킹은 Bearer/무인증이라 제외.
+  app.use("/v1/auth/*", csrfOriginGuard);
+  app.use("/v1/invites/*", csrfOriginGuard);
+  app.use("/v1/workspaces/*", csrfOriginGuard);
 
   app.route("/v1/widget", createWidgetRoutes());
   app.route("/v1/auth", createAuthRoutes());

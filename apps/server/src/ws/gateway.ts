@@ -40,12 +40,21 @@ interface Conn {
   missedPings: number;
   /** 인바운드 처리 직렬화 큐 — 같은 소켓의 메시지를 도착 순서대로 처리해 저장 순서를 보장(09 §2). */
   tail: Promise<void>;
+  /** 연결당 인바운드 플러드 가드 고정 윈도(08 §5: 30 msg/10s). */
+  inbound: { windowStart: number; count: number };
 }
 
 /** WS 종료 코드 — 인증 실패(04 §5). */
 const CLOSE_UNAUTHORIZED = 4401;
+/** WS 종료 코드 — 동일 visitor 동시 연결 상한 초과(08 §5). */
+const CLOSE_TOO_MANY = 4429;
 const PING_INTERVAL_MS = 30_000;
 const MAX_MISSED_PINGS = 2;
+/** 연결당 인바운드 상한 — 08 §5(30 msg/10s). 초과분은 error 이벤트 후 drop. */
+const WS_INBOUND_LIMIT = 30;
+const WS_INBOUND_WINDOW_MS = 10_000;
+/** 동일 visitor 동시 연결 상한 — 08 §5. */
+const MAX_VISITOR_CONNECTIONS = 5;
 
 export interface Gateway {
   handleUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer): void;
@@ -59,6 +68,8 @@ export function createGateway(ctx: AppContext): Gateway {
   const connections = new Map<string, Conn>();
   const channelSubs = new Map<string, Set<string>>();
   const channelUnsub = new Map<string, Promise<() => void>>();
+  /** visitorId → 현재 열린 연결 수(08 §5 동시 연결 상한). */
+  const visitorConns = new Map<string, number>();
 
   // ---------- 채널 구독/해제(참조 카운트) ----------
   async function subscribe(conn: Conn, channel: string): Promise<void> {
@@ -196,6 +207,14 @@ export function createGateway(ctx: AppContext): Gateway {
       return;
     }
 
+    // 동일 visitor 동시 연결 상한(08 §5) — 초과 시 새 연결을 거부(4429).
+    if (conn.kind === "visitor" && conn.visitorId) {
+      if ((visitorConns.get(conn.visitorId) ?? 0) >= MAX_VISITOR_CONNECTIONS) {
+        ws.close(CLOSE_TOO_MANY, "too many connections");
+        return;
+      }
+    }
+
     register(conn);
   }
 
@@ -214,11 +233,15 @@ export function createGateway(ctx: AppContext): Gateway {
       subscriptions: new Set(),
       missedPings: 0,
       tail: Promise.resolve(),
+      inbound: { windowStart: Date.now(), count: 0 },
     };
   }
 
   function register(conn: Conn): void {
     connections.set(conn.id, conn);
+    if (conn.kind === "visitor" && conn.visitorId) {
+      visitorConns.set(conn.visitorId, (visitorConns.get(conn.visitorId) ?? 0) + 1);
+    }
     conn.ws.on("pong", () => {
       conn.missedPings = 0;
     });
@@ -238,11 +261,32 @@ export function createGateway(ctx: AppContext): Gateway {
   async function cleanup(conn: Conn): Promise<void> {
     if (!connections.has(conn.id)) return;
     connections.delete(conn.id);
+    if (conn.kind === "visitor" && conn.visitorId) {
+      const n = (visitorConns.get(conn.visitorId) ?? 1) - 1;
+      if (n <= 0) visitorConns.delete(conn.visitorId);
+      else visitorConns.set(conn.visitorId, n);
+    }
     for (const channel of [...conn.subscriptions]) await unsubscribe(conn, channel);
+  }
+
+  /** 연결당 인바운드 플러드 가드(08 §5: 30 msg/10s 고정 윈도). 허용이면 true. */
+  function allowInbound(conn: Conn): boolean {
+    const now = Date.now();
+    if (now - conn.inbound.windowStart >= WS_INBOUND_WINDOW_MS) {
+      conn.inbound.windowStart = now;
+      conn.inbound.count = 0;
+    }
+    conn.inbound.count += 1;
+    return conn.inbound.count <= WS_INBOUND_LIMIT;
   }
 
   // ---------- 인바운드 메시지 ----------
   async function handleMessage(conn: Conn, raw: string): Promise<void> {
+    // 연결당 인바운드 플러드 가드(08 §5) — 초과분은 error 이벤트 후 drop.
+    if (!allowInbound(conn)) {
+      sendError(conn, "rate/limited", "인바운드 메시지가 너무 잦다.");
+      return;
+    }
     let json: unknown;
     try {
       json = JSON.parse(raw);

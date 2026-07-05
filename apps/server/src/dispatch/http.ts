@@ -27,7 +27,13 @@ export type DispatchOutcome =
   | { kind: "timeout"; latencyMs: number }
   | { kind: "http_error"; status: number; latencyMs: number }
   | { kind: "too_large"; latencyMs: number }
+  | { kind: "bad_content_type"; status: number; contentType: string; latencyMs: number }
   | { kind: "network_error"; message: string; latencyMs: number };
+
+/** 응답 Content-Type이 JSON 계열인지(08 §2 Content-Type 검증). */
+function isJsonContentType(contentType: string): boolean {
+  return /application\/json|\+json/i.test(contentType);
+}
 
 export interface PostAgentInput {
   endpointUrl: string;
@@ -63,7 +69,15 @@ export async function postToAgent(input: PostAgentInput): Promise<DispatchOutcom
 
     // 3xx(redirect)와 5xx는 에러로 처리. 4xx도 계약 위반이므로 http_error.
     if (res.status >= 300) {
+      await res.body?.cancel().catch(() => {});
       return { kind: "http_error", status: res.status, latencyMs };
+    }
+
+    // 08 §2: 응답 Content-Type 검증 — JSON이 아니면 본문을 읽지 않고 계약 위반으로 처리.
+    const contentType = res.headers.get("content-type") ?? "";
+    if (!isJsonContentType(contentType)) {
+      await res.body?.cancel().catch(() => {});
+      return { kind: "bad_content_type", status: res.status, contentType, latencyMs };
     }
 
     const body = await readLimited(res, MAX_RESPONSE_BYTES);

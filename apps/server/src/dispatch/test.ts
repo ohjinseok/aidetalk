@@ -79,6 +79,9 @@ export async function testAgentConnection(
   if (outcome.kind === "too_large") {
     return { ok: false, latencyMs: outcome.latencyMs, error: "response_too_large" };
   }
+  if (outcome.kind === "bad_content_type") {
+    return { ok: false, latencyMs: outcome.latencyMs, error: "bad_content_type" };
+  }
   if (outcome.kind === "network_error") {
     return { ok: false, latencyMs: outcome.latencyMs, error: "network_error" };
   }
