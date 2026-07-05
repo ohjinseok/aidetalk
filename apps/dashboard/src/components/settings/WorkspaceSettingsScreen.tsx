@@ -8,6 +8,14 @@ import type { AttributionRule } from "../../lib/api/schemas";
 import { useToast } from "../providers/ToastProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { FormRow } from "@/components/ui/form-row";
 import { Input } from "@/components/ui/input";
 import {
@@ -44,61 +52,83 @@ export function WorkspaceSettingsScreen() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-6">
-      <h1 className="mb-4 text-lg font-semibold">{td("dashboard.workspace.title")}</h1>
+    <div className="mx-auto max-w-2xl space-y-6 p-6">
+      <h1 className="text-lg font-semibold tracking-tight text-foreground">
+        {td("dashboard.workspace.title")}
+      </h1>
 
-      <FormRow label={td("dashboard.workspace.name")} htmlFor="wsName">
-        <Input
-          id="wsName"
-          value={name}
-          disabled={!isOwner}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </FormRow>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">
+            {td("dashboard.workspace.title")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FormRow label={td("dashboard.workspace.name")} htmlFor="wsName">
+            <Input
+              id="wsName"
+              value={name}
+              disabled={!isOwner}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </FormRow>
 
-      {/* 귀속 규칙 — 전환 트래킹(S1)에서만 의미(규칙 10). */}
-      {isS1 ? (
-        <FormRow label={td("dashboard.workspace.attributionRule")} htmlFor="attr">
-          <Select
-            value={rule}
-            disabled={!isOwner}
-            onValueChange={(v) => setRule(v as AttributionRule)}
-          >
-            <SelectTrigger id="attr" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="last_click">{td("dashboard.workspace.lastClick")}</SelectItem>
-              <SelectItem value="first_click">{td("dashboard.workspace.firstClick")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </FormRow>
-      ) : null}
-
-      <Button disabled={saving || !isOwner} onClick={() => void onSave()}>
-        {td("dashboard.common.save")}
-      </Button>
+          {/* 귀속 규칙 — 전환 트래킹(S1)에서만 의미(규칙 10). */}
+          {isS1 ? (
+            <FormRow label={td("dashboard.workspace.attributionRule")} htmlFor="attr">
+              <Select
+                value={rule}
+                disabled={!isOwner}
+                onValueChange={(v) => setRule(v as AttributionRule)}
+              >
+                <SelectTrigger id="attr" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="last_click">{td("dashboard.workspace.lastClick")}</SelectItem>
+                  <SelectItem value="first_click">{td("dashboard.workspace.firstClick")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormRow>
+          ) : null}
+        </CardContent>
+        <CardFooter>
+          <Button disabled={saving || !isOwner} onClick={() => void onSave()}>
+            {td("dashboard.common.save")}
+          </Button>
+        </CardFooter>
+      </Card>
 
       {/* 결제 탭(클라우드 전용) — ee의 BillingPanel 주입 지점.
           CLAUDE.md 규칙 8: 코어는 ee/를 import하지 않는다 → 여기서는 존재/플래그만 확인. */}
       {IS_CLOUD ? (
-        <section className="mt-8 rounded-lg border border-gray-200 bg-white p-4">
-          <h2 className="mb-2 text-sm font-semibold">{td("dashboard.workspace.billingTab")}</h2>
-          <p className="text-xs text-gray-400">{td("dashboard.workspace.billingCloudOnly")}</p>
-        </section>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">
+              {td("dashboard.workspace.billingTab")}
+            </CardTitle>
+            <CardDescription>{td("dashboard.workspace.billingCloudOnly")}</CardDescription>
+          </CardHeader>
+        </Card>
       ) : null}
 
       {/* 위험 구역 */}
-      <section className="mt-8 rounded-lg border border-red-200 bg-red-50 p-4">
-        <h2 className="mb-1 text-sm font-semibold text-red-700">
-          {td("dashboard.workspace.dangerZone")}
-        </h2>
-        <p className="mb-2 text-xs text-red-600">{td("dashboard.workspace.exportHint")}</p>
-        {/* TODO(question): 대화 CSV export 엔드포인트가 04 §2에 없음(Could). API 확정 후 연결. */}
-        <Button variant="outline" size="sm" disabled title="TODO: export endpoint">
-          {td("dashboard.workspace.exportCsv")}
-        </Button>
-      </section>
+      <Card className="border-destructive/20 bg-destructive/5">
+        <CardHeader>
+          <CardTitle className="text-sm font-medium text-destructive">
+            {td("dashboard.workspace.dangerZone")}
+          </CardTitle>
+          <CardDescription className="text-destructive/80">
+            {td("dashboard.workspace.exportHint")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* TODO(question): 대화 CSV export 엔드포인트가 04 §2에 없음(Could). API 확정 후 연결. */}
+          <Button variant="outline" size="sm" disabled title="TODO: export endpoint">
+            {td("dashboard.workspace.exportCsv")}
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
