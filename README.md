@@ -5,7 +5,16 @@
 [![License: AGPL v3](https://img.shields.io/badge/core-AGPL--3.0-blue.svg)](./LICENSE)
 [![ee License](https://img.shields.io/badge/ee-commercial-lightgrey.svg)](./ee/LICENSE)
 
-<!-- TODO: 스크린샷/데모 GIF (인박스 화면, 위젯 임베드, 어시스트 패널) -->
+**상담 인박스** — 방문자·AI·상담원을 한 문법으로. AI 자동응답은 아웃라인 버블 + "AI" 칩, 핸드오프 후 상담원 답장은 솔리드 버블로 구분됩니다.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/inbox-dark.png">
+  <img alt="AideTalk 상담 인박스 — AI 자동응답과 상담원 핸드오프" src="docs/assets/inbox-light.png">
+</picture>
+
+**임베드 위젯** — Shadow DOM 격리, 38KB gzip. 손님에게도 AI 응답임을 투명하게 표시합니다.
+
+<img alt="AideTalk 채팅 위젯" src="docs/assets/widget.png" width="380">
 
 ## 왜 만들었나
 

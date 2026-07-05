@@ -7,7 +7,7 @@ import { PanelRight } from "lucide-react";
 import type { Conversation, Message, Suggestion } from "@aidetalk/shared";
 
 import { assistApi, inboxApi, memberApi, trackingApi } from "../../lib/api/endpoints";
-import { td } from "../../lib/i18n";
+import { td, tf } from "../../lib/i18n";
 import type { ConversationDetail, ConversationTracking, Member } from "../../lib/api/schemas";
 import { readReceiptMsgId as computeReadReceiptMsgId } from "../../lib/readReceipt";
 import { mergeTimeline } from "../../lib/timeline";
@@ -315,7 +315,9 @@ export function ConversationView({ convId }: { convId: string }) {
               size="sm"
             />
             <span className="truncate text-sm font-semibold">
-              {detail.visitor.name || detail.visitor.email || convId.slice(-6)}
+              {detail.visitor.name ||
+                detail.visitor.email ||
+                tf("dashboard.inbox.anonymousVisitor", { id: detail.visitor.id.slice(-4) })}
             </span>
             <Badge variant={conversation.status === "closed" ? "secondary" : "warning"}>{td(statusKey)}</Badge>
             {/* AI 응대 중 — 지금 기계가 응대함을 "AI" 모노그램 칩으로. */}
