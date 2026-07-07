@@ -5,6 +5,7 @@
  * (CLAUDE.md 절대 규칙 4). 하드코딩 문자열 금지.
  */
 import { defaultLocale, locales, type Locale } from "./locale";
+import type { TranslationKey } from "./keys.generated";
 import en from "./locales/en.json";
 import ko from "./locales/ko.json";
 
@@ -13,16 +14,12 @@ export type { Locale };
 
 const messages = { ko, en } satisfies Record<Locale, unknown>;
 
-type Messages = typeof ko;
-
-/** 중첩 객체를 "a.b.c" 형태의 dot-path 리터럴 유니온으로 변환한다. */
-type DotPaths<T> = T extends string
-  ? never
-  : {
-      [K in keyof T & string]: T[K] extends string ? K : `${K}.${DotPaths<T[K]>}`;
-    }[keyof T & string];
-
-export type TranslationKey = DotPaths<Messages>;
+// TranslationKey는 코드젠(scripts/gen-keys.mjs → keys.generated.ts).
+// 과거 DotPaths 재귀 템플릿 타입은 키 ~400개 부근에서 TS 유니온이 truncate돼
+// 무관한 파일까지 typecheck가 전역 실패하는 문제가 있었다.
+// ko.json 키 변경 시 `pnpm --filter @aidetalk/i18n gen:keys` 재실행(테스트가 동기화 강제).
+export type { TranslationKey } from "./keys.generated";
+export { translationKeys } from "./keys.generated";
 
 function getByPath(obj: unknown, path: string): unknown {
   return path.split(".").reduce<unknown>((acc, part) => {

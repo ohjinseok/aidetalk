@@ -34,8 +34,8 @@ export default tseslint.config(
     },
   },
   {
-    // E2E 보조 Node 스크립트(.mjs) — 스텁 에이전트/정적 호스트. Node 전역 허용.
-    files: ["apps/widget/e2e/**/*.mjs"],
+    // 보조 Node 스크립트(.mjs) — E2E 스텁/코드젠. Node 전역 허용.
+    files: ["apps/widget/e2e/**/*.mjs", "packages/*/scripts/**/*.mjs"],
     languageOptions: {
       globals: {
         process: "readonly",

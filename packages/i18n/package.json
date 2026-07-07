@@ -13,7 +13,8 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "gen:keys": "node scripts/gen-keys.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
