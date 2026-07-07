@@ -7,6 +7,7 @@ import { and, asc, between, eq, sql } from "drizzle-orm";
 
 import type { Database } from "../client";
 import { conversions } from "../schema/conversions";
+import { isUniqueViolation } from "./_shared";
 
 export interface CreateConversionInput {
   conversationId: string;
@@ -42,7 +43,7 @@ export function makeConversionRepo(db: Database) {
         return row!;
       } catch (err) {
         // Postgres unique_violation → 멱등 재수신
-        if ((err as { code?: string }).code === "23505") {
+        if (isUniqueViolation(err)) {
           throw AppError.of("conversion/duplicate", "이미 기록된 전환이다.");
         }
         throw err;

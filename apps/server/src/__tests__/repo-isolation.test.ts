@@ -48,6 +48,56 @@ describe("agentLog.append 소유 격리", () => {
   });
 });
 
+describe("tagRepo.addToConversation 소유 격리", () => {
+  it("타 워크스페이스 tagId 부착 → undefined, 소유 워크스페이스는 성공", async () => {
+    const a = await newVisitorSession(h);
+    const b = await newVisitorSession(h);
+    const convA = await newConversation(h, a.token);
+    const tagB = await h.ctx.repos.tag.create(b.workspaceId, { name: "타워크스페이스태그" });
+
+    // b가 소유한 태그를 a의 워크스페이스/대화 기준으로 부착 시도 → 소유 검증 실패로 undefined.
+    const result = await h.ctx.repos.tag.addToConversation(a.workspaceId, convA, tagB!.id);
+    expect(result).toBeUndefined();
+
+    // 소유 워크스페이스의 태그는 정상 부착.
+    const tagA = await h.ctx.repos.tag.create(a.workspaceId, { name: "소유워크스페이스태그" });
+    const ok = await h.ctx.repos.tag.addToConversation(a.workspaceId, convA, tagA!.id);
+    expect(ok).toContain(tagA!.id);
+  });
+});
+
+describe("noteRepo.create 소유 격리", () => {
+  it("타 워크스페이스 conversationId로 생성 → not_found, 소유 워크스페이스는 성공", async () => {
+    const a = await newVisitorSession(h);
+    const b = await newVisitorSession(h);
+    const convA = await newConversation(h, a.token);
+
+    await expect(
+      h.ctx.repos.note.create(b.workspaceId, convA, { authorId: "usr_dummy00000000", body: "시도" }),
+    ).rejects.toMatchObject({ code: "not_found" });
+
+    const row = await h.ctx.repos.note.create(a.workspaceId, convA, {
+      authorId: "usr_dummy00000000",
+      body: "정상 메모",
+    });
+    expect(row.conversationId).toBe(convA);
+  });
+});
+
+describe("favoriteRepo.set 소유 격리", () => {
+  it("타 워크스페이스 conversationId로 즐겨찾기 설정 → false, 소유 워크스페이스는 true", async () => {
+    const a = await newVisitorSession(h);
+    const b = await newVisitorSession(h);
+    const convA = await newConversation(h, a.token);
+
+    const failed = await h.ctx.repos.favorite.set(b.workspaceId, convA, "usr_dummy00000000");
+    expect(failed).toBe(false);
+
+    const ok = await h.ctx.repos.favorite.set(a.workspaceId, convA, "usr_dummy00000000");
+    expect(ok).toBe(true);
+  });
+});
+
 describe("assist.append 소유 격리", () => {
   it("타 워크스페이스에서 다른 워크스페이스 대화로 append → not_found, 소유 워크스페이스는 성공", async () => {
     const a = await newVisitorSession(h);

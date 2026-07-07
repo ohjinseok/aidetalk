@@ -103,6 +103,25 @@ describe("09 §4-3 타 워크스페이스 멤버의 자원 접근", () => {
   });
 });
 
+describe("09 §4 visitor_token으로 메모/태그/즐겨찾기/counts 접근 차단(메모 미노출 계약 고정)", () => {
+  it("visitor_token(Bearer)으로 notes/tags/favorite/counts 경로 → 전부 401", async () => {
+    const s = await newVisitorSession(h);
+    const convId = await newConversation(h, s.token);
+    const cases: [string, string][] = [
+      ["GET", `/v1/workspaces/${s.workspaceId}/conversations/${convId}/notes`],
+      ["GET", `/v1/workspaces/${s.workspaceId}/tags`],
+      ["PUT", `/v1/workspaces/${s.workspaceId}/conversations/${convId}/favorite`],
+      ["DELETE", `/v1/workspaces/${s.workspaceId}/conversations/${convId}/favorite`],
+      ["GET", `/v1/workspaces/${s.workspaceId}/conversations/counts`],
+    ];
+    for (const [method, path] of cases) {
+      const res = await http(h, method, path, { token: s.token });
+      expect(res.status).toBe(401);
+      expect(res.json.error.code).toBe("auth/invalid");
+    }
+  });
+});
+
 describe("09 §4-2 suggestion.new 채널 격리(WS 통합)", () => {
   it("같은 대화에 agent+visitor 소켓 → suggestion.new는 agent만, visitor 미수신", async () => {
     // 워크스페이스 + 멤버(상담원) + 방문자 세션을 같은 워크스페이스에 구성.

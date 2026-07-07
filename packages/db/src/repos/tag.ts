@@ -7,12 +7,10 @@ import { newId } from "@aidetalk/shared";
 import { and, asc, eq, inArray } from "drizzle-orm";
 
 import type { Database } from "../client";
+import { isUniqueViolation } from "./_shared";
 import { conversations } from "../schema/conversations";
 import { conversationTags } from "../schema/conversation-tags";
 import { tags } from "../schema/tags";
-
-/** Postgres unique_violation. */
-const UNIQUE_VIOLATION = "23505";
 
 export interface CreateTagInput {
   name: string;
@@ -71,7 +69,7 @@ export function makeTagRepo(db: Database) {
           .returning();
         return row!;
       } catch (err) {
-        if ((err as { code?: string }).code === UNIQUE_VIOLATION) return null;
+        if (isUniqueViolation(err)) return null;
         throw err;
       }
     },
@@ -99,7 +97,7 @@ export function makeTagRepo(db: Database) {
           .returning();
         return row;
       } catch (err) {
-        if ((err as { code?: string }).code === UNIQUE_VIOLATION) return null;
+        if (isUniqueViolation(err)) return null;
         throw err;
       }
     },

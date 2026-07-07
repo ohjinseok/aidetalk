@@ -27,6 +27,18 @@ export async function assertConversationOwned(
 }
 
 /**
+ * Postgres unique_violation(23505) 여부.
+ * drizzle-orm이 postgres.js 에러를 감싸므로 code는 err.cause 쪽에 있을 수 있다 —
+ * 양쪽 모두 확인해야 한다(직접 err.code만 보면 항상 miss).
+ */
+export function isUniqueViolation(err: unknown): boolean {
+  const code = (err as { code?: string }).code;
+  if (code === "23505") return true;
+  const cause = (err as { cause?: { code?: string } }).cause;
+  return cause?.code === "23505";
+}
+
+/**
  * (timestamp, id) 복합 키셋 페이지네이션 커서 조건.
  * 방향에 따라
  *   asc  → (ts, id) > (cursor.ts, cursor.id)  (다음 페이지 = 더 최신)

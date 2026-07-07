@@ -29,18 +29,20 @@ import { keysetCursorCondition } from "./_shared";
  * (msg_ nanoid는 단조가 아니므로 id가 아니라 created_at으로 비교 — conversations 스키마 주석 참조.)
  */
 function unreadCountExpr(): SQL<number> {
+  // 주의: SELECT 목록 컨텍스트에서 drizzle은 `${conversations.id}`를 비정규화("id")로 렌더해
+  // 서브쿼리 내부의 messages.id에 잘못 바인딩된다. 반드시 `${conversations}."col"`로 명시 정규화.
   return sql<number>`(SELECT count(*)::int FROM ${messages} m
-    WHERE m.conversation_id = ${conversations.id} AND m.role = 'visitor'
-      AND (${conversations.agentLastReadMessageId} IS NULL
-           OR m.created_at > (SELECT m2.created_at FROM ${messages} m2 WHERE m2.id = ${conversations.agentLastReadMessageId})))`;
+    WHERE m.conversation_id = ${conversations}."id" AND m.role = 'visitor'
+      AND (${conversations}."agent_last_read_message_id" IS NULL
+           OR m.created_at > (SELECT m2.created_at FROM ${messages} m2 WHERE m2.id = ${conversations}."agent_last_read_message_id")))`;
 }
 
 /** 위 안읽음이 하나라도 있는지의 EXISTS 조건(unreadOnly 필터·unread 카운트용). */
 function unreadExistsCond(): SQL {
   return sql`EXISTS (SELECT 1 FROM ${messages} m
-    WHERE m.conversation_id = ${conversations.id} AND m.role = 'visitor'
-      AND (${conversations.agentLastReadMessageId} IS NULL
-           OR m.created_at > (SELECT m2.created_at FROM ${messages} m2 WHERE m2.id = ${conversations.agentLastReadMessageId})))`;
+    WHERE m.conversation_id = ${conversations}."id" AND m.role = 'visitor'
+      AND (${conversations}."agent_last_read_message_id" IS NULL
+           OR m.created_at > (SELECT m2.created_at FROM ${messages} m2 WHERE m2.id = ${conversations}."agent_last_read_message_id")))`;
 }
 
 export interface CreateConversationInput {

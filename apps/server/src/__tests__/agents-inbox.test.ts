@@ -13,12 +13,15 @@ import {
   newUserWithWorkspace,
   newVisitorSession,
   registerMockAgent,
+  WsClient,
   type Harness,
 } from "../../test/harness";
 import { startMockAgent, type MockAgent } from "../../test/mock-agent";
 
 let h: Harness;
 let mock: MockAgent;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 beforeAll(async () => {
   h = await createHarness();
@@ -300,6 +303,95 @@ describe("인박스 REST", () => {
       body: { outcome: "accepted" },
     });
     expect(patch.json.suggestion.outcome).toBe("accepted");
+  });
+});
+
+// ================= 보류(hold) + 방문자 편집 + 상담 이력 =================
+describe("보류(hold) + 방문자 편집 + 상담 이력", () => {
+  it("POST hold → status=pending + pending 이벤트 기록 + conversation.updated 브로드캐스트", async () => {
+    const s = await setup();
+    const convId = await newConversation(h, s.token);
+
+    const agentWs = await WsClient.connect(`${h.wsBase}/ws/agent`, { cookie: s.cookie });
+    agentWs.send("subscribe.conversation", { conversationId: convId });
+    await sleep(250); // 구독 완료 대기
+
+    const res = await http(h, "POST", `/v1/workspaces/${s.workspaceId}/conversations/${convId}/hold`, {
+      cookie: s.cookie,
+    });
+    expect(res.status).toBe(200);
+    expect(res.json.conversation.status).toBe("pending");
+
+    const updated = await agentWs.nextType("conversation.updated");
+    expect(updated.payload.conversation.id).toBe(convId);
+    expect(updated.payload.conversation.status).toBe("pending");
+
+    const events = await h.ctx.repos.event.listByConversation(s.workspaceId, convId);
+    expect(events.some((e) => e.type === "pending")).toBe(true);
+
+    agentWs.close();
+  });
+
+  it("PATCH visitors — 이름/전화 갱신, 잘못된 email 400, 타 워크스페이스 404, 이메일 수정해도 mergeByEmail 미동작", async () => {
+    const s = await setup();
+
+    const ok = await http(h, "PATCH", `/v1/workspaces/${s.workspaceId}/visitors/${s.visitorId}`, {
+      cookie: s.cookie,
+      body: { name: "홍길동", phone: "010-1234-5678" },
+    });
+    expect(ok.status).toBe(200);
+    expect(ok.json.visitor.name).toBe("홍길동");
+    expect(ok.json.visitor.phone).toBe("010-1234-5678");
+
+    const bad = await http(h, "PATCH", `/v1/workspaces/${s.workspaceId}/visitors/${s.visitorId}`, {
+      cookie: s.cookie,
+      body: { email: "not-an-email" },
+    });
+    expect(bad.status).toBe(400);
+
+    // 타 워크스페이스 경로로 s의 visitorId를 수정 시도 → 404(격리).
+    const other = await newUserWithWorkspace(h);
+    const forbidden = await http(
+      h,
+      "PATCH",
+      `/v1/workspaces/${other.workspaceId}/visitors/${s.visitorId}`,
+      { cookie: other.cookie, body: { name: "탈취시도" } },
+    );
+    expect(forbidden.status).toBe(404);
+
+    // 이메일 수정 시 mergeByEmail은 절대 트리거되지 않는다(상담원 프로필 수정은 병합 트리거가 아님).
+    const sess2 = await http(h, "POST", "/v1/widget/session", {
+      body: { workspaceId: s.workspaceId },
+    });
+    const visitor2Id = sess2.json.visitor.id as string;
+    await http(h, "PATCH", `/v1/workspaces/${s.workspaceId}/visitors/${visitor2Id}`, {
+      cookie: s.cookie,
+      body: { email: "dup@example.com" },
+    });
+    await http(h, "PATCH", `/v1/workspaces/${s.workspaceId}/visitors/${s.visitorId}`, {
+      cookie: s.cookie,
+      body: { email: "dup@example.com" },
+    });
+    const v1 = await h.ctx.repos.visitor.getById(s.workspaceId, s.visitorId);
+    const v2 = await h.ctx.repos.visitor.getById(s.workspaceId, visitor2Id);
+    expect(v1?.mergedInto).toBeNull();
+    expect(v2?.mergedInto).toBeNull();
+  });
+
+  it("GET /visitors/:visitorId/conversations — 이 방문자의 상담 이력 목록", async () => {
+    const s = await setup();
+    const conv1 = await newConversation(h, s.token);
+    const conv2 = await newConversation(h, s.token);
+
+    const res = await http(
+      h,
+      "GET",
+      `/v1/workspaces/${s.workspaceId}/visitors/${s.visitorId}/conversations`,
+      { cookie: s.cookie },
+    );
+    expect(res.status).toBe(200);
+    const ids = res.json.items.map((i: { conversation: { id: string } }) => i.conversation.id);
+    expect(ids).toEqual(expect.arrayContaining([conv1, conv2]));
   });
 });
 
