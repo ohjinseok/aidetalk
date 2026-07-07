@@ -325,7 +325,7 @@ export function InboxList() {
                       </span>
                       {hasUnread ? (
                         <span
-                          className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-info px-1.5 text-[11px] font-medium tabular-nums text-info-foreground"
+                          className="flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-info px-1 text-[10.5px] font-semibold leading-none tracking-normal tabular-nums text-info-foreground"
                           aria-label={td("dashboard.inbox.unread")}
                         >
                           {unread > 99 ? "99+" : unread}

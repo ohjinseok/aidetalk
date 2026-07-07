@@ -57,12 +57,13 @@ export function tagShortName(name: string): string {
 /**
  * 플랫 태그 목록을 `/` 구분자로 트리 그룹핑한다 (DB는 플랫 유지 — 07 문서 참조).
  * 1단계 그룹만 지원: "결제/환불" → 그룹 "결제" 하위 "환불". 구분자 없는 태그는 루트에.
+ * 루트 태그·그룹명·그룹 내 태그 전부 로케일(ko) 사전순 정렬 — DB 콜레이션 순서에 기대지 않는다.
  */
 export function groupTagsByPath<T extends { name: string }>(
   tags: T[],
 ): { root: T[]; groups: Map<string, T[]> } {
   const root: T[] = [];
-  const groups = new Map<string, T[]>();
+  const grouped = new Map<string, T[]>();
   for (const tag of tags) {
     const idx = tag.name.indexOf("/");
     if (idx <= 0) {
@@ -70,9 +71,16 @@ export function groupTagsByPath<T extends { name: string }>(
       continue;
     }
     const group = tag.name.slice(0, idx).trim();
-    const list = groups.get(group) ?? [];
+    const list = grouped.get(group) ?? [];
     list.push(tag);
-    groups.set(group, list);
+    grouped.set(group, list);
   }
+  const byName = (a: T, b: T) => a.name.localeCompare(b.name, "ko");
+  root.sort(byName);
+  const groups = new Map(
+    [...grouped.entries()]
+      .sort(([a], [b]) => a.localeCompare(b, "ko"))
+      .map(([k, list]) => [k, list.sort(byName)] as const),
+  );
   return { root, groups };
 }

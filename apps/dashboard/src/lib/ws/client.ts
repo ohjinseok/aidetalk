@@ -26,7 +26,17 @@ type SocketFactory = (url: string) => WebSocket;
 /** 기본 WS URL — env 우선, 없으면 현재 호스트 기준 추정. */
 export function defaultWsUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_WS_URL;
-  if (fromEnv) return fromEnv;
+  if (fromEnv) {
+    // env에 오리진만 주고 경로(/ws/agent)를 빠뜨리면 서버가 업그레이드를 거부해
+    // 조용히 무한 재연결에 빠진다 — 경로 없으면 붙여준다.
+    try {
+      const u = new URL(fromEnv);
+      if (u.pathname === "/" || u.pathname === "") u.pathname = "/ws/agent";
+      return u.toString();
+    } catch {
+      return fromEnv;
+    }
+  }
   if (typeof window !== "undefined") {
     const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
     return `${proto}//${window.location.host}/ws/agent`;

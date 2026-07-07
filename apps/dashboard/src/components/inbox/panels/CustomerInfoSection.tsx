@@ -87,7 +87,7 @@ export function CustomerInfoSection({
 
   return (
     <DetailsSection name="customer" title={td("dashboard.customer.title")}>
-      <dl className="space-y-2.5">
+      <dl className="space-y-0.5">
         <EditableField
           label={td("dashboard.customer.name")}
           value={visitor.name}
@@ -117,7 +117,7 @@ export function CustomerInfoSection({
       </button>
 
       {showMore ? (
-        <dl className="mt-3 space-y-2 border-t border-border pt-3">
+        <dl className="mt-2 space-y-1.5 border-t border-border pt-3">
           <ReadonlyField label={td("dashboard.customer.device")} value={device} />
           <ReadonlyField label={td("dashboard.customer.language")} value={visitor.locale} />
           <ReadonlyField label={td("dashboard.customer.timezone")} value={visitor.timezone} />
@@ -232,10 +232,11 @@ function EditableField({
     onSave(next === "" ? null : next);
   }
 
+  // 채널톡식 가로 행: 라벨 좌(고정폭) · 값 우측 정렬.
   return (
-    <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd>
+    <div className="flex min-h-7 items-center gap-2">
+      <dt className="w-16 shrink-0 text-xs text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 flex-1">
         {editing ? (
           <Input
             autoFocus
@@ -251,15 +252,16 @@ function EditableField({
                 setEditing(false);
               }
             }}
-            className="mt-0.5 h-8 text-[13px]"
+            className="h-7 text-[13px]"
           />
         ) : (
           <button
             type="button"
             onClick={begin}
-            className={`block w-full truncate text-left text-[13px] hover:underline ${
+            className={`block w-full truncate text-right text-[13px] hover:underline ${
               breakAll ? "break-all" : ""
-            } ${value ? "text-foreground" : "text-muted-foreground/70"}`}
+            } ${value ? "text-foreground" : "text-muted-foreground/60"}`}
+            title={value ?? undefined}
           >
             {value || td("dashboard.customer.none")}
           </button>
@@ -269,7 +271,7 @@ function EditableField({
   );
 }
 
-/** 읽기 전용 정의 리스트 한 줄 — 값 없으면 렌더하지 않는다. */
+/** 읽기 전용 정의 리스트 한 줄(라벨 좌·값 우) — 값 없으면 렌더하지 않는다. */
 function ReadonlyField({
   label,
   value,
@@ -281,9 +283,12 @@ function ReadonlyField({
 }) {
   if (!value) return null;
   return (
-    <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className={`text-[13px] text-foreground ${breakAll ? "break-all" : "truncate"}`} title={value}>
+    <div className="flex items-baseline gap-2">
+      <dt className="w-16 shrink-0 text-xs text-muted-foreground">{label}</dt>
+      <dd
+        className={`min-w-0 flex-1 text-right text-[13px] text-foreground ${breakAll ? "break-all" : "truncate"}`}
+        title={value}
+      >
         {value}
       </dd>
     </div>

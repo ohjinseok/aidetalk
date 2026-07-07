@@ -186,9 +186,9 @@
       "tabAssist": "어시스트",
       "modeBadgeAi": "AI",
       "modeBadgeHuman": "사람",
-      "statusOpen": "열림",
+      "statusOpen": "진행중",
       "statusPending": "보류중",
-      "statusClosed": "종료"
+      "statusClosed": "종료됨"
     },
     "tags": {
       "add": "태그 추가",
