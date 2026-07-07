@@ -145,7 +145,7 @@ export function WebhooksScreen() {
         <ul className="space-y-3">
           {webhooks.map((w) => (
             <li key={w.id}>
-              <Card>
+              <Card className="py-4 transition-colors hover:bg-accent/50">
                 <CardContent className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="break-all font-mono text-sm text-foreground">{w.url}</p>

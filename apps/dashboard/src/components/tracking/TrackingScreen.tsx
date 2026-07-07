@@ -159,7 +159,7 @@ export function TrackingScreen() {
       </Card>
 
       {/* v1은 pixel 미구현 — 정확도 안내 배너(07 §3). */}
-      <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400">
+      <div className="rounded-md border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
         {td("dashboard.tracking.pixelBanner")}
       </div>
     </div>

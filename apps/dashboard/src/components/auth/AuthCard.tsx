@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { td, type TranslationKey } from "@/lib/i18n";
 
+import { AuthBrandMark } from "./AuthBrandMark";
+
 interface AuthCardProps {
   titleKey: TranslationKey;
   submitKey: TranslationKey;
@@ -34,10 +36,11 @@ export function AuthCard({
 }: AuthCardProps) {
   const title = td(titleKey);
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <Card className="w-full max-w-sm" aria-label={title}>
-        <CardHeader>
-          <CardTitle className="text-lg tracking-tight">{title}</CardTitle>
+        <CardHeader className="text-center">
+          <AuthBrandMark />
+          <CardTitle className="text-xl font-semibold tracking-tight">{title}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit}>
@@ -45,8 +48,11 @@ export function AuthCard({
             <Button type="submit" className="w-full" disabled={busy}>
               {td(submitKey)}
             </Button>
-            <p className="mt-4 text-center text-sm text-muted-foreground">
-              <Link href={footerHref} className="text-primary hover:underline">
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              <Link
+                href={footerHref}
+                className="rounded-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
                 {td(footerKey)}
               </Link>
             </p>

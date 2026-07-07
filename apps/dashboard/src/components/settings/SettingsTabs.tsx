@@ -20,7 +20,7 @@ export function SettingsTabs() {
 
   return (
     <nav
-      className="flex gap-1 border-b border-border bg-background px-6"
+      className="flex items-center gap-1 border-b border-border bg-background px-6 py-3"
       aria-label={td("dashboard.nav.settings")}
     >
       {TABS.map((tab) => {
@@ -31,10 +31,10 @@ export function SettingsTabs() {
             key={tab.seg}
             href={href}
             aria-current={active ? "page" : undefined}
-            className={`-mb-px border-b-2 px-3 py-2.5 text-sm transition-colors ${
+            className={`rounded-full px-3.5 py-1.5 text-sm transition-colors ${
               active
-                ? "border-primary font-medium text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+                ? "bg-accent font-medium text-foreground"
+                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
             }`}
           >
             {td(tab.labelKey)}

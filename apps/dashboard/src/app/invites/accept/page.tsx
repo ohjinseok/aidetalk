@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+import { AuthBrandMark } from "@/components/auth/AuthBrandMark";
 import { useToast } from "@/components/providers/ToastProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,7 +49,8 @@ function AcceptInner() {
     return (
       <Card className="w-full max-w-sm text-center" aria-label={td("dashboard.invite.acceptTitle")}>
         <CardHeader>
-          <CardTitle className="text-lg tracking-tight">
+          <AuthBrandMark />
+          <CardTitle className="text-xl font-semibold tracking-tight">
             {td("dashboard.invite.acceptTitle")}
           </CardTitle>
         </CardHeader>
@@ -64,7 +66,8 @@ function AcceptInner() {
   return (
     <Card className="w-full max-w-sm text-center" aria-label={td("dashboard.invite.acceptTitle")}>
       <CardHeader>
-        <CardTitle className="text-lg tracking-tight">
+        <AuthBrandMark />
+        <CardTitle className="text-xl font-semibold tracking-tight">
           {td("dashboard.invite.acceptTitle")}
         </CardTitle>
       </CardHeader>
@@ -100,7 +103,7 @@ function AcceptInner() {
 
 export default function InviteAcceptPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <Suspense fallback={<Spinner />}>
         <AcceptInner />
       </Suspense>

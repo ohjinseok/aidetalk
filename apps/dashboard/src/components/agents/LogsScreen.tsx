@@ -9,6 +9,7 @@ import { td, type TranslationKey } from "@/lib/i18n";
 import type { AgentLog, AgentLogOutcome } from "@aidetalk/shared";
 import { useToast } from "@/components/providers/ToastProvider";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { AiChip } from "@/components/inbox/AiChip";
@@ -41,6 +42,18 @@ const OUTCOME_KEY: Record<AgentLogOutcome, TranslationKey> = {
   suggest: "dashboard.logs.outcomeSuggest",
   timeout: "dashboard.logs.outcomeTimeout",
   error: "dashboard.logs.outcomeError",
+};
+// 상태 코드 뱃지 시맨틱 변형 — 성공/정보/중립/경고/실패를 토큰으로 구분.
+const OUTCOME_VARIANT: Record<
+  AgentLogOutcome,
+  "success" | "info" | "soft" | "warning" | "destructive"
+> = {
+  reply: "success",
+  handoff: "info",
+  noop: "soft",
+  suggest: "info",
+  timeout: "warning",
+  error: "destructive",
 };
 
 function preview(summary: unknown): string {
@@ -163,7 +176,11 @@ export function LogsScreen({ agentId }: { agentId: string }) {
                         </span>
                       )}
                     </TableCell>
-                    <TableCell>{td(OUTCOME_KEY[log.outcome])}</TableCell>
+                    <TableCell>
+                      <Badge variant={OUTCOME_VARIANT[log.outcome]}>
+                        {td(OUTCOME_KEY[log.outcome])}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-right tabular-nums text-muted-foreground">
                       {latency}
                     </TableCell>

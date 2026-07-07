@@ -20,6 +20,13 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { SecretModal } from "./SecretModal";
 
+// 연결 상태 dot — Badge와 동일한 시맨틱 톤(success/muted/destructive)으로 상태를 한 번 더 강조.
+function statusDotClass(status: AgentStatus): string {
+  if (status === "active") return "bg-success";
+  if (status === "disabled") return "bg-muted-foreground/40";
+  return "bg-destructive";
+}
+
 function statusBadge(status: AgentStatus) {
   if (status === "active")
     return <Badge variant="success">{td("dashboard.agents.statusActive")}</Badge>;
@@ -205,6 +212,10 @@ export function AgentsScreen() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
+                      <span
+                        className={`size-1.5 shrink-0 rounded-full ${statusDotClass(agent.status)}`}
+                        aria-hidden
+                      />
                       <span className="font-medium text-foreground">{agent.name}</span>
                       {statusBadge(agent.status)}
                     </div>
@@ -236,7 +247,7 @@ export function AgentsScreen() {
                   </Button>
                   {tr && tr !== "loading" ? (
                     <span
-                      className={`tabular-nums text-xs ${tr.ok ? "text-green-600 dark:text-green-500" : "text-destructive"}`}
+                      className={`tabular-nums text-xs ${tr.ok ? "text-success" : "text-destructive"}`}
                     >
                       {tr.ok
                         ? tf("dashboard.agents.testOk", { latency: tr.latencyMs ?? 0 })

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { AuthBrandMark } from "@/components/auth/AuthBrandMark";
 import { useToast } from "@/components/providers/ToastProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,9 +49,10 @@ export default function OnboardingPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
-      <Card className="w-full max-w-lg" aria-label={td("dashboard.onboarding.title")}>
-        <CardHeader>
-          <CardTitle className="text-lg tracking-tight">
+      <Card className="w-full max-w-md" aria-label={td("dashboard.onboarding.title")}>
+        <CardHeader className="text-center">
+          <AuthBrandMark />
+          <CardTitle className="text-xl font-semibold tracking-tight">
             {td("dashboard.onboarding.title")}
           </CardTitle>
           <CardDescription>{td("dashboard.onboarding.subtitle")}</CardDescription>
@@ -76,7 +78,7 @@ export default function OnboardingPage() {
                   <label
                     key={s.value}
                     className={cn(
-                      "cursor-pointer rounded-lg border p-4 transition-colors",
+                      "cursor-pointer rounded-lg border p-4 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2",
                       segment === s.value
                         ? "border-primary bg-primary/5"
                         : "border-border hover:border-primary/50",

@@ -112,8 +112,8 @@ export function MembersScreen() {
               </div>
 
               {inviteUrl ? (
-                <div className="rounded-md bg-primary/5 p-3">
-                  <p className="mb-1.5 text-xs text-primary">
+                <div className="rounded-md bg-info/10 p-3">
+                  <p className="mb-1.5 text-xs text-info">
                     {td("dashboard.members.inviteCreated")}
                   </p>
                   <div className="flex items-center gap-2">
@@ -141,7 +141,10 @@ export function MembersScreen() {
       ) : (
         <ul className="divide-y divide-border rounded-xl border bg-card shadow-sm">
           {members.map((m) => (
-            <li key={m.id} className="flex items-center justify-between gap-2 px-4 py-3">
+            <li
+              key={m.id}
+              className="flex items-center justify-between gap-2 px-4 py-2.5 transition-colors hover:bg-accent/50"
+            >
               <div className="min-w-0">
                 <p className="truncate text-sm text-foreground">{m.name || m.email || m.userId}</p>
                 {m.email ? (
