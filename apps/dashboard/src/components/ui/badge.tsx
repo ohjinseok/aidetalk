@@ -17,9 +17,13 @@ const badgeVariants = cva(
           "border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
         ghost: "[a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
         link: "text-primary underline-offset-4 [a&]:hover:underline",
-        // 상태 배지용 — 라이트/다크 페어. success=녹색(활성), warning=앰버(대기)
-        success: "bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-400",
-        warning: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400",
+        // soft — 옅은 뉴트럴 배경 + 진한 텍스트(단색 플랫). 중립 상태 라벨용.
+        soft: "bg-muted text-foreground [a&]:hover:bg-muted/70",
+        // 상태 배지(soft) — 시맨틱 토큰 기반. 배경은 토큰의 옅은 틴트, 텍스트는 진한 동색.
+        // 라이트/다크는 토큰 값 자체가 각각 보정되어 자동 대응.
+        info: "bg-info/10 text-info [a&]:hover:bg-info/15",
+        success: "bg-success/10 text-success [a&]:hover:bg-success/15",
+        warning: "bg-warning/10 text-warning [a&]:hover:bg-warning/15",
       },
     },
     defaultVariants: {

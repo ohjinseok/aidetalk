@@ -39,12 +39,12 @@ import {
 } from "./ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
-/** 워크스페이스 이니셜 마크 — primary 톤 정사각 배지(그라디언트 방문자 아바타와 구분). */
+/** 워크스페이스 이니셜 마크 — 뉴트럴 정사각 배지(모노크롬 프라이머리와 톤 분리). */
 function WorkspaceMark({ name }: { name: string }) {
   return (
     <span
       aria-hidden
-      className="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-xs font-semibold text-primary"
+      className="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold text-foreground"
     >
       {avatarInitial(name)}
     </span>
@@ -166,11 +166,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                         aria-current={active ? "page" : undefined}
                         className={`relative flex size-10 items-center justify-center rounded-lg transition-colors ${
                           active
-                            ? "bg-accent text-primary"
+                            ? "bg-accent text-foreground"
                             : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                         }`}
                       >
-                        {/* 좌측 활성 인디케이터 */}
+                        {/* 좌측 활성 인디케이터 — 모노크롬 프라이머리 바(라이트 니어블랙/다크 화이트). */}
                         {active && (
                           <span
                             className="absolute left-0 h-5 w-0.5 rounded-full bg-primary"
@@ -227,7 +227,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                           <span className={current ? "font-medium text-foreground" : undefined}>
                             {m.workspaceName}
                           </span>
-                          {current && <Check className="ml-auto size-4 text-primary" aria-hidden />}
+                          {current && <Check className="ml-auto size-4 text-info" aria-hidden />}
                         </Link>
                       </DropdownMenuItem>
                     );
@@ -244,11 +244,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span
-                  className={`inline-flex items-center gap-1 ${status === "open" ? "text-green-600 dark:text-green-500" : "text-muted-foreground"}`}
+                  className={`inline-flex items-center gap-1 ${status === "open" ? "text-success" : "text-muted-foreground"}`}
                   aria-live="polite"
                 >
                   <span
-                    className={`size-2 rounded-full ${status === "open" ? "bg-green-500" : "bg-muted-foreground/40"}`}
+                    className={`size-2 rounded-full ${status === "open" ? "bg-success" : "bg-muted-foreground/40"}`}
                     aria-hidden
                   />
                   {status === "open" ? "" : td("dashboard.common.loading")}

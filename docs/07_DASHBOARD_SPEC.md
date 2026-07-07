@@ -1,6 +1,6 @@
 # 07_DASHBOARD_SPEC.md — 상담 인박스/설정 대시보드 명세
 
-> apps/dashboard — Next.js 16 App Router + Tailwind v4 + shadcn/ui (zinc 뉴트럴 + primary 인디고, CSS 변수 토큰, 다크모드 지원). 전체 UI 한국어 기본(i18n 키), 데스크톱 우선(≥1024px 최적화, 태블릿까지 사용 가능 수준).
+> apps/dashboard — Next.js 16 App Router + Tailwind v4 + shadcn/ui (웜 뉴트럴 + 모노크롬 프라이머리 + 포인트 블루(info)·success/warning/info 시맨틱, CSS 변수 토큰, 다크모드 지원). 전체 UI 한국어 기본(i18n 키), 데스크톱 우선(≥1024px 최적화, 태블릿까지 사용 가능 수준).
 > 데이터: REST(04 문서) + `/ws/agent` WebSocket. 상태 관리는 서버 상태 = TanStack Query, WS 이벤트로 쿼리 무효화/직접 캐시 갱신.
 
 ## 1. 라우트 맵 (App Router)

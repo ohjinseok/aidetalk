@@ -4,78 +4,99 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * shadcn/ui 토큰 — baseColor: zinc (oklch), CSS variables.
- * primary만 AideTalk 브랜드 인디고로 오버라이드한다.
- * 라이트: indigo-600(#4F46E5), 다크: indigo-500(대비 확보).
+ * AideTalk 디자인 토큰 — 채널톡/Linear식 미니멀 뉴트럴.
+ * 베이스: 살짝 웜한 무채색(hue ~90 warm gray, 채도 ≤0.004).
+ * primary는 모노크롬 — 라이트=니어블랙, 다크=니어화이트(반전).
+ * 포인트 컬러는 --info(비비드 블루)에만 국한: 링크·포커스 링·선택 하이라이트.
+ * 상태 시맨틱: --success(그린)/--warning(앰버)/--info(블루) + 각 foreground.
+ * 토큰 이름은 유지(소비 코드 호환) — 값만 교체 + 신규 토큰 추가.
  */
 :root {
-  --radius: 0.5rem;
+  --radius: 0.75rem;
   color-scheme: light;
 
-  /* 표면 3단 위계(라이트): background(옅은 zinc) < card(순백) 로 카드가 떠 보이게,
-   * sidebar는 background보다 한 톤 더 깊게 — 레일이 콘텐츠와 구분되도록. */
-  --background: oklch(0.992 0.001 286);
-  --foreground: oklch(0.141 0.005 285.823);
+  /* 표면 3단 위계(라이트): sidebar(0.972) < background(0.99) < card(순백)로 카드가 떠 보이게. */
+  --background: oklch(0.99 0.002 90);
+  --foreground: oklch(0.15 0.004 90);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
+  --card-foreground: oklch(0.15 0.004 90);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
+  --popover-foreground: oklch(0.15 0.004 90);
 
-  /* 브랜드 인디고 오버라이드 — indigo-600 */
-  --primary: oklch(0.511 0.262 276.966);
-  --primary-foreground: oklch(0.985 0 0);
+  /* primary = 모노크롬 니어블랙(neutral-900급, 웜 무채색). */
+  --primary: oklch(0.21 0.006 90);
+  --primary-foreground: oklch(0.985 0.001 90);
 
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
+  --secondary: oklch(0.968 0.002 90);
+  --secondary-foreground: oklch(0.22 0.004 90);
+  --muted: oklch(0.968 0.002 90);
+  --muted-foreground: oklch(0.552 0.008 90);
+  --accent: oklch(0.965 0.003 90);
+  --accent-foreground: oklch(0.22 0.004 90);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
 
-  /* ring — indigo-500 계열 */
-  --ring: oklch(0.585 0.233 277.117);
+  /* 경계는 더 옅게, card류에 미묘한 shadow와 병용. */
+  --border: oklch(0.928 0.003 90);
+  --input: oklch(0.928 0.003 90);
 
-  /* sidebar — background(0.992)보다 한 톤 더 깊게 두어 레일을 구분. */
-  --sidebar: oklch(0.977 0.001 286);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
+  /* 포인트 블루 — blue-600급. 포커스 링/선택 하이라이트/정보성 뱃지 공용. */
+  --info: oklch(0.546 0.225 262.9);
+  --info-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.546 0.225 262.9);
+
+  /* 상태 시맨틱(라이트) — text-{token}이 배경 위에서 AA를 넘도록 충분히 어둡게. */
+  --success: oklch(0.53 0.15 150);
+  --success-foreground: oklch(0.985 0 0);
+  --warning: oklch(0.56 0.14 60);
+  --warning-foreground: oklch(0.985 0 0);
+
+  /* sidebar — background(0.99)보다 한 톤 깊게 두어 레일을 구분. */
+  --sidebar: oklch(0.972 0.002 90);
+  --sidebar-foreground: oklch(0.15 0.004 90);
+  --sidebar-border: oklch(0.925 0.003 90);
 }
 
 .dark {
   color-scheme: dark;
 
-  /* 표면 3단 위계(다크): background(zinc-950급) < card(zinc-900급)로 카드가 떠 보이게. */
-  --background: oklch(0.135 0.004 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
+  /* 표면 3단 위계(다크): sidebar(0.125) < background(0.145) < card(0.205)로 카드가 부상. */
+  --background: oklch(0.145 0.003 90);
+  --foreground: oklch(0.985 0.001 90);
+  --card: oklch(0.205 0.004 90);
+  --card-foreground: oklch(0.985 0.001 90);
+  --popover: oklch(0.205 0.004 90);
+  --popover-foreground: oklch(0.985 0.001 90);
 
-  /* 브랜드 인디고 오버라이드 — indigo-500(다크 대비 확보) */
-  --primary: oklch(0.585 0.233 277.117);
-  --primary-foreground: oklch(0.985 0 0);
+  /* primary = 모노크롬 니어화이트(반전). */
+  --primary: oklch(0.97 0.002 90);
+  --primary-foreground: oklch(0.21 0.006 90);
 
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.27 0.004 90);
+  --secondary-foreground: oklch(0.985 0.001 90);
+  --muted: oklch(0.27 0.004 90);
+  --muted-foreground: oklch(0.71 0.008 90);
+  --accent: oklch(0.28 0.005 90);
+  --accent-foreground: oklch(0.985 0.001 90);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
 
-  /* ring — indigo-500 계열(동일) */
-  --ring: oklch(0.585 0.233 277.117);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
 
-  /* sidebar — background와 같은 깊이 + border로 구분(다크에선 과한 톤차 대신 경계선). */
-  --sidebar: oklch(0.135 0.004 285.823);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
+  /* 포인트 블루 — blue-400급(다크 대비). */
+  --info: oklch(0.707 0.16 256);
+  --info-foreground: oklch(0.2 0.03 262);
+  --ring: oklch(0.707 0.16 256);
+
+  /* 상태 시맨틱(다크) — 밝은 톤(어두운 배경 위 text-{token} AA 확보). */
+  --success: oklch(0.75 0.18 150);
+  --success-foreground: oklch(0.2 0.04 150);
+  --warning: oklch(0.83 0.17 84);
+  --warning-foreground: oklch(0.25 0.04 70);
+
+  /* sidebar — background보다 한 톤 깊게(레일을 콘텐츠보다 가라앉힘). */
+  --sidebar: oklch(0.125 0.003 90);
+  --sidebar-foreground: oklch(0.985 0.001 90);
+  --sidebar-border: oklch(1 0 0 / 8%);
 }
 
 @theme inline {
@@ -102,6 +123,15 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  /* 포인트/상태 시맨틱 — Tailwind 유틸(text-info, bg-success 등)로 노출. */
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-border: var(--sidebar-border);
