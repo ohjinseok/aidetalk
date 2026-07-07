@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
 
 import type {
   Conversation,
@@ -34,6 +34,17 @@ export interface ConversationState {
   /** 손님 새 메시지로 무효화된 pending 제안 카드 id 집합. */
   dimmed: Set<string>;
   loading: boolean;
+  /** 즐겨찾기 여부 — detail 로드 전에는 false(detail.favorite 파생). */
+  favorite: boolean;
+  /** 태그 id 목록 — detail 로드 전에는 빈 배열(detail.tagIds 파생). */
+  tagIds: string[];
+  /**
+   * 즐겨찾기 토글 — 낙관적 업데이트 후 서버 반영, 실패 시 롤백 + 토스트.
+   * 메모(notes)는 패널 컴포넌트가 noteApi를 직접 쓰므로 여기 넣지 않는다.
+   */
+  toggleFavorite: () => Promise<void>;
+  /** 태그 id 목록을 통째로 교체 — 이전 목록과 diff해 addTag/removeTag 호출(낙관적 업데이트, 실패 시 롤백). */
+  setTagIds: (next: string[]) => Promise<void>;
 }
 
 /**
@@ -158,6 +169,48 @@ export function useConversation(convId: string, wsId: string, isS1: boolean): Co
     }
   });
 
+  // ---- 즐겨찾기/태그: detail 파생 상태 + 낙관적 업데이트 액션 ----
+  const favorite = detail?.favorite ?? false;
+  const tagIds = detail?.tagIds ?? [];
+
+  const toggleFavorite = useCallback(async () => {
+    if (!detail) return;
+    const prev = detail.favorite ?? false;
+    const next = !prev;
+    setDetail((d) => (d ? { ...d, favorite: next } : d));
+    try {
+      const confirmed = await inboxApi.setFavorite(wsId, convId, next);
+      setDetail((d) => (d ? { ...d, favorite: confirmed } : d));
+    } catch (err) {
+      setDetail((d) => (d ? { ...d, favorite: prev } : d));
+      toast.error(err);
+    }
+  }, [detail, wsId, convId, toast]);
+
+  const setTagIdsAction = useCallback(
+    async (next: string[]) => {
+      if (!detail) return;
+      const prev = detail.tagIds ?? [];
+      setDetail((d) => (d ? { ...d, tagIds: next } : d));
+      const toAdd = next.filter((id) => !prev.includes(id));
+      const toRemove = prev.filter((id) => !next.includes(id));
+      try {
+        let latest = next;
+        for (const tagId of toAdd) {
+          latest = await inboxApi.addTag(wsId, convId, tagId);
+        }
+        for (const tagId of toRemove) {
+          latest = await inboxApi.removeTag(wsId, convId, tagId);
+        }
+        setDetail((d) => (d ? { ...d, tagIds: latest } : d));
+      } catch (err) {
+        setDetail((d) => (d ? { ...d, tagIds: prev } : d));
+        toast.error(err);
+      }
+    },
+    [detail, wsId, convId, toast],
+  );
+
   return {
     detail,
     setDetail,
@@ -173,5 +226,9 @@ export function useConversation(convId: string, wsId: string, isS1: boolean): Co
     visitorTyping,
     dimmed,
     loading,
+    favorite,
+    tagIds,
+    toggleFavorite,
+    setTagIds: setTagIdsAction,
   };
 }

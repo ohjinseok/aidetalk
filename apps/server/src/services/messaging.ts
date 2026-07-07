@@ -51,12 +51,18 @@ export async function sendVisitorMessage(
   // conv 참여자 전체에 message.new(발신 visitor 소켓은 게이트웨이 필터에서 자기 메시지 제외).
   await ctx.broadcaster.messageNew(conversationId, message);
 
-  // 인박스 목록 실시간 갱신.
+  // 인박스 목록 실시간 갱신 — 상담원 인박스가 미열람 배지/태그를 즉시 반영하도록
+  // unread(단건 카운트)와 tagIds를 함께 실어 전파한다(메시지 1건당 소량 쿼리, 09 §2).
+  const [unread, tagIds] = await Promise.all([
+    ctx.repos.conversation.unreadCount(visitor.workspaceId, conversationId),
+    ctx.repos.tag.listIdsByConversation(visitor.workspaceId, conversationId),
+  ]);
   const summary = await buildConversationSummary(
     ctx,
     visitor.workspaceId,
     updatedConv ?? conv,
     message,
+    { unread, tagIds },
   );
   if (summary) await ctx.broadcaster.inboxUpsert(visitor.workspaceId, summary);
 
@@ -74,12 +80,17 @@ export async function sendVisitorMessage(
   return message;
 }
 
-/** 인박스 요약(ConversationSummary) 조립 — visitor 프로필 + 마지막 메시지 미리보기. */
+/**
+ * 인박스 요약(ConversationSummary) 조립 — visitor 프로필 + 마지막 메시지 미리보기.
+ * extras로 상담원 전용 부가 정보(unread/tagIds)를 실을 수 있다. 이 값들은 wsInbox 채널
+ * (inbox.upsert/handoff.new)로만 나가며 위젯이 받는 conversation.updated에는 포함되지 않는다.
+ */
 export async function buildConversationSummary(
   ctx: AppContext,
   workspaceId: string,
   conversationRow: Parameters<typeof serializeConversation>[0],
   lastMessage: Message | null,
+  extras?: { unread?: number; tagIds?: string[] },
 ): Promise<ConversationSummary | null> {
   const visitor = await ctx.repos.visitor.getById(workspaceId, conversationRow.visitorId);
   if (!visitor) return null;
@@ -93,5 +104,7 @@ export async function buildConversationSummary(
           createdAt: lastMessage.createdAt,
         }
       : null,
+    ...(extras?.unread !== undefined ? { unread: extras.unread } : {}),
+    ...(extras?.tagIds !== undefined ? { tagIds: extras.tagIds } : {}),
   };
 }

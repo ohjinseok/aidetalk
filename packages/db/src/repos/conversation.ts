@@ -149,6 +149,21 @@ export function makeConversationRepo(db: Database) {
         .limit(limit);
     },
 
+    /**
+     * 단건 안읽음 수 — inbox.upsert 실시간 전파 시 summary.unread를 채우기 위한 소함수.
+     * listForInbox의 unread 컬럼과 동일한 unreadCountExpr을 재사용한다(정의 단일화).
+     * 대화가 없으면 0.
+     */
+    async unreadCount(workspaceId: string, conversationId: string): Promise<number> {
+      const [row] = await db
+        .select({ unread: unreadCountExpr() })
+        .from(conversations)
+        .where(
+          and(eq(conversations.workspaceId, workspaceId), eq(conversations.id, conversationId)),
+        );
+      return row?.unread ?? 0;
+    },
+
     /** 이 방문자의 다른 상담(방문자 프로필 패널). lastMessageAt desc, 기본 10건. */
     async listByVisitor(workspaceId: string, visitorId: string, limit = 10) {
       return db

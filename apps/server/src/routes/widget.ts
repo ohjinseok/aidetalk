@@ -83,7 +83,11 @@ export function createWidgetRoutes(): Hono<HonoEnv> {
       firstReferrer: body.referrer,
       firstPageUrl: body.pageUrl,
     });
-    await ctx.repos.visitor.touchLastSeen(body.workspaceId, visitor.id);
+    // 재방문이어도 locale/timezone은 최신 값으로 갱신(브라우저 설정 변경 반영).
+    await ctx.repos.visitor.touchLastSeen(body.workspaceId, visitor.id, {
+      locale: body.locale,
+      timezone: body.timezone,
+    });
 
     const visitorToken = signVisitorToken(
       { vis: visitor.id, ws: body.workspaceId, iat: Math.floor(Date.now() / 1000) },

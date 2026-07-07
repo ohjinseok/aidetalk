@@ -58,7 +58,14 @@ async function request(
 
 export async function postSession(
   serverUrl: string,
-  input: { workspaceId: string; existingToken?: string; pageUrl: string; referrer?: string },
+  input: {
+    workspaceId: string;
+    existingToken?: string;
+    pageUrl: string;
+    referrer?: string;
+    locale?: string;
+    timezone?: string;
+  },
 ): Promise<SessionResponse> {
   const data = await request(serverUrl, "/v1/widget/session", {
     method: "POST",
@@ -67,6 +74,8 @@ export async function postSession(
       existingToken: input.existingToken,
       pageUrl: input.pageUrl,
       referrer: input.referrer,
+      locale: input.locale,
+      timezone: input.timezone,
     }),
   });
   return sessionResponseSchema.parse(data);

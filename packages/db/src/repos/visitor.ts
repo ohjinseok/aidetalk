@@ -188,10 +188,23 @@ export function makeVisitorRepo(db: Database) {
       return { visitorIds: clusterIds, redactedConversationIds: conversationIds };
     },
 
-    async touchLastSeen(workspaceId: string, visitorId: string) {
+    /**
+     * 최근 접속 시각 갱신 + (선택) locale/timezone 최신화.
+     * 세션 재발급 때마다 호출되므로, 재방문 시 브라우저 설정이 바뀌었으면 여기서 덮어쓴다.
+     */
+    async touchLastSeen(
+      workspaceId: string,
+      visitorId: string,
+      patch?: { locale?: string; timezone?: string },
+    ) {
+      const set: { lastSeenAt: Date; locale?: string; timezone?: string } = {
+        lastSeenAt: new Date(),
+      };
+      if (patch?.locale !== undefined) set.locale = patch.locale;
+      if (patch?.timezone !== undefined) set.timezone = patch.timezone;
       await db
         .update(visitors)
-        .set({ lastSeenAt: new Date() })
+        .set(set)
         .where(and(eq(visitors.workspaceId, workspaceId), eq(visitors.id, visitorId)));
     },
   };

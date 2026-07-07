@@ -48,6 +48,23 @@ function safeStorageSet(kind: "local" | "session", key: string, value: string): 
   }
 }
 
+/** navigator.language 감지 — 구형 브라우저/차단 환경 대비 안전 래핑(실패 시 생략). */
+function detectLocale(): string | undefined {
+  try {
+    return navigator.language || undefined;
+  } catch {
+    return undefined;
+  }
+}
+/** Intl.DateTimeFormat().resolvedOptions().timeZone 감지 — 미지원 브라우저 대비 안전 래핑. */
+function detectTimezone(): string | undefined {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** 렌더용 불변 스냅샷 — 컴포넌트는 이것만 본다. */
 export interface WidgetSnapshot {
   phase: WidgetPhase;
@@ -188,6 +205,8 @@ export class WidgetController {
         existingToken,
         pageUrl: location.href,
         referrer: document.referrer || undefined,
+        locale: detectLocale(),
+        timezone: detectTimezone(),
       });
       this.token = session.visitorToken;
       this.writeToken(session.visitorToken);

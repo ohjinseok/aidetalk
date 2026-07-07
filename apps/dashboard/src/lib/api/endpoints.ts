@@ -10,7 +10,9 @@ import {
   authResponseSchema,
   conversationDetailSchema,
   conversationResponseSchema,
+  conversationTagIdsResponseSchema,
   conversationTrackingSchema,
+  inboxCountsSchema,
   inboxItemSchema,
   inviteResponseSchema,
   listEnvelope,
@@ -18,17 +20,27 @@ import {
   memberSchema,
   messageResponseSchema,
   messageSchema,
+  noteResponseSchema,
+  notesListResponseSchema,
   secretOnlySchema,
   suggestionSchema,
+  tagResponseSchema,
+  tagsListResponseSchema,
   trackingSummarySchema,
+  visitorResponseSchema,
   webhookSchema,
   webhookWithSecretSchema,
   workspaceResponseSchema,
   type Agent,
   type AgentLog,
+  type AgentUpdateVisitorRequest,
   type AttributionRule,
   type Conversation,
   type ConversationDetail,
+  type ConversationNote,
+  type CreateNoteRequest,
+  type CreateTagRequest,
+  type InboxCounts,
   type InboxItem,
   type Me,
   type Member,
@@ -36,7 +48,11 @@ import {
   type Role,
   type Segment,
   type Suggestion,
+  type Tag,
   type TrackingSummary,
+  type UpdateNoteRequest,
+  type UpdateTagRequest,
+  type VisitorDetail,
   type Webhook,
   type WebhookEventName,
   type WidgetSettings,
@@ -148,16 +164,36 @@ export const agentApi = {
 export const inboxApi = {
   list: (
     wsId: string,
-    params: { status?: string; cursor?: string; q?: string },
+    params: {
+      status?: string;
+      cursor?: string;
+      q?: string;
+      /** 담당자 필터 — userId 또는 "none"(미배정). */
+      assigneeId?: string;
+      tagId?: string;
+      unread?: boolean;
+      favorite?: boolean;
+    },
     opts?: ApiFetchOptions,
   ): Promise<{ items: InboxItem[]; nextCursor: string | null }> => {
-    const query = buildQuery({ status: params.status, cursor: params.cursor, q: params.q });
+    const query = buildQuery({
+      status: params.status,
+      cursor: params.cursor,
+      q: params.q,
+      assigneeId: params.assigneeId,
+      tagId: params.tagId,
+      unread: params.unread ? 1 : undefined,
+      favorite: params.favorite ? 1 : undefined,
+    });
     return apiFetch(
       `/v1/workspaces/${wsId}/conversations${query}`,
       listEnvelope(inboxItemSchema),
       opts,
     );
   },
+  /** 인박스 필터 탭/사이드바 카운트 집계. */
+  counts: (wsId: string, opts?: ApiFetchOptions): Promise<InboxCounts> =>
+    apiFetch(`/v1/workspaces/${wsId}/conversations/counts`, inboxCountsSchema, opts),
   get: (wsId: string, convId: string, opts?: ApiFetchOptions): Promise<ConversationDetail> =>
     apiFetch(`/v1/workspaces/${wsId}/conversations/${convId}`, conversationDetailSchema, opts),
   messages: (
@@ -197,13 +233,96 @@ export const inboxApi = {
     apiFetch(`/v1/workspaces/${wsId}/conversations/${convId}/reopen`, conversationResponseSchema, {
       method: "POST",
     }).then((r) => r.conversation),
+  hold: (wsId: string, convId: string): Promise<Conversation> =>
+    apiFetch(`/v1/workspaces/${wsId}/conversations/${convId}/hold`, conversationResponseSchema, {
+      method: "POST",
+    }).then((r) => r.conversation),
+  /** 즐겨찾기 설정/해제 — on이면 PUT, 아니면 DELETE. */
+  setFavorite: (wsId: string, convId: string, on: boolean): Promise<boolean> =>
+    apiFetch(
+      `/v1/workspaces/${wsId}/conversations/${convId}/favorite`,
+      z.object({ favorite: z.boolean() }),
+      { method: on ? "PUT" : "DELETE" },
+    ).then((r) => r.favorite),
+  addTag: (wsId: string, convId: string, tagId: string): Promise<string[]> =>
+    apiFetch(
+      `/v1/workspaces/${wsId}/conversations/${convId}/tags`,
+      conversationTagIdsResponseSchema,
+      { method: "POST", body: { tagId } },
+    ).then((r) => r.tagIds),
+  removeTag: (wsId: string, convId: string, tagId: string): Promise<string[]> =>
+    apiFetch(
+      `/v1/workspaces/${wsId}/conversations/${convId}/tags/${tagId}`,
+      conversationTagIdsResponseSchema,
+      { method: "DELETE" },
+    ).then((r) => r.tagIds),
 };
 
-// ---------- 방문자 (owner 전용) ----------
+// ---------- 인박스 태그 ----------
+export const tagApi = {
+  list: (wsId: string, opts?: ApiFetchOptions): Promise<Tag[]> =>
+    apiFetch(`/v1/workspaces/${wsId}/tags`, tagsListResponseSchema, opts).then((r) => r.items),
+  create: (wsId: string, body: CreateTagRequest): Promise<Tag> =>
+    apiFetch(`/v1/workspaces/${wsId}/tags`, tagResponseSchema, { method: "POST", body }).then(
+      (r) => r.tag,
+    ),
+  update: (wsId: string, tagId: string, body: UpdateTagRequest): Promise<Tag> =>
+    apiFetch(`/v1/workspaces/${wsId}/tags/${tagId}`, tagResponseSchema, {
+      method: "PATCH",
+      body,
+    }).then((r) => r.tag),
+  remove: (wsId: string, tagId: string): Promise<void> =>
+    apiFetch(`/v1/workspaces/${wsId}/tags/${tagId}`, null, { method: "DELETE" }),
+};
+
+// ---------- 상담 메모 ----------
+export const noteApi = {
+  list: (wsId: string, convId: string, opts?: ApiFetchOptions): Promise<ConversationNote[]> =>
+    apiFetch(
+      `/v1/workspaces/${wsId}/conversations/${convId}/notes`,
+      notesListResponseSchema,
+      opts,
+    ).then((r) => r.items),
+  create: (wsId: string, convId: string, body: CreateNoteRequest): Promise<ConversationNote> =>
+    apiFetch(`/v1/workspaces/${wsId}/conversations/${convId}/notes`, noteResponseSchema, {
+      method: "POST",
+      body,
+    }).then((r) => r.note),
+  update: (wsId: string, noteId: string, body: UpdateNoteRequest): Promise<ConversationNote> =>
+    apiFetch(`/v1/workspaces/${wsId}/notes/${noteId}`, noteResponseSchema, {
+      method: "PATCH",
+      body,
+    }).then((r) => r.note),
+  remove: (wsId: string, noteId: string): Promise<void> =>
+    apiFetch(`/v1/workspaces/${wsId}/notes/${noteId}`, null, { method: "DELETE" }),
+};
+
+// ---------- 방문자 ----------
 export const visitorApi = {
   // PII 파기(익명화) — owner만. 되돌릴 수 없음(08 §6). 응답 본문은 사용하지 않아 파싱 생략.
   deletePii: (wsId: string, visitorId: string): Promise<void> =>
     apiFetch(`/v1/workspaces/${wsId}/visitors/${visitorId}/pii`, null, { method: "DELETE" }),
+  // 방문자 정보 수정 — 상담원 전용(04 §2).
+  update: (
+    wsId: string,
+    visitorId: string,
+    patch: AgentUpdateVisitorRequest,
+  ): Promise<VisitorDetail> =>
+    apiFetch(`/v1/workspaces/${wsId}/visitors/${visitorId}`, visitorResponseSchema, {
+      method: "PATCH",
+      body: patch,
+    }).then((r) => r.visitor),
+  // 같은 방문자의 다른 대화 목록 — 정보 패널 "이전 대화" 표시용.
+  conversations: (
+    wsId: string,
+    visitorId: string,
+    opts?: ApiFetchOptions,
+  ): Promise<{ items: InboxItem[] }> =>
+    apiFetch(
+      `/v1/workspaces/${wsId}/visitors/${visitorId}/conversations`,
+      z.object({ items: z.array(inboxItemSchema) }),
+      opts,
+    ),
 };
 
 // ---------- 어시스트 (상담원 전용 — 규칙 9) ----------

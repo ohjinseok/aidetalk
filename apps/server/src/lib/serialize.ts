@@ -205,22 +205,28 @@ export function serializeWebhook(row: {
   };
 }
 
-/** visitors row → 상담원 인박스용 공개 방문자 객체(04 §6). */
+/** visitors row → 상담원 인박스용 공개 방문자 객체(04 §6, shared visitorDetailSchema 정합). */
 export function publicVisitor(v: {
   id: string;
   email: string | null;
   name: string | null;
+  phone: string | null;
   attributes: Record<string, unknown>;
   firstPageUrl: string | null;
   firstReferrer: string | null;
+  locale: string | null;
+  timezone: string | null;
 }) {
   return {
     id: v.id,
     email: v.email,
     name: v.name,
+    phone: v.phone,
     attributes: v.attributes,
     firstPageUrl: v.firstPageUrl,
     firstReferrer: v.firstReferrer,
+    locale: v.locale,
+    timezone: v.timezone,
   };
 }
 

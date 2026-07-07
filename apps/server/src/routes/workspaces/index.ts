@@ -19,7 +19,9 @@ import { serializeWorkspace } from "../../lib/serialize";
 import { createAgentRoutes } from "./agents";
 import { createInboxRoutes } from "./inbox";
 import { createMemberRoutes } from "./members";
+import { createNoteRoutes } from "./notes";
 import { assertOwner } from "./shared";
+import { createTagRoutes } from "./tags";
 import { createWorkspaceTrackingRoutes } from "./tracking";
 import { createVisitorRoutes } from "./visitors";
 
@@ -77,6 +79,8 @@ export function createWorkspaceRoutes(): Hono<HonoEnv> {
   app.route("/", createWorkspaceTrackingRoutes());
   app.route("/", createMemberRoutes());
   app.route("/", createVisitorRoutes());
+  app.route("/", createTagRoutes());
+  app.route("/", createNoteRoutes());
 
   return app;
 }

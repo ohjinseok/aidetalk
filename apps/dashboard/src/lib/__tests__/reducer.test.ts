@@ -44,6 +44,44 @@ describe("upsertInbox", () => {
     const out = upsertInbox(list, item("conv_a", "2026-07-03T12:00:00Z", "closed"), "open");
     expect(out).toHaveLength(0);
   });
+
+  it("incoming에 favorite가 없으면 기존 값을 보존한다", () => {
+    const list = [{ ...item("conv_a", "2026-07-03T10:00:00Z"), favorite: true }];
+    const incoming = item("conv_a", "2026-07-03T12:00:00Z"); // favorite 필드 없음
+    const out = upsertInbox(list, incoming);
+    expect(out[0]!.favorite).toBe(true);
+  });
+
+  it("incoming에 favorite가 있으면 교체한다", () => {
+    const list = [{ ...item("conv_a", "2026-07-03T10:00:00Z"), favorite: true }];
+    const incoming = { ...item("conv_a", "2026-07-03T12:00:00Z"), favorite: false };
+    const out = upsertInbox(list, incoming);
+    expect(out[0]!.favorite).toBe(false);
+  });
+
+  it("incoming에 unread/tagIds가 없으면 기존 값을 보존한다", () => {
+    const list = [{ ...item("conv_a", "2026-07-03T10:00:00Z"), unread: 3, tagIds: ["tag_1"] }];
+    const incoming = item("conv_a", "2026-07-03T12:00:00Z"); // unread/tagIds 없음
+    const out = upsertInbox(list, incoming);
+    expect(out[0]!.unread).toBe(3);
+    expect(out[0]!.tagIds).toEqual(["tag_1"]);
+  });
+
+  it("incoming에 unread/tagIds가 있으면 교체한다", () => {
+    const list = [{ ...item("conv_a", "2026-07-03T10:00:00Z"), unread: 3, tagIds: ["tag_1"] }];
+    const incoming = { ...item("conv_a", "2026-07-03T12:00:00Z"), unread: 0, tagIds: ["tag_2"] };
+    const out = upsertInbox(list, incoming);
+    expect(out[0]!.unread).toBe(0);
+    expect(out[0]!.tagIds).toEqual(["tag_2"]);
+  });
+
+  it("신규 항목(기존에 없던 대화)은 병합 없이 incoming 그대로 들어간다", () => {
+    const list = [item("conv_a", "2026-07-03T10:00:00Z")];
+    const incoming = { ...item("conv_b", "2026-07-03T12:00:00Z"), favorite: true };
+    const out = upsertInbox(list, incoming);
+    const b = out.find((i) => i.conversation.id === "conv_b")!;
+    expect(b.favorite).toBe(true);
+  });
 });
 
 describe("removeInbox / patchInboxConversation", () => {
@@ -67,5 +105,19 @@ describe("removeInbox / patchInboxConversation", () => {
     const patched = { ...item("conv_a", "2026-07-03T10:00:00Z", "closed").conversation };
     const out = patchInboxConversation(list, patched, "open");
     expect(out).toHaveLength(0);
+  });
+
+  it("patch는 conversation만 갱신하고 favorite/unread/tagIds는 보존한다", () => {
+    const list = [
+      { ...item("conv_a", "2026-07-03T10:00:00Z"), favorite: true, unread: 2, tagIds: ["tag_1"] },
+    ];
+    const patched = {
+      ...item("conv_a", "2026-07-03T10:00:00Z").conversation,
+      mode: "human" as const,
+    };
+    const out = patchInboxConversation(list, patched);
+    expect(out[0]!.favorite).toBe(true);
+    expect(out[0]!.unread).toBe(2);
+    expect(out[0]!.tagIds).toEqual(["tag_1"]);
   });
 });
