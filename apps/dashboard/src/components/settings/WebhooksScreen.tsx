@@ -97,8 +97,10 @@ export function WebhooksScreen() {
   }
 
   return (
-    <PageShell width="narrow">
+    <PageShell width="wide">
       <SettingsTabs />
+      {/* 탭은 wide 셸 기준 고정 — 본문만 읽기 폭으로 제한(좌측 정렬 유지) */}
+      <div className="max-w-3xl">
       <PageHeader
         title={td("dashboard.webhooks.title")}
         description={td("dashboard.webhooks.subtitle")}
@@ -240,6 +242,7 @@ export function WebhooksScreen() {
         onConfirm={() => removeTarget && void onRemove(removeTarget)}
         onCancel={() => setRemoveTarget(null)}
       />
+      </div>
     </PageShell>
   );
 }

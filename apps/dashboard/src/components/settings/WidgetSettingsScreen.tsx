@@ -398,7 +398,8 @@ export function WidgetSettingsScreen() {
                   <CopyIcon />
                 )}
               </Button>
-              <pre className="overflow-x-auto rounded-lg border bg-muted/50 p-3.5 pr-12 font-mono text-xs leading-relaxed text-foreground">
+              {/* 가로 스크롤 대신 줄바꿈 — 긴 URL/ID도 카드 폭 안에서 감싼다 */}
+              <pre className="rounded-lg border bg-muted/50 p-3.5 pr-12 font-mono text-xs leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere] text-foreground">
                 <code>{embedCode}</code>
               </pre>
             </div>
