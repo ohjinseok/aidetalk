@@ -33,7 +33,7 @@ export function createNoteRoutes(): Hono<HonoEnv> {
     const ctx = c.get("ctx");
     const wsId = c.req.param("wsId");
     const rows = await ctx.repos.note.listByConversation(wsId, c.req.param("id"));
-    return c.json({ items: rows.map(serializeNote) });
+    return c.json({ items: rows.map(serializeNote), nextCursor: null });
   });
 
   // 생성 — author = 인증 멤버. 대화가 타 워크스페이스 소유면 repo가 not_found.

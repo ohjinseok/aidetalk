@@ -270,7 +270,7 @@ export function createInboxRoutes(): Hono<HonoEnv> {
     const wsId = c.req.param("wsId");
     await getConvOr404(c, wsId, c.req.param("id"));
     const rows = await ctx.repos.assist.listByConversation(wsId, c.req.param("id"), member);
-    return c.json({ items: rows.map(serializeSuggestion) });
+    return c.json({ items: rows.map(serializeSuggestion), nextCursor: null });
   });
 
   // 제안 결과 기록.

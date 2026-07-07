@@ -49,7 +49,8 @@ export function createAgentRoutes(): Hono<HonoEnv> {
   app.get("/:wsId/agents", async (c) => {
     const ctx = c.get("ctx");
     const rows = await ctx.repos.agent.list(c.req.param("wsId"));
-    return c.json({ items: rows.map(serializeAgent) });
+    // 비페이지네이션 목록도 리스트 봉투(04 §0) 계약을 지킨다 — nextCursor: null 필수.
+    return c.json({ items: rows.map(serializeAgent), nextCursor: null });
   });
 
   // 수정 — active 전환 시 기존 active 자동 disabled(1개 제약).

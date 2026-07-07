@@ -60,8 +60,13 @@ export function createMemberRoutes(): Hono<HonoEnv> {
   // 목록.
   app.get("/:wsId/members", async (c) => {
     const ctx = c.get("ctx");
-    const rows = await ctx.repos.member.list(c.req.param("wsId"));
-    return c.json({ items: rows.map(serializeMember) });
+    const wsId = c.req.param("wsId");
+    const rows = await ctx.repos.member.list(wsId);
+    // repo 조인 프로젝션에는 workspaceId가 없다 — 계약(memberSchema)이 요구하므로 경로 값으로 채운다.
+    return c.json({
+      items: rows.map((r) => serializeMember({ ...r, workspaceId: wsId })),
+      nextCursor: null,
+    });
   });
 
   // 삭제(owner만).

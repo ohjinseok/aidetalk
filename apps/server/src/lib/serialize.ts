@@ -239,9 +239,10 @@ export function publicUser(user: { id: string; email: string; name: string }) {
   return { id: user.id, email: user.email, name: user.name };
 }
 
-/** members row → 공개 멤버 객체. */
+/** members row → 공개 멤버 객체. shared memberSchema와 정합(workspaceId 필수, createdAt은 optional·null 불가). */
 export function serializeMember(row: {
   id: string;
+  workspaceId: string;
   userId: string;
   role: string;
   status: string;
@@ -251,12 +252,14 @@ export function serializeMember(row: {
 }) {
   return {
     id: row.id,
+    workspaceId: row.workspaceId,
     userId: row.userId,
     role: row.role,
     status: row.status,
     email: row.email ?? null,
     name: row.name ?? null,
-    createdAt: row.createdAt != null ? toIso(row.createdAt) : null,
+    // memberSchema.createdAt은 optional(undefined 허용)이지 nullable이 아니다 — null 대신 생략.
+    createdAt: row.createdAt != null ? toIso(row.createdAt) : undefined,
   };
 }
 

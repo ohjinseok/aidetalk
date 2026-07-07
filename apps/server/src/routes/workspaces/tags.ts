@@ -27,7 +27,7 @@ export function createTagRoutes(): Hono<HonoEnv> {
   app.get("/:wsId/tags", async (c) => {
     const ctx = c.get("ctx");
     const rows = await ctx.repos.tag.list(c.req.param("wsId"));
-    return c.json({ items: rows.map(serializeTag) });
+    return c.json({ items: rows.map(serializeTag), nextCursor: null });
   });
 
   // 생성 — 전 멤버 가능. (workspaceId, name) 중복이면 conflict.

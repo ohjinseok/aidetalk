@@ -44,7 +44,7 @@ export function createWebhookRoutes(): Hono<HonoEnv> {
   app.get("/:wsId/webhooks", async (c) => {
     const ctx = c.get("ctx");
     const rows = await ctx.repos.webhook.list(c.req.param("wsId"));
-    return c.json({ items: rows.map(serializeWebhook) });
+    return c.json({ items: rows.map(serializeWebhook), nextCursor: null });
   });
 
   // 삭제.
