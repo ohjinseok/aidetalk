@@ -2,36 +2,28 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { PanelRight } from "lucide-react";
+import { PanelRight, Star } from "lucide-react";
 
-import type { Conversation, Suggestion } from "@aidetalk/shared";
+import type { Conversation, Suggestion, VisitorDetail } from "@aidetalk/shared";
 
 import { inboxApi, assistApi } from "@/lib/api/endpoints";
 import { td, tf } from "@/lib/i18n";
 import { readReceiptMsgId as computeReadReceiptMsgId } from "@/lib/readReceipt";
 import { mergeTimeline, upsertMessage } from "@/lib/timeline";
+import { cn } from "@/lib/utils";
 import { useConversation } from "@/hooks/useConversation";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { AvatarVisitor } from "@/components/ui/avatar-visitor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { AiChip } from "./AiChip";
-import { AssistPanel } from "./AssistPanel";
 import { Composer } from "./Composer";
+import { DetailsSidebar } from "./DetailsSidebar";
 import { Timeline, type TrackedMap } from "./Timeline";
-import { VisitorPanel } from "./VisitorPanel";
 
-// Radix Select는 빈 문자열 value를 허용하지 않아 "담당자 미지정"에 센티넬 값을 쓴다.
-const UNASSIGNED = "__unassigned__";
+const DETAILS_PANEL_KEY = "aidetalk.inbox.detailsPanel";
 
 export function ConversationView({ convId }: { convId: string }) {
   const { workspace } = useWorkspace();
@@ -55,12 +47,37 @@ export function ConversationView({ convId }: { convId: string }) {
     visitorTyping,
     dimmed,
     loading,
+    favorite,
+    tagIds,
+    toggleFavorite,
+    setTagIds,
   } = useConversation(convId, wsId, isS1);
 
   // 컴포저·편집 상태는 화면 로컬 — 대화 전환 시 초기화.
   const [composer, setComposer] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showInfo, setShowInfo] = useState(true);
+
+  // 패널 열림 상태는 localStorage에 기억(기본 열림). SSR 불일치 회피를 위해 마운트 후 복원.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(DETAILS_PANEL_KEY) === "0") setShowInfo(false);
+    } catch {
+      // 무시
+    }
+  }, []);
+
+  const toggleInfo = useCallback(() => {
+    setShowInfo((v) => {
+      const next = !v;
+      try {
+        localStorage.setItem(DETAILS_PANEL_KEY, next ? "1" : "0");
+      } catch {
+        // 무시
+      }
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     setComposer("");
@@ -151,6 +168,32 @@ export function ConversationView({ convId }: { convId: string }) {
     }
   }, [conversation, wsId, convId, patchConv, toast]);
 
+  const onHold = useCallback(async () => {
+    try {
+      patchConv(await inboxApi.hold(wsId, convId));
+    } catch (err) {
+      toast.error(err);
+    }
+  }, [wsId, convId, patchConv, toast]);
+
+  const onVisitorUpdated = useCallback(
+    (v: VisitorDetail) => setDetail((d) => (d ? { ...d, visitor: v } : d)),
+    [setDetail],
+  );
+
+  const onPiiDeleted = useCallback(
+    () =>
+      setDetail((d) =>
+        d
+          ? {
+              ...d,
+              visitor: { ...d.visitor, name: null, email: null, phone: null, attributes: {} },
+            }
+          : d,
+      ),
+    [setDetail],
+  );
+
   // 어시스트 카드 핸들러
   const onAccept = useCallback(
     async (s: Suggestion) => {
@@ -203,6 +246,8 @@ export function ConversationView({ convId }: { convId: string }) {
       : conversation.status === "pending"
         ? "dashboard.conversation.statusPending"
         : "dashboard.conversation.statusOpen";
+  const statusVariant =
+    conversation.status === "closed" ? "soft" : conversation.status === "pending" ? "warning" : "success";
 
   return (
     <div className="flex h-full">
@@ -221,34 +266,30 @@ export function ConversationView({ convId }: { convId: string }) {
                 detail.visitor.email ||
                 tf("dashboard.inbox.anonymousVisitor", { id: detail.visitor.id.slice(-4) })}
             </span>
-            <Badge variant={conversation.status === "closed" ? "secondary" : "warning"}>
-              {td(statusKey)}
-            </Badge>
+            <Badge variant={statusVariant}>{td(statusKey)}</Badge>
             {/* AI 응대 중 — 지금 기계가 응대함을 "AI" 모노그램 칩으로. */}
             {!modeHuman ? <AiChip /> : null}
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Select
-              value={conversation.assigneeId ?? UNASSIGNED}
-              onValueChange={(v) => void onAssign(v === UNASSIGNED ? null : v)}
+          <div className="flex shrink-0 items-center gap-1.5">
+            {/* 별표 토글 — favorite이면 채움+warning색. */}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={td(favorite ? "dashboard.conversation.unfavorite" : "dashboard.conversation.favorite")}
+              aria-pressed={favorite}
+              onClick={() => void toggleFavorite()}
             >
-              <SelectTrigger
-                className="h-8 w-36 text-[13px]"
-                aria-label={td("dashboard.conversation.assign")}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={UNASSIGNED}>
-                  {td("dashboard.conversation.assignPlaceholder")}
-                </SelectItem>
-                {members.map((m) => (
-                  <SelectItem key={m.id} value={m.userId}>
-                    {m.name || m.email || m.userId}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <Star
+                className={cn("size-4", favorite ? "fill-warning text-warning" : "")}
+                aria-hidden
+              />
+            </Button>
+            {/* 보류 — 진행중일 때만. */}
+            {conversation.status === "open" ? (
+              <Button variant="outline" size="sm" onClick={() => void onHold()}>
+                {td("dashboard.conversation.hold")}
+              </Button>
+            ) : null}
             {modeHuman ? (
               <Button variant="outline" size="sm" onClick={() => void onReturnToAi()}>
                 {td("dashboard.conversation.returnToAi")}
@@ -264,7 +305,7 @@ export function ConversationView({ convId }: { convId: string }) {
               size="icon-sm"
               aria-label={td("dashboard.conversation.togglePanel")}
               aria-pressed={showInfo}
-              onClick={() => setShowInfo((v) => !v)}
+              onClick={toggleInfo}
             >
               <PanelRight className="size-4" aria-hidden />
             </Button>
@@ -297,9 +338,22 @@ export function ConversationView({ convId }: { convId: string }) {
         />
       </div>
 
-      {/* 어시스트(사람 모드 전용) */}
-      {modeHuman ? (
-        <AssistPanel
+      {/* 우측 상세 패널(정보/어시스트) */}
+      {showInfo ? (
+        <DetailsSidebar
+          wsId={wsId}
+          convId={convId}
+          isS1={isS1}
+          detail={detail}
+          conversation={conversation}
+          members={members}
+          messages={messages}
+          tracking={tracking}
+          tagIds={tagIds}
+          onSetTagIds={(next) => void setTagIds(next)}
+          onAssign={(userId) => void onAssign(userId)}
+          onVisitorUpdated={onVisitorUpdated}
+          onPiiDeleted={onPiiDeleted}
           suggestions={suggestions}
           dimmed={dimmed}
           acceptRate={acceptRate}
@@ -307,32 +361,6 @@ export function ConversationView({ convId }: { convId: string }) {
           onEdit={onEdit}
           onIgnore={onIgnore}
           onInsertLink={onInsertLink}
-        />
-      ) : null}
-
-      {/* 정보 패널 */}
-      {showInfo ? (
-        <VisitorPanel
-          visitor={detail.visitor}
-          conversation={conversation}
-          tracking={tracking}
-          isS1={isS1}
-          onPiiDeleted={() =>
-            setDetail((d) =>
-              d
-                ? {
-                    ...d,
-                    visitor: {
-                      ...d.visitor,
-                      name: null,
-                      email: null,
-                      phone: null,
-                      attributes: {},
-                    },
-                  }
-                : d,
-            )
-          }
         />
       ) : null}
     </div>

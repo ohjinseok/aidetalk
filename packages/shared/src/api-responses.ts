@@ -212,6 +212,9 @@ export const visitorDetailSchema = z.object({
   firstPageUrl: z.string().nullable().optional(),
   locale: z.string().nullable().optional(),
   timezone: z.string().nullable().optional(),
+  // 최초/최근 접속 — 상세 패널 "더 보기" 컨텍스트용
+  createdAt: z.string().optional(),
+  lastSeenAt: z.string().nullable().optional(),
 });
 export type VisitorDetail = z.infer<typeof visitorDetailSchema>;
 

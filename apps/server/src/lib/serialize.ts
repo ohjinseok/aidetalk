@@ -216,6 +216,8 @@ export function publicVisitor(v: {
   firstReferrer: string | null;
   locale: string | null;
   timezone: string | null;
+  createdAt: Date;
+  lastSeenAt: Date | null;
 }) {
   return {
     id: v.id,
@@ -227,6 +229,8 @@ export function publicVisitor(v: {
     firstReferrer: v.firstReferrer,
     locale: v.locale,
     timezone: v.timezone,
+    createdAt: v.createdAt.toISOString(),
+    lastSeenAt: v.lastSeenAt ? v.lastSeenAt.toISOString() : null,
   };
 }
 

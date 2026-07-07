@@ -123,11 +123,7 @@ export function Timeline({
                   ) : null}
                   {link ? (
                     <span
-                      className={
-                        link.clickedAt
-                          ? "text-green-600 dark:text-green-400"
-                          : "text-muted-foreground"
-                      }
+                      className={link.clickedAt ? "text-success" : "text-muted-foreground"}
                     >
                       {link.clickedAt
                         ? tf("dashboard.conversation.linkClickedAt", {

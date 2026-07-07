@@ -33,7 +33,7 @@ export function AssistPanel({
   const rateLabel = acceptRate == null ? "—" : `${Math.round(acceptRate * 100)}%`;
 
   return (
-    <aside className="flex w-80 shrink-0 flex-col border-l border-border bg-background">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between border-b border-border bg-card px-4 py-2.5">
         <h3 className="text-sm font-medium">{td("dashboard.assist.panelTitle")}</h3>
         <span className="text-xs text-muted-foreground">
@@ -112,6 +112,6 @@ export function AssistPanel({
           })
         )}
       </div>
-    </aside>
+    </div>
   );
 }
