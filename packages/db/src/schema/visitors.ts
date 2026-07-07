@@ -20,6 +20,8 @@ export const visitors = pgTable(
     name: text("name"),
     phone: text("phone"),
     attributes: jsonb("attributes").$type<VisitorAttributes>().notNull().default({}),
+    locale: text("locale"), // 위젯 감지 로케일(예: 'ko', 'en'). 미상이면 null
+    timezone: text("timezone"), // IANA TZ(예: 'Asia/Seoul'). 미상이면 null
     firstReferrer: text("first_referrer"), // discovery 대비 유입 기록 (PRD §9.5)
     firstPageUrl: text("first_page_url"),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),

@@ -11,10 +11,12 @@
 import { z } from "zod";
 
 import {
+  conversationNoteSchema,
   conversationSchema,
   conversationSummarySchema,
   eventSchema,
   messageSchema,
+  tagSchema,
 } from "./entities";
 import { widgetSettingsSchema } from "./widget-settings";
 
@@ -171,11 +173,33 @@ export const agentLogSchema = z.object({
 export type AgentLog = z.infer<typeof agentLogSchema>;
 
 // ---------- 인박스 ----------
-/** 목록 항목 — ConversationSummary + unread?(04 §2). */
+/** 목록 항목 — ConversationSummary + favorite?(04 §2). unread/tagIds는 conversationSummary 정본 필드. */
 export const inboxItemSchema = conversationSummarySchema.extend({
-  unread: z.number().optional(),
+  favorite: z.boolean().optional(),
 });
 export type InboxItem = z.infer<typeof inboxItemSchema>;
+
+/** 인박스 필터 탭/사이드바용 카운트 집계 — 04 §2. */
+export const inboxCountsSchema = z.object({
+  mine: z.number(),
+  all: z.number(),
+  unread: z.number(),
+  favorites: z.number(),
+  unassigned: z.number(),
+  byAssignee: z.array(
+    z.object({
+      assigneeId: z.string(),
+      count: z.number(),
+    }),
+  ),
+  byTag: z.array(
+    z.object({
+      tagId: z.string(),
+      count: z.number(),
+    }),
+  ),
+});
+export type InboxCounts = z.infer<typeof inboxCountsSchema>;
 
 /** 방문자 상세 — 대화 상세/정보 패널용. 불확실 필드는 optional. */
 export const visitorDetailSchema = z.object({
@@ -186,19 +210,34 @@ export const visitorDetailSchema = z.object({
   attributes: z.record(z.unknown()).optional(),
   firstReferrer: z.string().nullable().optional(),
   firstPageUrl: z.string().nullable().optional(),
+  locale: z.string().nullable().optional(),
+  timezone: z.string().nullable().optional(),
 });
 export type VisitorDetail = z.infer<typeof visitorDetailSchema>;
 
-/** 대화 상세 — 04 §2: { conversation, visitor, events }. */
+export const visitorResponseSchema = z.object({ visitor: visitorDetailSchema });
+
+/** 대화 상세 — 04 §2: { conversation, visitor, events } + favorite?/tagIds?(인박스 확장). */
 export const conversationDetailSchema = z.object({
   conversation: conversationSchema,
   visitor: visitorDetailSchema,
   events: z.array(eventSchema),
+  favorite: z.boolean().optional(),
+  tagIds: z.array(z.string()).optional(),
 });
 export type ConversationDetail = z.infer<typeof conversationDetailSchema>;
 
 export const conversationResponseSchema = z.object({ conversation: conversationSchema });
 export const messageResponseSchema = z.object({ message: messageSchema });
+
+// ---------- 인박스 태그 ----------
+export const tagResponseSchema = z.object({ tag: tagSchema });
+export const tagsListResponseSchema = z.object({ items: z.array(tagSchema) });
+export const conversationTagIdsResponseSchema = z.object({ tagIds: z.array(z.string()) });
+
+// ---------- 상담 메모 ----------
+export const noteResponseSchema = z.object({ note: conversationNoteSchema });
+export const notesListResponseSchema = z.object({ items: z.array(conversationNoteSchema) });
 
 // ---------- 트래킹 ----------
 export const trackingSummarySchema = z.object({

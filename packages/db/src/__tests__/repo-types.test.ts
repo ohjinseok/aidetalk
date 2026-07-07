@@ -14,6 +14,10 @@ describe("repo 시그니처 타입 강제", () => {
     expectTypeOf<Parameters<Repos["visitor"]["getOrCreateByToken"]>[0]>().toEqualTypeOf<string>();
     expectTypeOf<Parameters<Repos["visitor"]["hardDeletePii"]>[0]>().toEqualTypeOf<string>();
     expectTypeOf<Parameters<Repos["conversation"]["create"]>[0]>().toEqualTypeOf<string>();
+    expectTypeOf<Parameters<Repos["tag"]["create"]>[0]>().toEqualTypeOf<string>();
+    expectTypeOf<Parameters<Repos["tag"]["addToConversation"]>[0]>().toEqualTypeOf<string>();
+    expectTypeOf<Parameters<Repos["note"]["create"]>[0]>().toEqualTypeOf<string>();
+    expectTypeOf<Parameters<Repos["favorite"]["set"]>[0]>().toEqualTypeOf<string>();
     expectTypeOf<Parameters<Repos["message"]["append"]>[0]>().toEqualTypeOf<string>();
     expectTypeOf<Parameters<Repos["event"]["append"]>[0]>().toEqualTypeOf<string>();
     expectTypeOf<Parameters<Repos["agentLog"]["append"]>[0]>().toEqualTypeOf<string>();

@@ -35,5 +35,9 @@ export const conversations = pgTable(
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [index("conv_inbox").on(t.workspaceId, t.status, t.lastMessageAt)],
+  (t) => [
+    index("conv_inbox").on(t.workspaceId, t.status, t.lastMessageAt),
+    // 담당자별 인박스 필터/카운트(assignee, byAssignee)용.
+    index("conv_ws_assignee").on(t.workspaceId, t.assigneeId, t.status),
+  ],
 );

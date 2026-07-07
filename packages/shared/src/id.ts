@@ -21,6 +21,8 @@ export const ID_PREFIXES = [
   "tlk", // tracked_links
   "cvn", // conversions
   "asg", // assist_suggestions
+  "tag", // tags (인박스 태그)
+  "note", // conversation_notes (상담원 메모)
   "whk", // webhooks
   "inv", // invites (미가입 이메일 초대)
 ] as const;

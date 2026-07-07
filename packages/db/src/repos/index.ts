@@ -12,10 +12,13 @@ import { makeAssistRepo } from "./assist";
 import { makeConversationRepo } from "./conversation";
 import { makeConversionRepo } from "./conversion";
 import { makeEventRepo } from "./event";
+import { makeFavoriteRepo } from "./favorite";
 import { makeInstanceRepo } from "./instance";
 import { makeInviteRepo } from "./invite";
 import { makeMemberRepo } from "./member";
 import { makeMessageRepo } from "./message";
+import { makeNoteRepo } from "./note";
+import { makeTagRepo } from "./tag";
 import { makeTrackedLinkRepo } from "./tracked-link";
 import { makeUserRepo } from "./user";
 import { makeVisitorRepo } from "./visitor";
@@ -30,6 +33,9 @@ export * from "./invite";
 export * from "./agent";
 export * from "./visitor";
 export * from "./conversation";
+export * from "./tag";
+export * from "./note";
+export * from "./favorite";
 export * from "./message";
 export * from "./event";
 export * from "./instance";
@@ -49,6 +55,9 @@ export function createRepos(db: Database) {
     agent: makeAgentRepo(db),
     visitor: makeVisitorRepo(db),
     conversation: makeConversationRepo(db),
+    tag: makeTagRepo(db),
+    note: makeNoteRepo(db),
+    favorite: makeFavoriteRepo(db),
     message: makeMessageRepo(db),
     event: makeEventRepo(db),
     instance: makeInstanceRepo(db),

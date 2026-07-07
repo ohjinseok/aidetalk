@@ -68,8 +68,49 @@ export const conversationSummarySchema = z.object({
       createdAt: z.string(),
     })
     .nullable(),
+  // 아래 두 필드는 상담원 전용 인박스 부가 정보. WS inbox.upsert/handoff.new가 자동으로 실어 나른다.
+  // ⚠️ conversationSchema(위젯도 받는 스키마)에는 넣지 않는다 — 태그/미열람 수는 상담원 전용 정보(규칙 9 취지).
+  unread: z.number().optional(),
+  tagIds: z.array(z.string()).optional(),
 });
 export type ConversationSummary = z.infer<typeof conversationSummarySchema>;
+
+/** 태그 색상 팔레트 — 인박스 태그 UI(07 문서). */
+export const tagColorSchema = z.enum([
+  "gray",
+  "red",
+  "orange",
+  "amber",
+  "green",
+  "teal",
+  "blue",
+  "indigo",
+  "purple",
+  "pink",
+]);
+export type TagColor = z.infer<typeof tagColorSchema>;
+
+/** Tag — 워크스페이스 단위 인박스 태그. */
+export const tagSchema = z.object({
+  id: z.string(),
+  workspaceId: z.string(),
+  name: z.string(),
+  color: tagColorSchema,
+  createdAt: z.string(),
+});
+export type Tag = z.infer<typeof tagSchema>;
+
+/** ConversationNote — 상담원 메모. authorName은 users 조인 표시용(불확실 → optional). */
+export const conversationNoteSchema = z.object({
+  id: z.string(),
+  conversationId: z.string(),
+  authorId: z.string(),
+  authorName: z.string().nullable().optional(),
+  body: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type ConversationNote = z.infer<typeof conversationNoteSchema>;
 
 /** 어시스트 제안 소스/결과 — 03 문서 assist_suggestions. */
 export const suggestionSourceSchema = z.enum(["agent", "builtin"]);
@@ -108,6 +149,7 @@ export const eventTypeSchema = z.enum([
   "unassigned",
   "closed",
   "reopened",
+  "pending", // 보류 전환
 ]);
 export type EventType = z.infer<typeof eventTypeSchema>;
 

@@ -7,6 +7,7 @@
  */
 import { z } from "zod";
 
+import { tagColorSchema } from "./entities";
 import {
   attributionRuleSchema,
   roleSchema,
@@ -20,6 +21,9 @@ export const sessionRequestSchema = z.object({
   existingToken: z.string().optional(),
   pageUrl: z.string().optional(),
   referrer: z.string().optional(),
+  // 위젯이 navigator.language / Intl.DateTimeFormat().resolvedOptions().timeZone으로 보내는 값.
+  locale: z.string().max(35).optional(),
+  timezone: z.string().max(64).optional(),
 });
 export type SessionRequest = z.infer<typeof sessionRequestSchema>;
 
@@ -123,6 +127,51 @@ export const patchSuggestionRequestSchema = z.object({
   outcome: z.enum(["accepted", "edited", "ignored"]),
 });
 export type PatchSuggestionRequest = z.infer<typeof patchSuggestionRequestSchema>;
+
+// ---------- 인박스 태그 (§2) ----------
+export const createTagRequestSchema = z.object({
+  name: z.string().min(1).max(50),
+  color: tagColorSchema.default("gray"),
+});
+export type CreateTagRequest = z.infer<typeof createTagRequestSchema>;
+
+export const updateTagRequestSchema = z
+  .object({
+    name: z.string().min(1).max(50).optional(),
+    color: tagColorSchema.optional(),
+  })
+  .refine((v) => v.name !== undefined || v.color !== undefined, {
+    message: "name 또는 color 중 하나는 필요하다.",
+  });
+export type UpdateTagRequest = z.infer<typeof updateTagRequestSchema>;
+
+export const setConversationTagRequestSchema = z.object({
+  tagId: z.string().min(1),
+});
+export type SetConversationTagRequest = z.infer<typeof setConversationTagRequestSchema>;
+
+// ---------- 상담 메모 (§2) ----------
+export const createNoteRequestSchema = z.object({
+  body: z.string().min(1).max(2000),
+});
+export type CreateNoteRequest = z.infer<typeof createNoteRequestSchema>;
+
+export const updateNoteRequestSchema = z.object({
+  body: z.string().min(1).max(2000),
+});
+export type UpdateNoteRequest = z.infer<typeof updateNoteRequestSchema>;
+
+// ---------- 방문자 정보 수정 (§2, 상담원 전용) ----------
+export const agentUpdateVisitorRequestSchema = z
+  .object({
+    name: z.string().max(100).nullable().optional(),
+    email: z.string().email().nullable().optional(),
+    phone: z.string().max(40).nullable().optional(),
+  })
+  .refine((v) => v.name !== undefined || v.email !== undefined || v.phone !== undefined, {
+    message: "name, email, phone 중 하나는 필요하다.",
+  });
+export type AgentUpdateVisitorRequest = z.infer<typeof agentUpdateVisitorRequestSchema>;
 
 // ---------- 위젯 핸드오프 (§1) ----------
 export const widgetHandoffRequestSchema = z.object({
