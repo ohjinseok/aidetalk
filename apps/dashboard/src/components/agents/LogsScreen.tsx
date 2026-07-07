@@ -2,18 +2,19 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { agentApi } from "@/lib/api/endpoints";
 import { formatMessageTime } from "@/lib/format";
 import { td, type TranslationKey } from "@/lib/i18n";
-import type { AgentLog, AgentLogOutcome } from "@aidetalk/shared";
+import type { Agent, AgentLog, AgentLogOutcome } from "@aidetalk/shared";
 import { useToast } from "@/components/providers/ToastProvider";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
+import { PageHeader, PageShell } from "@/components/layout/PageShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { AiChip } from "@/components/inbox/AiChip";
-import { Modal } from "@/components/ui/Modal";
 import {
   Select,
   SelectContent,
@@ -22,14 +23,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 // Radix Select는 빈 문자열 value 불가 — "전체" 필터에 센티넬 값을 쓴다.
 const ALL_OUTCOMES = "all";
@@ -70,11 +63,12 @@ export function LogsScreen({ agentId }: { agentId: string }) {
   const wsId = workspace.id;
   const toast = useToast();
 
+  const [agent, setAgent] = useState<Agent | null>(null);
   const [logs, setLogs] = useState<AgentLog[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [outcomeFilter, setOutcomeFilter] = useState<AgentLogOutcome | "">("");
-  const [detail, setDetail] = useState<AgentLog | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   async function load(reset: boolean) {
     setLoading(true);
@@ -94,19 +88,36 @@ export function LogsScreen({ agentId }: { agentId: string }) {
 
   useEffect(() => {
     void load(true);
+    // 커넥터명 맥락 표시용 — 단건 조회 API가 없어 목록에서 찾는다(v1).
+    agentApi
+      .list(wsId)
+      .then((list) => setAgent(list.find((a) => a.id === agentId) ?? null))
+      .catch(() => setAgent(null));
   }, [wsId, agentId]);
 
   // outcome 필터는 클라이언트에서 적용(단순 검색, v1).
   const visible = outcomeFilter ? logs.filter((l) => l.outcome === outcomeFilter) : logs;
 
   return (
-    <div className="mx-auto max-w-4xl overflow-y-auto p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold tracking-tight">{td("dashboard.logs.title")}</h1>
-        <Link href={`/w/${wsId}/agents`} className="text-sm text-primary hover:underline">
-          ← {td("dashboard.common.back")}
-        </Link>
-      </div>
+    <PageShell width="wide">
+      <PageHeader
+        title={agent?.name ?? td("dashboard.logs.title")}
+        description={td("dashboard.logs.description")}
+        actions={
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/w/${wsId}/agents`}>
+              <ChevronLeft />
+              {td("dashboard.logs.backToAgents")}
+            </Link>
+          </Button>
+        }
+      />
+
+      {agent ? (
+        <p className="mb-4 -mt-3 break-all font-mono text-xs text-muted-foreground">
+          {agent.endpointUrl}
+        </p>
+      ) : null}
 
       <div className="mb-3 flex items-center gap-2">
         <span className="text-xs text-muted-foreground">{td("dashboard.logs.filterOutcome")}</span>
@@ -114,7 +125,7 @@ export function LogsScreen({ agentId }: { agentId: string }) {
           value={outcomeFilter || ALL_OUTCOMES}
           onValueChange={(v) => setOutcomeFilter(v === ALL_OUTCOMES ? "" : (v as AgentLogOutcome))}
         >
-          <SelectTrigger className="w-40" aria-label={td("dashboard.logs.filterOutcome")}>
+          <SelectTrigger className="h-8 w-40 text-xs" aria-label={td("dashboard.logs.filterOutcome")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -129,45 +140,47 @@ export function LogsScreen({ agentId }: { agentId: string }) {
       </div>
 
       {loading && logs.length === 0 ? (
-        <Spinner />
+        <div className="flex justify-center py-16">
+          <Spinner />
+        </div>
       ) : visible.length === 0 ? (
-        <Empty>
+        <Empty className="border">
           <EmptyHeader>
             <EmptyTitle>{td("dashboard.logs.empty")}</EmptyTitle>
           </EmptyHeader>
         </Empty>
       ) : (
-        <div className="rounded-lg border border-border bg-card shadow-xs">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-[11px] font-medium tracking-wide text-muted-foreground">
-                  {td("dashboard.logs.time")}
-                </TableHead>
-                <TableHead className="text-[11px] font-medium tracking-wide text-muted-foreground">
-                  {td("dashboard.logs.mode")}
-                </TableHead>
-                <TableHead className="text-[11px] font-medium tracking-wide text-muted-foreground">
-                  {td("dashboard.logs.outcome")}
-                </TableHead>
-                <TableHead className="text-right text-[11px] font-medium tracking-wide text-muted-foreground">
-                  {td("dashboard.logs.latency")}
-                </TableHead>
-                <TableHead className="text-[11px] font-medium tracking-wide text-muted-foreground">
-                  {td("dashboard.logs.preview")}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visible.map((log) => {
-                const rs = log.responseSummary as Record<string, unknown> | null | undefined;
-                const latency = rs && typeof rs.latencyMs === "number" ? `${rs.latencyMs}ms` : "";
-                return (
-                  <TableRow key={log.id} className="cursor-pointer" onClick={() => setDetail(log)}>
-                    <TableCell className="tabular-nums text-muted-foreground">
+        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+          {/* 헤더 행 — 밀도 컴팩트(13px) */}
+          <div className="grid grid-cols-[9rem_5rem_6rem_5rem_1fr] items-center gap-3 border-b border-border/60 bg-muted/30 px-4 py-2 text-[11px] font-medium tracking-wide text-muted-foreground">
+            <span>{td("dashboard.logs.time")}</span>
+            <span>{td("dashboard.logs.mode")}</span>
+            <span>{td("dashboard.logs.outcome")}</span>
+            <span className="text-right">{td("dashboard.logs.latency")}</span>
+            <span>{td("dashboard.logs.preview")}</span>
+          </div>
+          <ul className="divide-y divide-border/60">
+            {visible.map((log) => {
+              const rs = log.responseSummary as Record<string, unknown> | null | undefined;
+              const latency = rs && typeof rs.latencyMs === "number" ? `${rs.latencyMs}ms` : "";
+              const isOpen = expanded === log.id;
+              return (
+                <li key={log.id}>
+                  <button
+                    type="button"
+                    onClick={() => setExpanded(isOpen ? null : log.id)}
+                    aria-expanded={isOpen}
+                    className="grid w-full grid-cols-[9rem_5rem_6rem_5rem_1fr] items-center gap-3 px-4 py-2.5 text-left text-[13px] transition-colors hover:bg-accent/40 data-[open=true]:bg-accent/30"
+                    data-open={isOpen}
+                  >
+                    <span className="flex items-center gap-1.5 tabular-nums text-muted-foreground">
+                      <ChevronRight
+                        className={`size-3 shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`}
+                        aria-hidden
+                      />
                       {formatMessageTime(log.createdAt)}
-                    </TableCell>
-                    <TableCell>
+                    </span>
+                    <span>
                       {log.mode === "reply" ? (
                         <AiChip />
                       ) : (
@@ -175,23 +188,42 @@ export function LogsScreen({ agentId }: { agentId: string }) {
                           {td("dashboard.logs.modeAssist")}
                         </span>
                       )}
-                    </TableCell>
-                    <TableCell>
+                    </span>
+                    <span>
                       <Badge variant={OUTCOME_VARIANT[log.outcome]}>
                         {td(OUTCOME_KEY[log.outcome])}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {latency}
-                    </TableCell>
-                    <TableCell className="max-w-xs truncate text-muted-foreground">
+                    </span>
+                    <span className="text-right tabular-nums text-muted-foreground">{latency}</span>
+                    <span className="truncate text-muted-foreground">
                       {preview(log.requestSummary)}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                    </span>
+                  </button>
+
+                  {isOpen ? (
+                    <div className="grid gap-4 border-t border-border/40 bg-muted/20 px-4 py-4 md:grid-cols-2">
+                      <div>
+                        <p className="mb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground">
+                          {td("dashboard.logs.requestSummary")}
+                        </p>
+                        <pre className="overflow-x-auto rounded-lg border border-border/60 bg-card p-3 font-mono text-xs text-foreground">
+                          {JSON.stringify(log.requestSummary, null, 2)}
+                        </pre>
+                      </div>
+                      <div>
+                        <p className="mb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground">
+                          {td("dashboard.logs.responseSummary")}
+                        </p>
+                        <pre className="overflow-x-auto rounded-lg border border-border/60 bg-card p-3 font-mono text-xs text-foreground">
+                          {JSON.stringify(log.responseSummary ?? null, null, 2)}
+                        </pre>
+                      </div>
+                    </div>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
 
@@ -202,33 +234,6 @@ export function LogsScreen({ agentId }: { agentId: string }) {
           </Button>
         </div>
       ) : null}
-
-      <Modal
-        open={detail !== null}
-        onClose={() => setDetail(null)}
-        title={td("dashboard.logs.detailTitle")}
-      >
-        {detail ? (
-          <div className="space-y-4 text-sm">
-            <div>
-              <p className="mb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground">
-                {td("dashboard.logs.requestSummary")}
-              </p>
-              <pre className="overflow-x-auto rounded bg-muted p-3 font-mono text-xs text-foreground">
-                {JSON.stringify(detail.requestSummary, null, 2)}
-              </pre>
-            </div>
-            <div>
-              <p className="mb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground">
-                {td("dashboard.logs.responseSummary")}
-              </p>
-              <pre className="overflow-x-auto rounded bg-muted p-3 font-mono text-xs text-foreground">
-                {JSON.stringify(detail.responseSummary ?? null, null, 2)}
-              </pre>
-            </div>
-          </div>
-        ) : null}
-      </Modal>
-    </div>
+    </PageShell>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { CopyIcon, PlusIcon, Trash2Icon } from "lucide-react";
 
 import { workspaceApi } from "@/lib/api/endpoints";
 import { td, type TranslationKey } from "@/lib/i18n";
@@ -12,9 +13,8 @@ import type {
 } from "@aidetalk/shared";
 import { useToast } from "@/components/providers/ToastProvider";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
+import { PageHeader, PageShell, SectionCard } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CopyButton } from "@/components/ui/CopyButton";
 import { FormRow } from "@/components/ui/form-row";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { SettingsTabs } from "./SettingsTabs";
 import { WidgetPreview } from "./WidgetPreview";
 
 const DAY_KEYS: TranslationKey[] = [
@@ -60,6 +61,7 @@ export function WidgetSettingsScreen() {
   const toast = useToast();
   const [form, setForm] = useState(() => withDefaults(workspace.widgetSettings));
   const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const embedCode = useMemo(() => {
     const host = process.env.NEXT_PUBLIC_SERVER_URL ?? "https://your-aidetalk-host";
@@ -84,6 +86,16 @@ export function WidgetSettingsScreen() {
       toast.error(err);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function copyEmbed() {
+    try {
+      await navigator.clipboard.writeText(embedCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // 클립보드 접근 불가 환경은 무시(사용자 수동 복사).
     }
   }
 
@@ -124,29 +136,51 @@ export function WidgetSettingsScreen() {
     });
   }
 
-  return (
-    <div className="grid gap-6 p-6 lg:grid-cols-2">
-      {/* 폼 */}
-      <div className="space-y-6">
-        <h1 className="text-lg font-semibold tracking-tight text-foreground">
-          {td("dashboard.widget.title")}
-        </h1>
+  // 저장 푸터 — 소유자만 저장 가능(규칙 11 아님, 07 §5 권한). 비소유자는 안내.
+  const saveFooter = (
+    <>
+      {!isOwner ? (
+        <span className="mr-auto text-xs text-muted-foreground">
+          {td("dashboard.members.ownerOnly")}
+        </span>
+      ) : null}
+      <Button disabled={saving || !isOwner} onClick={() => void onSave()}>
+        {td("dashboard.common.save")}
+      </Button>
+    </>
+  );
 
-        <Card>
-          <CardContent>
+  return (
+    <PageShell width="wide">
+      <SettingsTabs />
+      <PageHeader
+        title={td("dashboard.widget.title")}
+        description={td("dashboard.widget.subtitle")}
+      />
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_400px]">
+        {/* 좌: 설정 폼 */}
+        <div className="space-y-5">
+          {/* 위젯 모양 */}
+          <SectionCard
+            title={td("dashboard.widget.appearance")}
+            description={td("dashboard.widget.appearanceDesc")}
+            footer={saveFooter}
+          >
             <FormRow label={td("dashboard.widget.primaryColor")} htmlFor="primaryColor">
               <div className="flex items-center gap-2">
                 <input
                   id="primaryColor"
                   type="color"
+                  aria-label={td("dashboard.widget.primaryColor")}
                   value={form.primaryColor}
                   onChange={(e) => setForm((f) => ({ ...f, primaryColor: e.target.value }))}
-                  className="h-9 w-12 rounded-md border border-input bg-transparent"
+                  className="size-9 shrink-0 cursor-pointer rounded-md border border-input bg-transparent p-0.5"
                 />
                 <Input
                   value={form.primaryColor}
                   onChange={(e) => setForm((f) => ({ ...f, primaryColor: e.target.value }))}
-                  className="w-32"
+                  className="w-36 font-mono"
                 />
               </div>
             </FormRow>
@@ -160,51 +194,55 @@ export function WidgetSettingsScreen() {
               />
             </FormRow>
 
-            <FormRow label={td("dashboard.widget.tone")} htmlFor="tone">
-              <Select
-                value={form.tone}
-                onValueChange={(v) => setForm((f) => ({ ...f, tone: v as WidgetTone }))}
-              >
-                <SelectTrigger id="tone" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="formal">{td("dashboard.widget.toneFormal")}</SelectItem>
-                  <SelectItem value="casual">{td("dashboard.widget.toneCasual")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormRow>
+            <div className="grid gap-x-4 sm:grid-cols-2">
+              <FormRow label={td("dashboard.widget.tone")} htmlFor="tone" className="mb-0">
+                <Select
+                  value={form.tone}
+                  onValueChange={(v) => setForm((f) => ({ ...f, tone: v as WidgetTone }))}
+                >
+                  <SelectTrigger id="tone" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="formal">{td("dashboard.widget.toneFormal")}</SelectItem>
+                    <SelectItem value="casual">{td("dashboard.widget.toneCasual")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormRow>
 
-            <FormRow label={td("dashboard.widget.launcherPosition")} htmlFor="pos">
-              <Select
-                value={form.launcherPosition}
-                onValueChange={(v) =>
-                  setForm((f) => ({ ...f, launcherPosition: v as LauncherPosition }))
-                }
+              <FormRow
+                label={td("dashboard.widget.launcherPosition")}
+                htmlFor="pos"
+                className="mb-0"
               >
-                <SelectTrigger id="pos" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="right">{td("dashboard.widget.positionRight")}</SelectItem>
-                  <SelectItem value="left">{td("dashboard.widget.positionLeft")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormRow>
-          </CardContent>
-        </Card>
+                <Select
+                  value={form.launcherPosition}
+                  onValueChange={(v) =>
+                    setForm((f) => ({ ...f, launcherPosition: v as LauncherPosition }))
+                  }
+                >
+                  <SelectTrigger id="pos" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="right">{td("dashboard.widget.positionRight")}</SelectItem>
+                    <SelectItem value="left">{td("dashboard.widget.positionLeft")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormRow>
+            </div>
+          </SectionCard>
 
-        {/* 운영시간 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">
-              {td("dashboard.widget.officeHours")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Label className="mb-4 flex items-center gap-2 text-sm font-normal">
+          {/* 운영 시간 */}
+          <SectionCard
+            title={td("dashboard.widget.officeHours")}
+            description={td("dashboard.widget.officeHoursDesc")}
+            footer={saveFooter}
+          >
+            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border/60 bg-muted/30 px-3.5 py-3">
               <input
                 type="checkbox"
+                className="mt-0.5 size-4 accent-primary"
                 checked={form.officeHours.enabled}
                 onChange={(e) =>
                   setForm((f) => ({
@@ -213,122 +251,160 @@ export function WidgetSettingsScreen() {
                   }))
                 }
               />
-              {td("dashboard.widget.officeHoursEnabled")}
-            </Label>
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-foreground">
+                  {td("dashboard.widget.officeHoursEnabled")}
+                </span>
+                <span className="mt-0.5 block text-[13px] text-muted-foreground">
+                  {td("dashboard.widget.officeHoursToggleHint")}
+                </span>
+              </span>
+            </label>
 
-            <FormRow label={td("dashboard.widget.timezone")} htmlFor="tz">
-              <Input
-                id="tz"
-                value={form.officeHours.tz}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, officeHours: { ...f.officeHours, tz: e.target.value } }))
-                }
-              />
-            </FormRow>
-
-            {form.officeHours.rules.map((rule, i) => (
-              <div key={i} className="mb-2 rounded-md border border-border p-2">
-                <div className="mb-1 flex flex-wrap gap-1">
-                  {DAY_KEYS.map((dk, di) => {
-                    const day = di + 1;
-                    const on = rule.days.includes(day);
-                    return (
-                      <button
-                        key={day}
-                        type="button"
-                        onClick={() => toggleDay(i, day)}
-                        className={`h-7 w-7 rounded-md text-xs ${
-                          on
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        {td(dk)}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="flex items-center gap-2">
+            {form.officeHours.enabled ? (
+              <div className="mt-5 space-y-5">
+                <FormRow
+                  label={td("dashboard.widget.timezone")}
+                  htmlFor="tz"
+                  hint={td("dashboard.widget.timezoneHint")}
+                  className="mb-0"
+                >
                   <Input
-                    type="time"
-                    value={rule.open}
-                    onChange={(e) => updateRule(i, { open: e.target.value })}
-                    className="w-28"
-                    aria-label={td("dashboard.widget.open")}
-                  />
-                  <span className="text-muted-foreground">–</span>
-                  <Input
-                    type="time"
-                    value={rule.close}
-                    onChange={(e) => updateRule(i, { close: e.target.value })}
-                    className="w-28"
-                    aria-label={td("dashboard.widget.close")}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
+                    id="tz"
+                    className="max-w-xs font-mono"
+                    value={form.officeHours.tz}
+                    onChange={(e) =>
                       setForm((f) => ({
                         ...f,
-                        officeHours: {
-                          ...f.officeHours,
-                          rules: f.officeHours.rules.filter((_, idx) => idx !== i),
-                        },
+                        officeHours: { ...f.officeHours, tz: e.target.value },
                       }))
                     }
-                  >
-                    {td("dashboard.widget.removeRule")}
-                  </Button>
+                  />
+                </FormRow>
+
+                <div>
+                  <Label className="mb-2">{td("dashboard.widget.rules")}</Label>
+                  <div className="space-y-2">
+                    {form.officeHours.rules.map((rule, i) => (
+                      <div key={i} className="rounded-lg border border-border/60 p-3">
+                        <div className="mb-2.5 flex flex-wrap gap-1">
+                          {DAY_KEYS.map((dk, di) => {
+                            const day = di + 1;
+                            const on = rule.days.includes(day);
+                            return (
+                              <button
+                                key={day}
+                                type="button"
+                                onClick={() => toggleDay(i, day)}
+                                aria-pressed={on}
+                                className={`size-8 rounded-md text-xs font-medium transition-colors ${
+                                  on
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-muted text-muted-foreground hover:bg-muted/70"
+                                }`}
+                              >
+                                {td(dk)}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="time"
+                            value={rule.open}
+                            onChange={(e) => updateRule(i, { open: e.target.value })}
+                            className="w-32"
+                            aria-label={td("dashboard.widget.open")}
+                          />
+                          <span className="text-muted-foreground">–</span>
+                          <Input
+                            type="time"
+                            value={rule.close}
+                            onChange={(e) => updateRule(i, { close: e.target.value })}
+                            className="w-32"
+                            aria-label={td("dashboard.widget.close")}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="ml-auto text-muted-foreground hover:text-destructive"
+                            aria-label={td("dashboard.widget.removeRule")}
+                            onClick={() =>
+                              setForm((f) => ({
+                                ...f,
+                                officeHours: {
+                                  ...f.officeHours,
+                                  rules: f.officeHours.rules.filter((_, idx) => idx !== i),
+                                },
+                              }))
+                            }
+                          >
+                            <Trash2Icon />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    <Button type="button" variant="outline" size="sm" onClick={addRule}>
+                      <PlusIcon />
+                      {td("dashboard.widget.addRule")}
+                    </Button>
+                  </div>
                 </div>
+
+                <FormRow
+                  label={td("dashboard.widget.offHoursMessage")}
+                  htmlFor="offHours"
+                  className="mb-0"
+                >
+                  <Textarea
+                    id="offHours"
+                    rows={2}
+                    value={form.offHoursMessage}
+                    onChange={(e) => setForm((f) => ({ ...f, offHoursMessage: e.target.value }))}
+                  />
+                </FormRow>
               </div>
-            ))}
-            <Button type="button" variant="outline" size="sm" onClick={addRule}>
-              {td("dashboard.widget.addRule")}
-            </Button>
+            ) : null}
+          </SectionCard>
+        </div>
 
-            <div className="mt-4">
-              <FormRow label={td("dashboard.widget.offHoursMessage")} htmlFor="offHours">
-                <Textarea
-                  id="offHours"
-                  rows={2}
-                  value={form.offHoursMessage}
-                  onChange={(e) => setForm((f) => ({ ...f, offHoursMessage: e.target.value }))}
-                />
-              </FormRow>
+        {/* 우: 프리뷰 + 설치 (sticky) */}
+        <div className="space-y-5 lg:sticky lg:top-8 lg:self-start">
+          <SectionCard
+            title={td("dashboard.widget.preview")}
+            description={td("dashboard.widget.previewDesc")}
+          >
+            <WidgetPreview settings={form} />
+          </SectionCard>
+
+          <SectionCard
+            title={td("dashboard.widget.install")}
+            description={td("dashboard.widget.embedCodeHint")}
+          >
+            <div className="relative">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => void copyEmbed()}
+                aria-label={td("dashboard.common.copy")}
+                className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
+              >
+                {copied ? (
+                  <span className="text-xs font-medium text-success">
+                    {td("dashboard.common.copied")}
+                  </span>
+                ) : (
+                  <CopyIcon />
+                )}
+              </Button>
+              <pre className="overflow-x-auto rounded-lg border bg-muted/50 p-3.5 pr-12 font-mono text-xs leading-relaxed text-foreground">
+                <code>{embedCode}</code>
+              </pre>
             </div>
-          </CardContent>
-        </Card>
-
-        <div>
-          <Button disabled={saving || !isOwner} onClick={() => void onSave()}>
-            {td("dashboard.common.save")}
-          </Button>
-          {!isOwner ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              {td("dashboard.members.ownerOnly")}
-            </p>
-          ) : null}
+          </SectionCard>
         </div>
       </div>
-
-      {/* 프리뷰 + 임베드 */}
-      <div>
-        <h2 className="mb-2 text-sm font-medium text-foreground">
-          {td("dashboard.widget.preview")}
-        </h2>
-        <WidgetPreview settings={form} />
-
-        <h2 className="mb-2 mt-6 text-sm font-medium text-foreground">
-          {td("dashboard.widget.embedCode")}
-        </h2>
-        <p className="mb-2 text-xs text-muted-foreground">{td("dashboard.widget.embedCodeHint")}</p>
-        <pre className="overflow-x-auto rounded-md border bg-muted p-3 font-mono text-xs text-foreground">
-          <code>{embedCode}</code>
-        </pre>
-        <div className="mt-2">
-          <CopyButton value={embedCode} label={td("dashboard.widget.embedCode")} />
-        </div>
-      </div>
-    </div>
+    </PageShell>
   );
 }

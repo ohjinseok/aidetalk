@@ -51,6 +51,7 @@ function LoginInner() {
   return (
     <AuthCard
       titleKey="dashboard.auth.loginTitle"
+      descriptionKey="dashboard.auth.loginSubtitle"
       submitKey="dashboard.auth.loginSubmit"
       footerHref={signupHref}
       footerKey="dashboard.auth.toSignup"

@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Check } from "lucide-react";
+
 import { AuthBrandMark } from "@/components/auth/AuthBrandMark";
 import { useToast } from "@/components/providers/ToastProvider";
 import { Button } from "@/components/ui/button";
@@ -48,16 +50,16 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
-      <Card className="w-full max-w-md" aria-label={td("dashboard.onboarding.title")}>
-        <CardHeader className="text-center">
+    <main className="flex min-h-svh items-center justify-center bg-muted/30 px-4 py-10">
+      <Card className="w-full max-w-md gap-0 py-8 shadow-sm" aria-label={td("dashboard.onboarding.title")}>
+        <CardHeader className="gap-1.5 text-center">
           <AuthBrandMark />
           <CardTitle className="text-xl font-semibold tracking-tight">
             {td("dashboard.onboarding.title")}
           </CardTitle>
           <CardDescription>{td("dashboard.onboarding.subtitle")}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="mt-7">
           <form onSubmit={onSubmit}>
             <FormRow label={td("dashboard.onboarding.wsName")} htmlFor="wsName">
               <Input
@@ -69,37 +71,47 @@ export default function OnboardingPage() {
               />
             </FormRow>
 
-            <fieldset className="mb-5">
+            <fieldset className="mb-6">
               <legend className="mb-2 text-sm font-medium text-foreground">
                 {td("dashboard.onboarding.segmentLabel")}
               </legend>
               <div className="grid gap-3 sm:grid-cols-2">
-                {SEGMENTS.map((s) => (
-                  <label
-                    key={s.value}
-                    className={cn(
-                      "cursor-pointer rounded-lg border p-4 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2",
-                      segment === s.value
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50",
-                    )}
-                  >
-                    <input
-                      type="radio"
-                      name="segment"
-                      value={s.value}
-                      checked={segment === s.value}
-                      onChange={() => setSegment(s.value)}
-                      className="sr-only"
-                    />
-                    <span className="block text-sm font-semibold text-foreground">{s.title}</span>
-                    <span className="mt-1 block text-xs text-muted-foreground">{s.desc}</span>
-                  </label>
-                ))}
+                {SEGMENTS.map((s) => {
+                  const selected = segment === s.value;
+                  return (
+                    <label
+                      key={s.value}
+                      className={cn(
+                        "relative flex cursor-pointer flex-col rounded-lg border p-4 transition-colors outline-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2",
+                        selected
+                          ? "border-foreground bg-accent/60"
+                          : "border-border hover:border-foreground/40 hover:bg-muted/40",
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="segment"
+                        value={s.value}
+                        checked={selected}
+                        onChange={() => setSegment(s.value)}
+                        className="sr-only"
+                      />
+                      <span className="flex items-start justify-between gap-2">
+                        <span className="text-sm font-semibold text-foreground">{s.title}</span>
+                        {selected ? (
+                          <Check className="mt-0.5 size-4 shrink-0 text-foreground" aria-hidden />
+                        ) : null}
+                      </span>
+                      <span className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                        {s.desc}
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
             </fieldset>
 
-            <Button type="submit" className="w-full" disabled={busy}>
+            <Button type="submit" className="h-10 w-full" disabled={busy}>
               {td("dashboard.onboarding.createSubmit")}
             </Button>
           </form>

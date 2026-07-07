@@ -47,14 +47,17 @@ function AcceptInner() {
 
   if (!token) {
     return (
-      <Card className="w-full max-w-sm text-center" aria-label={td("dashboard.invite.acceptTitle")}>
-        <CardHeader>
+      <Card
+        className="w-full max-w-sm gap-0 py-8 text-center shadow-sm"
+        aria-label={td("dashboard.invite.acceptTitle")}
+      >
+        <CardHeader className="gap-1.5">
           <AuthBrandMark />
           <CardTitle className="text-xl font-semibold tracking-tight">
             {td("dashboard.invite.acceptTitle")}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="mt-7">
           <p className="text-sm text-destructive">{td("dashboard.invite.missingToken")}</p>
         </CardContent>
       </Card>
@@ -64,14 +67,17 @@ function AcceptInner() {
   const tokenQs = `inviteToken=${encodeURIComponent(token)}`;
 
   return (
-    <Card className="w-full max-w-sm text-center" aria-label={td("dashboard.invite.acceptTitle")}>
-      <CardHeader>
+    <Card
+      className="w-full max-w-sm gap-0 py-8 text-center shadow-sm"
+      aria-label={td("dashboard.invite.acceptTitle")}
+    >
+      <CardHeader className="gap-1.5">
         <AuthBrandMark />
         <CardTitle className="text-xl font-semibold tracking-tight">
           {td("dashboard.invite.acceptTitle")}
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="mt-7">
         {authState === "checking" ? (
           <Spinner />
         ) : authState === "authed" ? (

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { MoreVertical, Plug, ScrollText } from "lucide-react";
 
 import { agentApi } from "@/lib/api/endpoints";
 import { td, tf } from "@/lib/i18n";
@@ -10,11 +11,33 @@ import { useResource } from "@/hooks/useResource";
 import { useAgentStatus } from "@/components/providers/AgentStatusProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
+import { PageHeader, PageShell } from "@/components/layout/PageShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { FormRow } from "@/components/ui/form-row";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
@@ -60,12 +83,22 @@ export function AgentsScreen() {
   const [rotateTarget, setRotateTarget] = useState<Agent | null>(null);
   const [testResult, setTestResult] = useState<Record<string, AgentTestResult | "loading">>({});
 
-  // 등록 폼
+  // 등록 폼(Dialog)
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [name, setName] = useState("");
   const [endpointUrl, setEndpointUrl] = useState("");
   const [timeoutMs, setTimeoutMs] = useState("");
   const [assistEnabled, setAssistEnabled] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  function resetForm() {
+    setName("");
+    setEndpointUrl("");
+    setTimeoutMs("");
+    setAssistEnabled(true);
+    setAdvancedOpen(false);
+  }
 
   async function onRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -80,11 +113,9 @@ export function AgentsScreen() {
       if (!assistEnabled) {
         await agentApi.update(wsId, res.agent.id, { assistEnabled: false });
       }
+      setDialogOpen(false);
+      resetForm();
       setSecret(res.secret);
-      setName("");
-      setEndpointUrl("");
-      setTimeoutMs("");
-      setAssistEnabled(true);
       await reload();
     } catch (err) {
       toast.error(err);
@@ -130,29 +161,183 @@ export function AgentsScreen() {
     }
   }
 
-  return (
-    <div className="mx-auto max-w-3xl overflow-y-auto p-6">
-      <h1 className="mb-4 text-lg font-semibold tracking-tight">{td("dashboard.agents.title")}</h1>
+  const registerButton = isOwner ? (
+    <Button onClick={() => setDialogOpen(true)}>{td("dashboard.agents.registerButton")}</Button>
+  ) : null;
 
-      {/* 등록 폼 (owner) */}
-      {isOwner ? (
-        <Card className="mb-6 shadow-xs">
+  return (
+    <PageShell width="default">
+      <PageHeader
+        title={td("dashboard.agents.title")}
+        description={td("dashboard.agents.description")}
+        actions={registerButton}
+      />
+
+      {loading ? (
+        <div className="flex justify-center py-16">
+          <Spinner />
+        </div>
+      ) : agents.length === 0 ? (
+        <Empty className="border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Plug />
+            </EmptyMedia>
+            <EmptyTitle>{td("dashboard.agents.empty")}</EmptyTitle>
+            <EmptyDescription>{td("dashboard.agents.emptyDescription")}</EmptyDescription>
+          </EmptyHeader>
+          {isOwner ? (
+            <EmptyContent>
+              <Button onClick={() => setDialogOpen(true)}>
+                {td("dashboard.agents.registerButton")}
+              </Button>
+            </EmptyContent>
+          ) : null}
+        </Empty>
+      ) : (
+        <ul className="space-y-3">
+          {agents.map((agent) => {
+            const tr = testResult[agent.id];
+            const autoDisabled = agent.status === "auto_disabled";
+            return (
+              <li
+                key={agent.id}
+                className="rounded-xl border border-border bg-card p-4 shadow-xs transition-colors hover:border-border/80"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`size-2 shrink-0 rounded-full ${statusDotClass(agent.status)}`}
+                        aria-hidden
+                      />
+                      <span className="truncate font-medium text-foreground">{agent.name}</span>
+                      {statusBadge(agent.status)}
+                    </div>
+                    <p className="mt-1.5 break-all font-mono text-xs text-muted-foreground">
+                      {agent.endpointUrl}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      <Badge variant="soft">
+                        {tf("dashboard.agents.timeoutMeta", { ms: agent.timeoutMs })}
+                      </Badge>
+                      {agent.assistEnabled ? (
+                        <Badge variant="info">{td("dashboard.agents.assistBadge")}</Badge>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <Button variant="outline" size="sm" onClick={() => void onTest(agent)}>
+                      {tr === "loading"
+                        ? td("dashboard.agents.testing")
+                        : td("dashboard.agents.test")}
+                    </Button>
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link href={`/w/${wsId}/agents/${agent.id}/logs`}>
+                        <ScrollText />
+                        {td("dashboard.agents.viewLogs")}
+                      </Link>
+                    </Button>
+                    {isOwner ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={td("dashboard.common.actions")}
+                          >
+                            <MoreVertical />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onSelect={() => void onToggle(agent)}>
+                            {agent.status === "active"
+                              ? td("dashboard.agents.disable")
+                              : td("dashboard.agents.enable")}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => setRotateTarget(agent)}>
+                            {td("dashboard.agents.rotateSecret")}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* 연결 테스트 결과 — 인라인 표시 */}
+                {tr && tr !== "loading" ? (
+                  <p
+                    className={`mt-3 tabular-nums text-xs ${tr.ok ? "text-success" : "text-destructive"}`}
+                  >
+                    {tr.ok
+                      ? tf("dashboard.agents.testOk", { latency: tr.latencyMs ?? 0 })
+                      : `${td("dashboard.agents.testFail")}${tr.error ? `: ${tr.error}` : ""}`}
+                  </p>
+                ) : null}
+
+                {/* auto_disabled — 장애 강조 + 재활성 액션 */}
+                {autoDisabled ? (
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-destructive">
+                        {td("dashboard.agents.autoDisabledCard")}
+                      </p>
+                      <Link
+                        href={`/w/${wsId}/agents/${agent.id}/logs`}
+                        className="text-xs text-destructive/80 underline-offset-2 hover:underline"
+                      >
+                        {td("dashboard.agents.autoDisabledHint")}
+                      </Link>
+                    </div>
+                    {isOwner ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => void onToggle(agent)}
+                      >
+                        {td("dashboard.agents.reactivate")}
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {/* 등록 다이얼로그 */}
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(next) => {
+          setDialogOpen(next);
+          if (!next) resetForm();
+        }}
+      >
+        <DialogContent>
           <form onSubmit={onRegister}>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">
-                {td("dashboard.agents.registerTitle")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+            <DialogHeader>
+              <DialogTitle>{td("dashboard.agents.registerTitle")}</DialogTitle>
+              <DialogDescription>{td("dashboard.agents.registerDescription")}</DialogDescription>
+            </DialogHeader>
+
+            <div className="my-4 space-y-1">
               <FormRow label={td("dashboard.agents.name")} htmlFor="agentName">
                 <Input
                   id="agentName"
                   required
+                  autoFocus
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
               </FormRow>
-              <FormRow label={td("dashboard.agents.endpointUrl")} htmlFor="endpointUrl">
+              <FormRow
+                label={td("dashboard.agents.endpointUrl")}
+                htmlFor="endpointUrl"
+                hint={td("dashboard.agents.endpointHint")}
+              >
                 <Input
                   id="endpointUrl"
                   type="url"
@@ -162,20 +347,8 @@ export function AgentsScreen() {
                   onChange={(e) => setEndpointUrl(e.target.value)}
                 />
               </FormRow>
-              <FormRow
-                label={td("dashboard.agents.timeoutMs")}
-                htmlFor="timeoutMs"
-                hint={td("dashboard.agents.timeoutHint")}
-              >
-                <Input
-                  id="timeoutMs"
-                  type="number"
-                  placeholder="30000"
-                  value={timeoutMs}
-                  onChange={(e) => setTimeoutMs(e.target.value)}
-                />
-              </FormRow>
-              <label className="flex items-center gap-2 text-sm text-foreground">
+
+              <label className="flex items-center gap-2 py-1 text-sm text-foreground">
                 <input
                   type="checkbox"
                   className="size-4 rounded border-border accent-primary"
@@ -184,94 +357,47 @@ export function AgentsScreen() {
                 />
                 {td("dashboard.agents.assistEnabled")}
               </label>
-            </CardContent>
-            <CardFooter>
+
+              <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+                <CollapsibleTrigger className="text-xs font-medium text-muted-foreground hover:text-foreground">
+                  {advancedOpen
+                    ? td("dashboard.agents.advancedHide")
+                    : td("dashboard.agents.advancedShow")}
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-3">
+                  <FormRow
+                    label={td("dashboard.agents.timeoutMs")}
+                    htmlFor="timeoutMs"
+                    hint={td("dashboard.agents.timeoutHint")}
+                  >
+                    <Input
+                      id="timeoutMs"
+                      type="number"
+                      placeholder="30000"
+                      value={timeoutMs}
+                      onChange={(e) => setTimeoutMs(e.target.value)}
+                    />
+                  </FormRow>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDialogOpen(false)}
+                disabled={submitting}
+              >
+                {td("dashboard.common.cancel")}
+              </Button>
               <Button type="submit" disabled={submitting}>
                 {td("dashboard.agents.register")}
               </Button>
-            </CardFooter>
+            </DialogFooter>
           </form>
-        </Card>
-      ) : null}
-
-      {/* 목록 */}
-      {loading ? (
-        <Spinner />
-      ) : agents.length === 0 ? (
-        <Empty>
-          <EmptyHeader>
-            <EmptyTitle>{td("dashboard.agents.empty")}</EmptyTitle>
-          </EmptyHeader>
-        </Empty>
-      ) : (
-        <ul className="space-y-3">
-          {agents.map((agent) => {
-            const tr = testResult[agent.id];
-            return (
-              <li key={agent.id} className="rounded-lg border border-border bg-card p-4 shadow-xs">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`size-1.5 shrink-0 rounded-full ${statusDotClass(agent.status)}`}
-                        aria-hidden
-                      />
-                      <span className="font-medium text-foreground">{agent.name}</span>
-                      {statusBadge(agent.status)}
-                    </div>
-                    <p className="mt-0.5 break-all font-mono text-xs text-muted-foreground">
-                      {agent.endpointUrl}
-                    </p>
-                    {agent.status === "auto_disabled" ? (
-                      <Link
-                        href={`/w/${wsId}/agents/${agent.id}/logs`}
-                        className="mt-1 inline-block text-xs text-destructive hover:underline"
-                      >
-                        {td("dashboard.agents.autoDisabledHint")}
-                      </Link>
-                    ) : null}
-                  </div>
-                  <Link
-                    href={`/w/${wsId}/agents/${agent.id}/logs`}
-                    className="shrink-0 text-xs text-primary hover:underline"
-                  >
-                    {td("dashboard.agents.viewLogs")}
-                  </Link>
-                </div>
-
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => void onTest(agent)}>
-                    {tr === "loading"
-                      ? td("dashboard.agents.testing")
-                      : td("dashboard.agents.test")}
-                  </Button>
-                  {tr && tr !== "loading" ? (
-                    <span
-                      className={`tabular-nums text-xs ${tr.ok ? "text-success" : "text-destructive"}`}
-                    >
-                      {tr.ok
-                        ? tf("dashboard.agents.testOk", { latency: tr.latencyMs ?? 0 })
-                        : `${td("dashboard.agents.testFail")}${tr.error ? `: ${tr.error}` : ""}`}
-                    </span>
-                  ) : null}
-                  {isOwner ? (
-                    <>
-                      <Button variant="ghost" size="sm" onClick={() => setRotateTarget(agent)}>
-                        {td("dashboard.agents.rotateSecret")}
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => void onToggle(agent)}>
-                        {agent.status === "active"
-                          ? td("dashboard.agents.disable")
-                          : td("dashboard.agents.enable")}
-                      </Button>
-                    </>
-                  ) : null}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+        </DialogContent>
+      </Dialog>
 
       <SecretModal open={secret !== null} secret={secret ?? ""} onClose={() => setSecret(null)} />
       <ConfirmDialog
@@ -281,6 +407,6 @@ export function AgentsScreen() {
         onConfirm={() => rotateTarget && void onRotate(rotateTarget)}
         onCancel={() => setRotateTarget(null)}
       />
-    </div>
+    </PageShell>
   );
 }

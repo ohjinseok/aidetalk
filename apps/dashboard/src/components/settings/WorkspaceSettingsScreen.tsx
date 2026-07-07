@@ -7,15 +7,9 @@ import { td } from "@/lib/i18n";
 import type { AttributionRule } from "@aidetalk/shared";
 import { useToast } from "@/components/providers/ToastProvider";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
+import { PageHeader, PageShell, SectionCard } from "@/components/layout/PageShell";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { FormRow } from "@/components/ui/form-row";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SettingsTabs } from "./SettingsTabs";
 
 /** EDITION 플래그 — 클라우드에서만 결제 탭 노출(07 §5). 코어는 ee/를 import하지 않음(규칙 8). */
 const IS_CLOUD = process.env.NEXT_PUBLIC_EDITION === "cloud";
@@ -52,17 +47,32 @@ export function WorkspaceSettingsScreen() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-6">
-      <h1 className="text-lg font-semibold tracking-tight text-foreground">
-        {td("dashboard.workspace.title")}
-      </h1>
+    <PageShell width="narrow">
+      <SettingsTabs />
+      <PageHeader
+        title={td("dashboard.workspace.title")}
+        description={td("dashboard.workspace.subtitle")}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">{td("dashboard.workspace.title")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <FormRow label={td("dashboard.workspace.name")} htmlFor="wsName">
+      <div className="space-y-5">
+        {/* 일반 정보 */}
+        <SectionCard
+          title={td("dashboard.workspace.general")}
+          description={td("dashboard.workspace.generalDesc")}
+          footer={
+            <>
+              {!isOwner ? (
+                <span className="mr-auto text-xs text-muted-foreground">
+                  {td("dashboard.members.ownerOnly")}
+                </span>
+              ) : null}
+              <Button disabled={saving || !isOwner} onClick={() => void onSave()}>
+                {td("dashboard.common.save")}
+              </Button>
+            </>
+          }
+        >
+          <FormRow label={td("dashboard.workspace.name")} htmlFor="wsName" className="mb-0">
             <Input
               id="wsName"
               value={name}
@@ -73,7 +83,12 @@ export function WorkspaceSettingsScreen() {
 
           {/* 귀속 규칙 — 전환 트래킹(S1)에서만 의미(규칙 10). */}
           {isS1 ? (
-            <FormRow label={td("dashboard.workspace.attributionRule")} htmlFor="attr">
+            <FormRow
+              label={td("dashboard.workspace.attributionRule")}
+              htmlFor="attr"
+              hint={td("dashboard.workspace.attributionHint")}
+              className="mt-4 mb-0"
+            >
               <Select
                 value={rule}
                 disabled={!isOwner}
@@ -91,45 +106,41 @@ export function WorkspaceSettingsScreen() {
               </Select>
             </FormRow>
           ) : null}
-        </CardContent>
-        <CardFooter>
-          <Button disabled={saving || !isOwner} onClick={() => void onSave()}>
-            {td("dashboard.common.save")}
-          </Button>
-        </CardFooter>
-      </Card>
+        </SectionCard>
 
-      {/* 결제 탭(클라우드 전용) — ee의 BillingPanel 주입 지점.
-          CLAUDE.md 규칙 8: 코어는 ee/를 import하지 않는다 → 여기서는 존재/플래그만 확인. */}
-      {IS_CLOUD ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">
-              {td("dashboard.workspace.billingTab")}
-            </CardTitle>
-            <CardDescription>{td("dashboard.workspace.billingCloudOnly")}</CardDescription>
-          </CardHeader>
-        </Card>
-      ) : null}
+        {/* 결제 탭(클라우드 전용) — ee의 BillingPanel 주입 지점.
+            CLAUDE.md 규칙 8: 코어는 ee/를 import하지 않는다 → 여기서는 존재/플래그만 확인. */}
+        {IS_CLOUD ? (
+          <SectionCard
+            title={td("dashboard.workspace.billingTab")}
+            description={td("dashboard.workspace.billingCloudOnly")}
+          >
+            <Badge variant="info">{td("dashboard.workspace.billingTab")}</Badge>
+          </SectionCard>
+        ) : null}
 
-      {/* 위험 구역 */}
-      <Card className="border-destructive/20 bg-destructive/5">
-        <CardHeader>
-          <CardTitle className="text-sm font-medium text-destructive">
-            {td("dashboard.workspace.dangerZone")}
-          </CardTitle>
-          <CardDescription className="text-destructive/80">
-            {td("dashboard.workspace.exportHint")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {/* TODO(question): 대화 CSV export 엔드포인트가 04 §2에 없음(Could). API 확정 후 연결.
-              엔드포인트 확정 전까지 disabled — 상단 exportHint가 미구현 안내를 대신한다. */}
-          <Button variant="outline" size="sm" disabled>
-            {td("dashboard.workspace.exportCsv")}
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+        {/* 위험 구역 */}
+        <SectionCard
+          danger
+          title={td("dashboard.workspace.dangerZone")}
+          description={td("dashboard.workspace.exportHint")}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground">
+                {td("dashboard.workspace.exportCsv")}
+              </p>
+              <p className="mt-0.5 text-[13px] text-muted-foreground">
+                {td("dashboard.workspace.exportComingSoon")}
+              </p>
+            </div>
+            {/* TODO(question): 대화 CSV export 엔드포인트가 04 §2에 없음(Could). API 확정 후 연결. */}
+            <Button variant="outline" size="sm" disabled>
+              {td("dashboard.workspace.exportCsv")}
+            </Button>
+          </div>
+        </SectionCard>
+      </div>
+    </PageShell>
   );
 }
