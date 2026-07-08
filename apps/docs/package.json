@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "AideTalk 공개 문서 사이트 (VitePress) — 설치 가이드/Agent Protocol/위젯 임베드 가이드",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev": "vitepress dev",

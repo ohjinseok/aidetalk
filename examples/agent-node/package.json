@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "description": "AideTalk 예제 에이전트 (Node/Hono + Claude API) — docs/05_AGENT_PROTOCOL.md 참고 구현",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "start": "tsx index.ts",

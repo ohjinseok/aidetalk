@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "Drizzle 스키마 + 마이그레이션 + repository 계층 (03_DATA_MODEL.md 단일 출처)",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",

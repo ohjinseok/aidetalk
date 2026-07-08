@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "로케일 파일(ko 기본, en) + 타입 세이프 t() 헬퍼",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",

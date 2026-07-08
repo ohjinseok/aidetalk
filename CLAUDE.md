@@ -11,6 +11,7 @@
 수익 모델: Open Core — 셀프호스팅 무료(AGPL), 클라우드 유료. `docs/internal/01_BUSINESS_MODEL.md`.
 
 문서 맵: `docs/internal/00_PRD.md`(요구사항) / `02_ARCHITECTURE`(설계) / `03_DATA_MODEL`(스키마) / `04_API_SPEC`(REST·WS 명세) / `05_AGENT_PROTOCOL`(커넥터 계약) / `06_WIDGET_SPEC` / `07_DASHBOARD_SPEC` / `08_SECURITY` / `09_TESTING` / `10_DEPLOYMENT` / `11_ROADMAP`(작업 단위)
+(`docs/internal/`은 메인테이너 로컬 전용 — 공개 레포에는 포함되지 않는다.)
 
 ## 절대 규칙 (위반 금지)
 

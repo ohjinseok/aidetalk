@@ -35,3 +35,6 @@ apps/widget/dist/
 
 # VitePress
 **/.vitepress/cache/
+
+# 내부 문서 (메인테이너 로컬 전용, 공개 레포에는 미포함)
+docs/internal/

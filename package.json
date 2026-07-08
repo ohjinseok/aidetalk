@@ -4,6 +4,15 @@
   "private": true,
   "description": "AideTalk — 한국 SMB를 위한 오픈소스 CS 메신저",
   "license": "AGPL-3.0-only",
+  "author": "Jinseok Oh",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aidetalk/aidetalk.git"
+  },
+  "homepage": "https://github.com/aidetalk/aidetalk#readme",
+  "bugs": {
+    "url": "https://github.com/aidetalk/aidetalk/issues"
+  },
   "engines": {
     "node": ">=22.0.0"
   },

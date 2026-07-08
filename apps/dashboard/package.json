@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "상담 인박스 + 설정 대시보드 (Next.js 16 App Router + Tailwind)",
+  "license": "AGPL-3.0-only",
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
