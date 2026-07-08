@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "Hono(HTTP) + ws(WebSocket) 단일 Node 프로세스 — API 게이트웨이 + Agent Dispatcher",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",

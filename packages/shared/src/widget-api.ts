@@ -45,9 +45,11 @@ export type MessagesList = z.infer<typeof messagesListSchema>;
 export const postMessageResponseSchema = z.object({
   message: messageSchema,
 });
+export type PostMessageResponse = z.infer<typeof postMessageResponseSchema>;
 
 /** PATCH /v1/widget/profile 응답 — 04 §1 (병합 시 새 토큰). */
 export const profileResponseSchema = z.object({
   visitorToken: z.string(),
   visitor: visitorSchema,
 });
+export type ProfileResponse = z.infer<typeof profileResponseSchema>;

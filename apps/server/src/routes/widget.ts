@@ -9,9 +9,14 @@ import {
   sessionRequestSchema,
   widgetHandoffRequestSchema,
   type CreateConversationRequest,
+  type CreateConversationResponse,
   type LongPollSendRequest,
+  type MessagesList,
+  type PostMessageResponse,
   type ProfilePatchRequest,
+  type ProfileResponse,
   type SessionRequest,
+  type SessionResponse,
   type WidgetHandoffRequest,
 } from "@aidetalk/shared";
 import { t } from "@aidetalk/i18n";
@@ -99,13 +104,15 @@ export function createWidgetRoutes(): Hono<HonoEnv> {
       visitor.id,
     );
 
-    return c.json({
+    // shared 위젯 계약(sessionResponseSchema)으로 컴파일 타임 정합 강제 — 드리프트 시 타입 에러.
+    const response: SessionResponse = {
       visitorToken,
       visitor: { id: visitor.id, email: visitor.email, name: visitor.name },
       workspaceName: workspace.name, // 위젯 헤더 표기용(04 §1)
       widgetSettings: evaluateWidgetSettings(workspace.widgetSettings),
       openConversationId: openConv?.id ?? null,
-    });
+    };
+    return c.json(response);
   });
 
   // 이하 전 경로 visitor_token 필수.
@@ -154,7 +161,10 @@ export function createWidgetRoutes(): Hono<HonoEnv> {
       });
     }
 
-    return c.json({ conversation: serializeConversation(conv) }, 201);
+    // createConversationResponseSchema는 conversation을 pick(id/mode/status)하지만, 응답 shape은
+    // 기존대로 전체 conversation을 보낸다(위젯이 초과 필드를 파싱 단계에서 무시). 계약 정합만 강제.
+    const response: CreateConversationResponse = { conversation: serializeConversation(conv) };
+    return c.json(response, 201);
   });
 
   // ---------- 메시지 목록(재연결 동기화) ----------
@@ -175,7 +185,8 @@ export function createWidgetRoutes(): Hono<HonoEnv> {
     const items = rows.map(serializeMessage);
     const last = rows[rows.length - 1];
     const nextCursor = rows.length === limit && last ? encodeCursor(last) : null;
-    return c.json({ items, nextCursor });
+    const response: MessagesList = { items, nextCursor };
+    return c.json(response);
   });
 
   // ---------- long-poll 폴백 전송 (WS message.send와 동일 처리) ----------
@@ -198,7 +209,8 @@ export function createWidgetRoutes(): Hono<HonoEnv> {
       clientMsgId: body.clientMsgId,
       text: body.text,
     });
-    return c.json({ message }, 201);
+    const response: PostMessageResponse = { message };
+    return c.json(response, 201);
   });
 
   // ---------- 손님 "상담원 연결" 요청 ----------
@@ -251,12 +263,13 @@ export function createWidgetRoutes(): Hono<HonoEnv> {
       { vis: effectiveVisitorId, ws: visitor.workspaceId, iat: Math.floor(Date.now() / 1000) },
       ctx.env.VISITOR_TOKEN_SECRET,
     );
-    return c.json({
+    const response: ProfileResponse = {
       visitorToken,
       visitor: effective
         ? { id: effective.id, email: effective.email, name: effective.name }
         : { id: effectiveVisitorId, email: body.email ?? null, name: body.name ?? null },
-    });
+    };
+    return c.json(response);
   });
 
   return app;
