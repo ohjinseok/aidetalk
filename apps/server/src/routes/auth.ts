@@ -34,7 +34,7 @@ export function createAuthRoutes(): Hono<HonoEnv> {
     const body = validated<SignupRequest>(c);
 
     const existing = await ctx.repos.user.getByEmail(body.email);
-    if (existing) throw AppError.of("conflict", "이미 가입된 이메일이다.");
+    if (existing) throw AppError.of("conflict", "email already registered");
 
     const user = await ctx.repos.user.create(body);
     await startSession(c, user.id);
@@ -45,11 +45,11 @@ export function createAuthRoutes(): Hono<HonoEnv> {
     const ctx = c.get("ctx");
     const ip = getClientIp(c);
     const rl = await ctx.rateLimiter.hit(`login:${ip}`, LOGIN_LIMIT, LOGIN_WINDOW_SEC);
-    if (!rl.allowed) throw AppError.of("rate/limited", "로그인 시도가 너무 잦다.");
+    if (!rl.allowed) throw AppError.of("rate/limited", "too many login attempts");
 
     const body = validated<LoginRequest>(c);
     const user = await ctx.repos.user.verifyPassword(body.email, body.password);
-    if (!user) throw AppError.of("auth/invalid", "이메일 또는 비밀번호가 올바르지 않다.");
+    if (!user) throw AppError.of("auth/invalid", "invalid email or password");
 
     await startSession(c, user.id);
     return c.json({ user: publicUser(user) });
@@ -73,7 +73,7 @@ export function createMeRoute(): Hono<HonoEnv> {
     const ctx = c.get("ctx");
     const { userId } = c.get("user")!;
     const user = await ctx.repos.user.getById(userId);
-    if (!user) throw AppError.of("auth/invalid", "세션이 유효하지 않다.");
+    if (!user) throw AppError.of("auth/invalid", "invalid session");
     const memberships = await ctx.repos.member.listByUser(userId);
     return c.json({
       user: publicUser(user),

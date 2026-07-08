@@ -26,20 +26,20 @@ export function createInviteRoutes(): Hono<HonoEnv> {
     // (1) 미가입 이메일 초대(invites 테이블) — token_hash 조회.
     const invite = await ctx.repos.invite.getByTokenHash(hashSecret(body.inviteToken));
     if (invite) {
-      if (invite.acceptedAt) throw AppError.of("conflict", "이미 수락된 초대다.");
+      if (invite.acceptedAt) throw AppError.of("conflict", "invite already accepted");
       if (invite.expiresAt.getTime() < Date.now()) {
-        throw AppError.of("not_found", "만료되었거나 유효하지 않은 초대다.");
+        throw AppError.of("not_found", "invite expired or invalid");
       }
       const user = await ctx.repos.user.getById(userId);
       if (!user || user.email !== invite.email) {
-        throw AppError.of("auth/forbidden", "이 초대의 대상 이메일이 아니다.");
+        throw AppError.of("auth/forbidden", "invite email mismatch");
       }
       if (await ctx.repos.member.getRole(invite.workspaceId, userId)) {
-        throw AppError.of("conflict", "이미 워크스페이스 멤버다.");
+        throw AppError.of("conflict", "already a workspace member");
       }
       // 원자적 수락 마킹(동시/재수락 거부).
       const marked = await ctx.repos.invite.markAccepted(invite.workspaceId, invite.id);
-      if (!marked) throw AppError.of("conflict", "이미 수락된 초대다.");
+      if (!marked) throw AppError.of("conflict", "invite already accepted");
 
       const member = await ctx.repos.member.addActive(
         invite.workspaceId,
@@ -59,13 +59,13 @@ export function createInviteRoutes(): Hono<HonoEnv> {
 
     // (2) 기가입 계정 초대(members 테이블) — inviteToken(raw) 조회.
     const invited = await ctx.repos.member.getByInviteToken(body.inviteToken);
-    if (!invited) throw AppError.of("not_found", "유효하지 않은 초대다.");
+    if (!invited) throw AppError.of("not_found", "invalid invite");
     if (invited.userId !== userId) {
-      throw AppError.of("auth/forbidden", "이 초대의 대상이 아니다.");
+      throw AppError.of("auth/forbidden", "invite target mismatch");
     }
 
     const member = await ctx.repos.member.acceptInvite(invited.workspaceId, body.inviteToken);
-    if (!member) throw AppError.of("not_found", "유효하지 않은 초대다.");
+    if (!member) throw AppError.of("not_found", "invalid invite");
     return c.json({
       member: {
         id: member.id,

@@ -17,7 +17,7 @@ export async function getVisitorConversationOr404(
 ) {
   const conv = await ctx.repos.conversation.getById(visitor.workspaceId, conversationId);
   if (!conv || conv.visitorId !== visitor.visitorId) {
-    throw AppError.of("not_found", "대화를 찾을 수 없다.");
+    throw AppError.of("not_found", "conversation not found");
   }
   return conv;
 }

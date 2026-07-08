@@ -65,11 +65,11 @@ export function createWidgetRoutes(): Hono<HonoEnv> {
     const ctx = c.get("ctx");
     const ip = getClientIp(c);
     const rl = await ctx.rateLimiter.hit(`session:${ip}`, SESSION_LIMIT, SESSION_WINDOW_SEC);
-    if (!rl.allowed) throw AppError.of("rate/limited", "요청이 너무 많다. 잠시 후 다시 시도하라.");
+    if (!rl.allowed) throw AppError.of("rate/limited", "too many requests");
 
     const body = validated<SessionRequest>(c);
     const workspace = await ctx.repos.workspace.getById(body.workspaceId);
-    if (!workspace) throw AppError.of("not_found", "워크스페이스를 찾을 수 없다.");
+    if (!workspace) throw AppError.of("not_found", "workspace not found");
 
     // 기존 토큰이 유효하고 같은 워크스페이스면 동일 visitor 복원.
     let existingVisitorId: string | undefined;
@@ -121,7 +121,7 @@ export function createWidgetRoutes(): Hono<HonoEnv> {
     await ctx.planEnforcer.assertCanCreateConversation(visitor.workspaceId);
 
     const workspace = await ctx.repos.workspace.getById(visitor.workspaceId);
-    if (!workspace) throw AppError.of("not_found", "워크스페이스를 찾을 수 없다.");
+    if (!workspace) throw AppError.of("not_found", "workspace not found");
 
     // active agent 있으면 ai, 없으면 human으로 시작.
     const activeAgent = await ctx.repos.agent.getActive(visitor.workspaceId);
@@ -189,7 +189,7 @@ export function createWidgetRoutes(): Hono<HonoEnv> {
       VISITOR_MSG_LIMIT,
       VISITOR_MSG_WINDOW_SEC,
     );
-    if (!rl.allowed) throw AppError.of("rate/limited", "메시지 전송이 너무 잦다.");
+    if (!rl.allowed) throw AppError.of("rate/limited", "message send rate limited");
 
     const body = validated<LongPollSendRequest>(c);
     const message = await sendVisitorMessage(ctx, {

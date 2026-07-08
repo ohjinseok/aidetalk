@@ -5,15 +5,15 @@
 import { serve } from "@hono/node-server";
 import { createDbConnection, createRepos, runMigrations } from "@aidetalk/db";
 
-import { createApp } from "./app.js";
-import { createContext } from "./context.js";
-import { parseEnv } from "./env.js";
-import { createLogger } from "./logger.js";
-import { createPubSub } from "./pubsub/index.js";
-import { createRateLimiter } from "./ratelimit/index.js";
-import { createSessionStore } from "./session/store.js";
-import { createTelemetryReporter } from "./services/telemetry.js";
-import { createGateway } from "./ws/gateway.js";
+import { createApp } from "./app";
+import { createContext } from "./context";
+import { parseEnv } from "./env";
+import { createLogger } from "./logger";
+import { createPubSub } from "./pubsub/index";
+import { createRateLimiter } from "./ratelimit/index";
+import { createSessionStore } from "./session/store";
+import { createTelemetryReporter } from "./services/telemetry";
+import { createGateway } from "./ws/gateway";
 
 async function main(): Promise<void> {
   // 1) env 검증 — 실패 시 사유 출력 후 종료(값은 출력하지 않음).

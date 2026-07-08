@@ -6,7 +6,12 @@
  * 여기서는 인터페이스만 정의하고, ee/가 구현체(CloudPlanEnforcer, BillingProvider)를 주입한다.
  */
 
-/** 01 문서 §3 — 플랜별 한도(v1 확정값). 무제한은 Infinity. */
+/**
+ * 01 문서 §3 — 플랜별 한도(v1 확정값). 무제한은 Infinity.
+ *
+ * ⚠️ 미배선 공개 계약: PLANS/PlanId는 ee/(클라우드 과금)나 후속 웨이브에서 구현·주입되는
+ *    공개 값·타입이며, 코어(ee/ 밖)에서는 의도적으로 미사용이다(CLAUDE.md 규칙 8, 02 §1-1).
+ */
 export const PLANS = {
   oss: {
     id: "oss",
@@ -34,6 +39,7 @@ export const PLANS = {
   },
 } as const;
 
+/** 플랜 식별자. PLANS와 함께 ee/·후속 웨이브 전용 — 코어에서는 의도적으로 미사용(위 주석 참조). */
 export type PlanId = keyof typeof PLANS;
 
 /**
@@ -70,6 +76,9 @@ export class NoopPlanEnforcer implements PlanEnforcer {
 /**
  * 결제 인터페이스 — 01 문서 §6. PG 중립.
  * 코어는 이 인터페이스만 알고, 구현은 ee/billing 안에서만 특정 PG API를 호출한다.
+ *
+ * ⚠️ 미배선 공개 계약: 구현체(예: TossBillingProvider)와 주입 지점은 ee/(클라우드)나 후속
+ *    웨이브에서 제공된다. 코어(ee/ 밖)에서는 의도적으로 미사용이다(CLAUDE.md 규칙 8, 02 §1-1).
  */
 export interface BillingProvider {
   /** 카드/결제수단 등록 UI로 보낼 URL 또는 위젯 파라미터 생성. */

@@ -35,20 +35,20 @@ export async function testAgentConnection(
   agent: TestableAgent,
 ): Promise<AgentTestResult> {
   if (!agent.secretEnc) {
-    return { ok: false, latencyMs: 0, error: "secret 복호화 불가(재발급 필요)" };
+    return { ok: false, latencyMs: 0, error: "secret_unavailable" };
   }
   let secret: string;
   try {
     secret = decryptSecret(agent.secretEnc, resolveSecretEncKeyMaterial(app.env));
   } catch {
-    return { ok: false, latencyMs: 0, error: "secret 복호화 실패" };
+    return { ok: false, latencyMs: 0, error: "secret_decrypt_failed" };
   }
 
   if (app.env.EDITION === "cloud" && !app.env.ALLOW_INSECURE_AGENT_ENDPOINT) {
     try {
       await assertResolvesToPublicIp(new URL(agent.endpointUrl).hostname);
     } catch {
-      return { ok: false, latencyMs: 0, error: "endpoint SSRF 차단" };
+      return { ok: false, latencyMs: 0, error: "ssrf_blocked" };
     }
   }
 

@@ -7,6 +7,7 @@ import { AppError } from "@aidetalk/shared";
 import { Hono, type Context } from "hono";
 
 import type { HonoEnv } from "../../http/types";
+import { getWsCtx } from "../../http/ws-ctx";
 import { serializeConversionEvent, serializeTrackedLink } from "../../lib/serialize";
 import { buildTrackingSummary, parseTrackingRange } from "../../services/tracking";
 import { getConvOr404 } from "./shared";
@@ -16,8 +17,7 @@ export function createWorkspaceTrackingRoutes(): Hono<HonoEnv> {
 
   // 대화 상세 트래킹(링크·클릭·전환) — 04 §2.
   app.get("/:wsId/conversations/:id/tracking", async (c) => {
-    const ctx = c.get("ctx");
-    const wsId = c.req.param("wsId");
+    const { ctx, wsId } = getWsCtx(c);
     await assertS1Segment(c);
     const conv = await getConvOr404(c, wsId, c.req.param("id"));
     const links = await ctx.repos.trackedLink.listByConversation(wsId, conv.id);
@@ -30,8 +30,7 @@ export function createWorkspaceTrackingRoutes(): Hono<HonoEnv> {
 
   // 워크스페이스 트래킹 요약(기간) — 04 §2. ⚠️ attributedRevenueKrw는 "상담 기여 매출(추정)".
   app.get("/:wsId/tracking/summary", async (c) => {
-    const ctx = c.get("ctx");
-    const wsId = c.req.param("wsId");
+    const { ctx, wsId } = getWsCtx(c);
     await assertS1Segment(c);
     const { from, to } = parseTrackingRange(c.req.query("from"), c.req.query("to"));
     const summary = await buildTrackingSummary(ctx, wsId, from, to);
@@ -46,10 +45,9 @@ export function createWorkspaceTrackingRoutes(): Hono<HonoEnv> {
  * (CLAUDE.md 규칙 10 / 04 §2 "segment=s2_no_site면 전부 404")
  */
 async function assertS1Segment(c: Context<HonoEnv>): Promise<void> {
-  const ctx = c.get("ctx");
-  const wsId = c.req.param("wsId")!;
+  const { ctx, wsId } = getWsCtx(c);
   const workspace = await ctx.repos.workspace.getById(wsId);
   if (!workspace || workspace.segment === "s2_no_site") {
-    throw AppError.of("not_found", "이 워크스페이스에는 트래킹 API가 없다.");
+    throw AppError.of("not_found", "tracking API not available for this workspace");
   }
 }

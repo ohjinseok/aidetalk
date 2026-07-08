@@ -18,6 +18,7 @@ import { Hono } from "hono";
 
 import { validateJson, validated } from "../../http/middleware";
 import type { HonoEnv } from "../../http/types";
+import { getWsCtx } from "../../http/ws-ctx";
 import { assertOwner } from "./shared";
 
 export function createTagRoutes(): Hono<HonoEnv> {
@@ -25,45 +26,42 @@ export function createTagRoutes(): Hono<HonoEnv> {
 
   // 목록 — name 오름차순(repo가 정렬).
   app.get("/:wsId/tags", async (c) => {
-    const ctx = c.get("ctx");
-    const rows = await ctx.repos.tag.list(c.req.param("wsId"));
+    const { ctx, wsId } = getWsCtx(c);
+    const rows = await ctx.repos.tag.list(wsId);
     return c.json({ items: rows.map(serializeTag), nextCursor: null });
   });
 
   // 생성 — 전 멤버 가능. (workspaceId, name) 중복이면 conflict.
   app.post("/:wsId/tags", validateJson(createTagRequestSchema), async (c) => {
-    const ctx = c.get("ctx");
-    const wsId = c.req.param("wsId");
+    const { ctx, wsId } = getWsCtx(c);
     const body = validated<CreateTagRequest>(c);
 
     const row = await ctx.repos.tag.create(wsId, { name: body.name, color: body.color });
-    if (!row) throw AppError.of("conflict", "이미 같은 이름의 태그가 있다.");
+    if (!row) throw AppError.of("conflict", "tag name already exists");
     return c.json({ tag: serializeTag(row) }, 201);
   });
 
   // 수정 — 전 멤버 가능. name 충돌 시 conflict, 대상 없으면 not_found.
   app.patch("/:wsId/tags/:tagId", validateJson(updateTagRequestSchema), async (c) => {
-    const ctx = c.get("ctx");
-    const wsId = c.req.param("wsId");
+    const { ctx, wsId } = getWsCtx(c);
     const body = validated<UpdateTagRequest>(c);
 
     const row = await ctx.repos.tag.update(wsId, c.req.param("tagId"), {
       name: body.name,
       color: body.color,
     });
-    if (row === null) throw AppError.of("conflict", "이미 같은 이름의 태그가 있다.");
-    if (row === undefined) throw AppError.of("not_found", "태그를 찾을 수 없다.");
+    if (row === null) throw AppError.of("conflict", "tag name already exists");
+    if (row === undefined) throw AppError.of("not_found", "tag not found");
     return c.json({ tag: serializeTag(row) });
   });
 
   // 삭제 — owner 전용(파괴적 변경: 부착된 모든 대화에서 함께 제거).
   app.delete("/:wsId/tags/:tagId", async (c) => {
-    const ctx = c.get("ctx");
+    const { ctx, wsId } = getWsCtx(c);
     assertOwner(c.get("member")!);
-    const wsId = c.req.param("wsId");
 
     const removed = await ctx.repos.tag.remove(wsId, c.req.param("tagId"));
-    if (!removed) throw AppError.of("not_found", "태그를 찾을 수 없다.");
+    if (!removed) throw AppError.of("not_found", "tag not found");
     return c.body(null, 204);
   });
 

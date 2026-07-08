@@ -9,6 +9,7 @@ import { Hono } from "hono";
 
 import { validateJson, validated } from "../../http/middleware";
 import type { HonoEnv } from "../../http/types";
+import { getWsCtx } from "../../http/ws-ctx";
 import { publicVisitor, serializeMessage } from "../../lib/serialize";
 import { buildConversationSummary } from "../../services/messaging";
 import { assertOwner } from "./shared";
@@ -26,8 +27,7 @@ export function createVisitorRoutes(): Hono<HonoEnv> {
     "/:wsId/visitors/:visitorId",
     validateJson(agentUpdateVisitorRequestSchema),
     async (c) => {
-      const ctx = c.get("ctx");
-      const wsId = c.req.param("wsId");
+      const { ctx, wsId } = getWsCtx(c);
       const visitorId = c.req.param("visitorId");
       const body = validated<AgentUpdateVisitorRequest>(c);
 
@@ -45,7 +45,7 @@ export function createVisitorRoutes(): Hono<HonoEnv> {
         patch as VisitorProfilePatch,
       );
       // 타 워크스페이스 방문자(또는 없음)는 갱신 대상이 없어 undefined → not_found(격리).
-      if (!updated) throw AppError.of("not_found", "방문자를 찾을 수 없다.");
+      if (!updated) throw AppError.of("not_found", "visitor not found");
 
       return c.json({ visitor: publicVisitor(updated) });
     },
@@ -53,8 +53,7 @@ export function createVisitorRoutes(): Hono<HonoEnv> {
 
   // 이 방문자의 상담 이력(방문자 프로필 패널) — ConversationSummary 목록.
   app.get("/:wsId/visitors/:visitorId/conversations", async (c) => {
-    const ctx = c.get("ctx");
-    const wsId = c.req.param("wsId");
+    const { ctx, wsId } = getWsCtx(c);
     const visitorId = c.req.param("visitorId");
 
     const rows = await ctx.repos.conversation.listByVisitor(wsId, visitorId, 20);
@@ -69,14 +68,13 @@ export function createVisitorRoutes(): Hono<HonoEnv> {
   });
 
   app.delete("/:wsId/visitors/:visitorId/pii", async (c) => {
-    const ctx = c.get("ctx");
+    const { ctx, wsId } = getWsCtx(c);
     const member = c.get("member")!;
     assertOwner(member);
-    const wsId = c.req.param("wsId");
     const visitorId = c.req.param("visitorId");
 
     const result = await ctx.repos.visitor.hardDeletePii(wsId, visitorId);
-    if (!result) throw AppError.of("not_found", "방문자를 찾을 수 없다.");
+    if (!result) throw AppError.of("not_found", "visitor not found");
 
     // 감사 로그 — 파기 이력을 남긴다. visitorId/대화id는 PII 값이 아니므로 기록 가능(규칙 5).
     ctx.logger.info(

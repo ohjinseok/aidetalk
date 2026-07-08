@@ -74,13 +74,13 @@ export async function validateAgentEndpoint(
   try {
     url = new URL(rawUrl);
   } catch {
-    throw AppError.of("validation/failed", "endpointUrl 형식이 올바르지 않다.");
+    throw AppError.of("validation/failed", "invalid endpointUrl format");
   }
   if (url.protocol !== "http:" && url.protocol !== "https:") {
-    throw AppError.of("validation/failed", "endpointUrl은 http/https만 허용된다.");
+    throw AppError.of("validation/failed", "endpointUrl must be http or https");
   }
   if (policy.cloud && !policy.allowInsecure && url.protocol !== "https:") {
-    throw AppError.of("validation/failed", "클라우드에서는 https endpoint만 허용된다.");
+    throw AppError.of("validation/failed", "cloud allows https endpoint only");
   }
   if (policy.cloud && !policy.allowInsecure) {
     await assertResolvesToPublicIp(url.hostname);
@@ -96,7 +96,7 @@ export async function assertResolvesToPublicIp(hostname: string): Promise<void> 
   // 호스트명이 이미 IP 리터럴이면 바로 검사.
   if (isIP(hostname)) {
     if (isPrivateIp(hostname)) {
-      throw AppError.of("validation/failed", "사설/루프백 IP로의 endpoint는 허용되지 않는다.");
+      throw AppError.of("validation/failed", "private/loopback IP endpoint not allowed");
     }
     return;
   }
@@ -104,9 +104,9 @@ export async function assertResolvesToPublicIp(hostname: string): Promise<void> 
   try {
     results = await lookup(hostname, { all: true });
   } catch {
-    throw AppError.of("validation/failed", "endpoint 호스트를 확인할 수 없다.");
+    throw AppError.of("validation/failed", "endpoint host resolution failed");
   }
   if (results.length === 0 || results.some((r) => isPrivateIp(r.address))) {
-    throw AppError.of("validation/failed", "사설/루프백 IP로의 endpoint는 허용되지 않는다.");
+    throw AppError.of("validation/failed", "private/loopback IP endpoint not allowed");
   }
 }

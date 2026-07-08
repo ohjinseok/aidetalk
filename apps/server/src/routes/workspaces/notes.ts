@@ -22,6 +22,7 @@ import { Hono } from "hono";
 
 import { validateJson, validated } from "../../http/middleware";
 import type { HonoEnv } from "../../http/types";
+import { getWsCtx } from "../../http/ws-ctx";
 
 export function createNoteRoutes(): Hono<HonoEnv> {
   const app = new Hono<HonoEnv>();
@@ -30,8 +31,7 @@ export function createNoteRoutes(): Hono<HonoEnv> {
 
   // 목록 — authorName 포함(작성자 삭제 시 null). 대화가 타 워크스페이스 소유면 repo가 not_found.
   app.get("/:wsId/conversations/:id/notes", async (c) => {
-    const ctx = c.get("ctx");
-    const wsId = c.req.param("wsId");
+    const { ctx, wsId } = getWsCtx(c);
     const rows = await ctx.repos.note.listByConversation(wsId, c.req.param("id"));
     return c.json({ items: rows.map(serializeNote), nextCursor: null });
   });
@@ -41,9 +41,8 @@ export function createNoteRoutes(): Hono<HonoEnv> {
     "/:wsId/conversations/:id/notes",
     validateJson(createNoteRequestSchema),
     async (c) => {
-      const ctx = c.get("ctx");
+      const { ctx, wsId } = getWsCtx(c);
       const member = c.get("member")!;
-      const wsId = c.req.param("wsId");
       const body = validated<CreateNoteRequest>(c);
 
       const row = await ctx.repos.note.create(wsId, c.req.param("id"), {
@@ -59,39 +58,37 @@ export function createNoteRoutes(): Hono<HonoEnv> {
 
   // 수정 — 작성자 본인만.
   app.patch("/:wsId/notes/:noteId", validateJson(updateNoteRequestSchema), async (c) => {
-    const ctx = c.get("ctx");
+    const { ctx, wsId } = getWsCtx(c);
     const member = c.get("member")!;
-    const wsId = c.req.param("wsId");
     const noteId = c.req.param("noteId");
     const body = validated<UpdateNoteRequest>(c);
 
     const existing = await ctx.repos.note.getById(wsId, noteId);
-    if (!existing) throw AppError.of("not_found", "메모를 찾을 수 없다.");
+    if (!existing) throw AppError.of("not_found", "note not found");
     if (existing.authorId !== member.userId) {
-      throw AppError.of("auth/forbidden", "작성자만 메모를 수정할 수 있다.");
+      throw AppError.of("auth/forbidden", "only the author can edit this note");
     }
 
     const row = await ctx.repos.note.update(wsId, noteId, { body: body.body });
-    if (!row) throw AppError.of("not_found", "메모를 찾을 수 없다.");
+    if (!row) throw AppError.of("not_found", "note not found");
     const author = await ctx.repos.user.getById(row.authorId);
     return c.json({ note: serializeNote({ ...row, authorName: author?.name ?? null }) });
   });
 
   // 삭제 — 작성자 또는 owner.
   app.delete("/:wsId/notes/:noteId", async (c) => {
-    const ctx = c.get("ctx");
+    const { ctx, wsId } = getWsCtx(c);
     const member = c.get("member")!;
-    const wsId = c.req.param("wsId");
     const noteId = c.req.param("noteId");
 
     const existing = await ctx.repos.note.getById(wsId, noteId);
-    if (!existing) throw AppError.of("not_found", "메모를 찾을 수 없다.");
+    if (!existing) throw AppError.of("not_found", "note not found");
     if (existing.authorId !== member.userId && member.role !== "owner") {
-      throw AppError.of("auth/forbidden", "작성자 또는 소유자만 메모를 삭제할 수 있다.");
+      throw AppError.of("auth/forbidden", "only the author or owner can delete this note");
     }
 
     const removed = await ctx.repos.note.remove(wsId, noteId);
-    if (!removed) throw AppError.of("not_found", "메모를 찾을 수 없다.");
+    if (!removed) throw AppError.of("not_found", "note not found");
     return c.body(null, 204);
   });
 

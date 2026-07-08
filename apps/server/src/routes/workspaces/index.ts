@@ -15,6 +15,7 @@ import { Hono } from "hono";
 
 import { requireMembership, requireUser, validateJson, validated } from "../../http/middleware";
 import type { HonoEnv } from "../../http/types";
+import { getWsCtx } from "../../http/ws-ctx";
 import { serializeWorkspace } from "../../lib/serialize";
 import { createAgentRoutes } from "./agents";
 import { createInboxRoutes } from "./inbox";
@@ -49,21 +50,20 @@ export function createWorkspaceRoutes(): Hono<HonoEnv> {
 
   // ---------- 단건 조회 ----------
   app.get("/:wsId", requireMembership, async (c) => {
-    const ctx = c.get("ctx");
-    const workspace = await ctx.repos.workspace.getById(c.req.param("wsId"));
-    if (!workspace) throw AppError.of("not_found", "워크스페이스를 찾을 수 없다.");
+    const { ctx, wsId } = getWsCtx(c);
+    const workspace = await ctx.repos.workspace.getById(wsId);
+    if (!workspace) throw AppError.of("not_found", "workspace not found");
     return c.json({ workspace: serializeWorkspace(workspace) });
   });
 
   // ---------- 워크스페이스 설정(owner만) ----------
   app.patch("/:wsId/settings", validateJson(updateWorkspaceSettingsRequestSchema), async (c) => {
-    const ctx = c.get("ctx");
+    const { ctx, wsId } = getWsCtx(c);
     assertOwner(c.get("member")!);
-    const wsId = c.req.param("wsId");
     const body = validated<UpdateWorkspaceSettingsRequest>(c);
 
     const workspace = await ctx.repos.workspace.getById(wsId);
-    if (!workspace) throw AppError.of("not_found", "워크스페이스를 찾을 수 없다.");
+    if (!workspace) throw AppError.of("not_found", "workspace not found");
 
     const updated = await ctx.repos.workspace.updateSettingsFields(wsId, {
       name: body.name,

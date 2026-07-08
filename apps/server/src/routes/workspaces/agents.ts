@@ -15,6 +15,7 @@ import { Hono } from "hono";
 import { testAgentConnection } from "../../dispatch/test";
 import { validateJson, validated } from "../../http/middleware";
 import type { HonoEnv } from "../../http/types";
+import { getWsCtx } from "../../http/ws-ctx";
 import { generateAgentSecret } from "../../lib/agent-secret";
 import { endpointPolicy, validateAgentEndpoint } from "../../lib/agent-endpoint";
 import { clampLimit, decodeCursor, encodeCursor } from "../../lib/cursor";
@@ -26,8 +27,7 @@ export function createAgentRoutes(): Hono<HonoEnv> {
 
   // 등록 — secret 원문은 이 응답 1회만.
   app.post("/:wsId/agents", validateJson(createAgentRequestSchema), async (c) => {
-    const ctx = c.get("ctx");
-    const wsId = c.req.param("wsId");
+    const { ctx, wsId } = getWsCtx(c);
     const body = validated<CreateAgentRequest>(c);
 
     const endpointUrl = await validateAgentEndpoint(body.endpointUrl, endpointPolicy(ctx.env));
@@ -47,21 +47,20 @@ export function createAgentRoutes(): Hono<HonoEnv> {
 
   // 목록.
   app.get("/:wsId/agents", async (c) => {
-    const ctx = c.get("ctx");
-    const rows = await ctx.repos.agent.list(c.req.param("wsId"));
+    const { ctx, wsId } = getWsCtx(c);
+    const rows = await ctx.repos.agent.list(wsId);
     // 비페이지네이션 목록도 리스트 봉투(04 §0) 계약을 지킨다 — nextCursor: null 필수.
     return c.json({ items: rows.map(serializeAgent), nextCursor: null });
   });
 
   // 수정 — active 전환 시 기존 active 자동 disabled(1개 제약).
   app.patch("/:wsId/agents/:id", validateJson(updateAgentRequestSchema), async (c) => {
-    const ctx = c.get("ctx");
-    const wsId = c.req.param("wsId");
+    const { ctx, wsId } = getWsCtx(c);
     const agentId = c.req.param("id");
     const body = validated<UpdateAgentRequest>(c);
 
     const existing = await ctx.repos.agent.getById(wsId, agentId);
-    if (!existing) throw AppError.of("not_found", "커넥터를 찾을 수 없다.");
+    if (!existing) throw AppError.of("not_found", "connector not found");
 
     // 필드 갱신(endpointUrl 변경 시 재검증).
     const patch: { name?: string; endpointUrl?: string; timeoutMs?: number; assistEnabled?: boolean } =
@@ -96,11 +95,10 @@ export function createAgentRoutes(): Hono<HonoEnv> {
 
   // secret 재발급 — 새 secret 1회 노출.
   app.post("/:wsId/agents/:id/rotate-secret", async (c) => {
-    const ctx = c.get("ctx");
-    const wsId = c.req.param("wsId");
+    const { ctx, wsId } = getWsCtx(c);
     const agentId = c.req.param("id");
     const existing = await ctx.repos.agent.getById(wsId, agentId);
-    if (!existing) throw AppError.of("not_found", "커넥터를 찾을 수 없다.");
+    if (!existing) throw AppError.of("not_found", "connector not found");
 
     const secret = generateAgentSecret();
     const secretEnc = encryptSecret(secret, resolveSecretEncKeyMaterial(ctx.env));
@@ -110,11 +108,10 @@ export function createAgentRoutes(): Hono<HonoEnv> {
 
   // 연결 테스트 — 실제 dispatch.
   app.post("/:wsId/agents/:id/test", async (c) => {
-    const ctx = c.get("ctx");
-    const wsId = c.req.param("wsId");
+    const { ctx, wsId } = getWsCtx(c);
     const agentId = c.req.param("id");
     const agent = await ctx.repos.agent.getById(wsId, agentId);
-    if (!agent) throw AppError.of("not_found", "커넥터를 찾을 수 없다.");
+    if (!agent) throw AppError.of("not_found", "connector not found");
 
     const result = await testAgentConnection(ctx, wsId, {
       id: agent.id,
@@ -127,10 +124,9 @@ export function createAgentRoutes(): Hono<HonoEnv> {
 
   // AI 로그 목록.
   app.get("/:wsId/agent-logs", async (c) => {
-    const ctx = c.get("ctx");
-    const wsId = c.req.param("wsId");
+    const { ctx, wsId } = getWsCtx(c);
     const agentId = c.req.query("agentId");
-    if (!agentId) throw AppError.of("validation/failed", "agentId 쿼리가 필요하다.");
+    if (!agentId) throw AppError.of("validation/failed", "agentId query required");
 
     const cursor = decodeCursor(c.req.query("cursor"));
     const limit = clampLimit(c.req.query("limit"), 50, 100);

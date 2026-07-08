@@ -63,7 +63,7 @@ export function validateJson(schema: ZodTypeAny): MiddlewareHandler<HonoEnv> {
     }
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
-      throw AppError.of("validation/failed", "요청 본문 검증에 실패했다.", parsed.error.flatten());
+      throw AppError.of("validation/failed", "request body validation failed", parsed.error.flatten());
     }
     c.set("valid", parsed.data);
     await next();
@@ -92,7 +92,7 @@ export const csrfOriginGuard: MiddlewareHandler<HonoEnv> = async (c, next) => {
       const ctx = c.get("ctx");
       const allowed = allowedOrigins(ctx.env.DASHBOARD_URL, ctx.env.SERVER_URL);
       if (!allowed.has(origin)) {
-        throw AppError.of("auth/forbidden", "허용되지 않은 Origin에서의 요청이다.");
+        throw AppError.of("auth/forbidden", "origin not allowed");
       }
     }
   }
@@ -122,7 +122,7 @@ export const requireVisitor: MiddlewareHandler<HonoEnv> = async (c, next) => {
   const token = auth?.startsWith("Bearer ") ? auth.slice(7) : undefined;
   const payload = token ? verifyVisitorToken(token, ctx.env.VISITOR_TOKEN_SECRET) : null;
   if (!payload) {
-    throw AppError.of("auth/invalid", "유효한 visitor_token이 필요하다.");
+    throw AppError.of("auth/invalid", "valid visitor_token required");
   }
   c.set("visitor", { visitorId: payload.vis, workspaceId: payload.ws });
   await next();
@@ -137,7 +137,7 @@ export const requireUser: MiddlewareHandler<HonoEnv> = async (c, next) => {
   const sessionId = getCookie(c, SESSION_COOKIE);
   const userId = sessionId ? await ctx.sessionStore.get(sessionId) : null;
   if (!userId) {
-    throw AppError.of("auth/invalid", "로그인이 필요하다.");
+    throw AppError.of("auth/invalid", "authentication required");
   }
   c.set("user", { userId });
   await next();
@@ -150,12 +150,12 @@ export const requireUser: MiddlewareHandler<HonoEnv> = async (c, next) => {
 export const requireMembership: MiddlewareHandler<HonoEnv> = async (c, next) => {
   const ctx = c.get("ctx");
   const user = c.get("user");
-  if (!user) throw AppError.of("auth/invalid", "로그인이 필요하다.");
+  if (!user) throw AppError.of("auth/invalid", "authentication required");
   const workspaceId = c.req.param("wsId");
-  if (!workspaceId) throw AppError.of("not_found", "워크스페이스를 찾을 수 없다.");
+  if (!workspaceId) throw AppError.of("not_found", "workspace not found");
   const role = await ctx.repos.member.getRole(workspaceId, user.userId);
   if (!role) {
-    throw AppError.of("auth/forbidden", "이 워크스페이스에 접근할 권한이 없다.");
+    throw AppError.of("auth/forbidden", "workspace access forbidden");
   }
   c.set("member", { userId: user.userId, workspaceId, role });
   await next();

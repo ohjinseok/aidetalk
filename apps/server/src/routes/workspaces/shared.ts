@@ -15,13 +15,13 @@ export async function getConvOr404(
 ) {
   const ctx = c.get("ctx");
   const conv = await ctx.repos.conversation.getById(workspaceId, conversationId);
-  if (!conv) throw AppError.of("not_found", "대화를 찾을 수 없다.");
+  if (!conv) throw AppError.of("not_found", "conversation not found");
   return conv;
 }
 
 /** owner 권한 강제(아니면 403). */
 export function assertOwner(member: MemberAuth): void {
   if (member.role !== "owner") {
-    throw AppError.of("auth/forbidden", "소유자만 수행할 수 있다.");
+    throw AppError.of("auth/forbidden", "owner only");
   }
 }

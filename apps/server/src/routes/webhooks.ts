@@ -53,7 +53,7 @@ export function createWebhookRoutes(): Hono<HonoEnv> {
     const wsId = c.req.param("wsId");
     const id = c.req.param("id");
     const existing = await ctx.repos.webhook.getById(wsId, id);
-    if (!existing) throw AppError.of("not_found", "웹훅을 찾을 수 없다.");
+    if (!existing) throw AppError.of("not_found", "webhook not found");
     await ctx.repos.webhook.remove(wsId, id);
     return c.body(null, 204);
   });

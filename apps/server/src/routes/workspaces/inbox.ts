@@ -17,6 +17,7 @@ import { Hono, type Context } from "hono";
 
 import { validateJson, validated } from "../../http/middleware";
 import type { HonoEnv } from "../../http/types";
+import { getWsCtx } from "../../http/ws-ctx";
 import { clampLimit, decodeCursor, encodeCursor } from "../../lib/cursor";
 import {
   publicVisitor,
@@ -38,9 +39,8 @@ export function createInboxRoutes(): Hono<HonoEnv> {
   //   unread=1         → 미열람(방문자 발신 미확인)이 있는 대화만
   //   favorite=1       → 요청 상담원 본인이 즐겨찾기한 대화만
   app.get("/:wsId/conversations", async (c) => {
-    const ctx = c.get("ctx");
+    const { ctx, wsId } = getWsCtx(c);
     const member = c.get("member")!;
-    const wsId = c.req.param("wsId");
     const status = parseStatus(c.req.query("status"));
     const q = c.req.query("q")?.trim() || undefined;
     const cursor = decodeCursor(c.req.query("cursor"));
@@ -88,18 +88,16 @@ export function createInboxRoutes(): Hono<HonoEnv> {
 
   // 인박스 카운트 배지(필터 탭/사이드바) — ⚠️ /:id 매칭보다 먼저 등록해야 한다(Hono 등록 순서).
   app.get("/:wsId/conversations/counts", async (c) => {
-    const ctx = c.get("ctx");
+    const { ctx, wsId } = getWsCtx(c);
     const member = c.get("member")!;
-    const wsId = c.req.param("wsId");
     const counts = await ctx.repos.conversation.countsForInbox(wsId, member.userId);
     return c.json(counts);
   });
 
   // 대화 상세(+이벤트) — favorite/tagIds는 요청 상담원 기준 부가 정보(위젯 미노출).
   app.get("/:wsId/conversations/:id", async (c) => {
-    const ctx = c.get("ctx");
+    const { ctx, wsId } = getWsCtx(c);
     const member = c.get("member")!;
-    const wsId = c.req.param("wsId");
     const conv = await getConvOr404(c, wsId, c.req.param("id"));
     const visitor = await ctx.repos.visitor.getById(wsId, conv.visitorId);
     const events = await ctx.repos.event.listByConversation(wsId, conv.id);
@@ -118,8 +116,7 @@ export function createInboxRoutes(): Hono<HonoEnv> {
 
   // 메시지 목록.
   app.get("/:wsId/conversations/:id/messages", async (c) => {
-    const ctx = c.get("ctx");
-    const wsId = c.req.param("wsId");
+    const { ctx, wsId } = getWsCtx(c);
     await getConvOr404(c, wsId, c.req.param("id"));
     const after = decodeCursor(c.req.query("after"));
     const limit = clampLimit(c.req.query("limit"), 50, 100);
@@ -135,9 +132,8 @@ export function createInboxRoutes(): Hono<HonoEnv> {
     "/:wsId/conversations/:id/messages",
     validateJson(inboxSendMessageRequestSchema),
     async (c) => {
-      const ctx = c.get("ctx");
+      const { ctx, wsId } = getWsCtx(c);
       const member = c.get("member")!;
-      const wsId = c.req.param("wsId");
       const conv = await getConvOr404(c, wsId, c.req.param("id"));
       const body = validated<InboxSendMessageRequest>(c);
 
@@ -170,9 +166,8 @@ export function createInboxRoutes(): Hono<HonoEnv> {
     "/:wsId/conversations/:id/assign",
     validateJson(assignConversationRequestSchema),
     async (c) => {
-      const ctx = c.get("ctx");
+      const { ctx, wsId } = getWsCtx(c);
       const member = c.get("member")!;
-      const wsId = c.req.param("wsId");
       const conv = await getConvOr404(c, wsId, c.req.param("id"));
       const body = validated<AssignConversationRequest>(c);
 
@@ -191,9 +186,8 @@ export function createInboxRoutes(): Hono<HonoEnv> {
 
   // AI에게 반환.
   app.post("/:wsId/conversations/:id/return-to-ai", async (c) => {
-    const ctx = c.get("ctx");
+    const { ctx, wsId } = getWsCtx(c);
     const member = c.get("member")!;
-    const wsId = c.req.param("wsId");
     const conv = await getConvOr404(c, wsId, c.req.param("id"));
 
     const updated = await ctx.repos.conversation.setMode(wsId, conv.id, "ai", null);
@@ -221,17 +215,15 @@ export function createInboxRoutes(): Hono<HonoEnv> {
 
   // ---------- 즐겨찾기(상담원 개인별 — ⚠️ WS 브로드캐스트 안 함) ----------
   app.put("/:wsId/conversations/:id/favorite", async (c) => {
-    const ctx = c.get("ctx");
+    const { ctx, wsId } = getWsCtx(c);
     const member = c.get("member")!;
-    const wsId = c.req.param("wsId");
     const ok = await ctx.repos.favorite.set(wsId, c.req.param("id"), member.userId);
-    if (!ok) throw AppError.of("not_found", "대화를 찾을 수 없다.");
+    if (!ok) throw AppError.of("not_found", "conversation not found");
     return c.json({ favorite: true });
   });
   app.delete("/:wsId/conversations/:id/favorite", async (c) => {
-    const ctx = c.get("ctx");
+    const { ctx, wsId } = getWsCtx(c);
     const member = c.get("member")!;
-    const wsId = c.req.param("wsId");
     await ctx.repos.favorite.unset(wsId, c.req.param("id"), member.userId);
     return c.json({ favorite: false });
   });
@@ -241,20 +233,18 @@ export function createInboxRoutes(): Hono<HonoEnv> {
     "/:wsId/conversations/:id/tags",
     validateJson(setConversationTagRequestSchema),
     async (c) => {
-      const wsId = c.req.param("wsId");
+      const { ctx, wsId } = getWsCtx(c);
       const conv = await getConvOr404(c, wsId, c.req.param("id"));
       const body = validated<SetConversationTagRequest>(c);
-      const ctx = c.get("ctx");
       // 대화는 위에서 확인됐으므로 undefined는 태그가 없거나 교차 워크스페이스 태그를 뜻한다.
       const tagIds = await ctx.repos.tag.addToConversation(wsId, conv.id, body.tagId);
-      if (tagIds === undefined) throw AppError.of("not_found", "태그를 찾을 수 없다.");
+      if (tagIds === undefined) throw AppError.of("not_found", "tag not found");
       await broadcastInbox(c, wsId, conv, { tagIds });
       return c.json({ tagIds });
     },
   );
   app.delete("/:wsId/conversations/:id/tags/:tagId", async (c) => {
-    const ctx = c.get("ctx");
-    const wsId = c.req.param("wsId");
+    const { ctx, wsId } = getWsCtx(c);
     const conv = await getConvOr404(c, wsId, c.req.param("id"));
     const tagIds = await ctx.repos.tag.removeFromConversation(wsId, conv.id, c.req.param("tagId"));
     await broadcastInbox(c, wsId, conv, { tagIds });
@@ -265,9 +255,8 @@ export function createInboxRoutes(): Hono<HonoEnv> {
 
   // 제안 목록 — memberContext 필수(visitor 접근 원천 차단).
   app.get("/:wsId/conversations/:id/suggestions", async (c) => {
-    const ctx = c.get("ctx");
+    const { ctx, wsId } = getWsCtx(c);
     const member = c.get("member")!;
-    const wsId = c.req.param("wsId");
     await getConvOr404(c, wsId, c.req.param("id"));
     const rows = await ctx.repos.assist.listByConversation(wsId, c.req.param("id"), member);
     return c.json({ items: rows.map(serializeSuggestion), nextCursor: null });
@@ -275,12 +264,11 @@ export function createInboxRoutes(): Hono<HonoEnv> {
 
   // 제안 결과 기록.
   app.patch("/:wsId/suggestions/:id", validateJson(patchSuggestionRequestSchema), async (c) => {
-    const ctx = c.get("ctx");
+    const { ctx, wsId } = getWsCtx(c);
     const member = c.get("member")!;
-    const wsId = c.req.param("wsId");
     const body = validated<PatchSuggestionRequest>(c);
     const row = await ctx.repos.assist.setOutcome(wsId, c.req.param("id"), body.outcome, member);
-    if (!row) throw AppError.of("not_found", "제안을 찾을 수 없다.");
+    if (!row) throw AppError.of("not_found", "suggestion not found");
     return c.json({ suggestion: serializeSuggestion(row) });
   });
 
@@ -293,9 +281,8 @@ async function setStatusHandler(
   status: "open" | "pending" | "closed",
   eventType: "closed" | "reopened" | "pending",
 ) {
-  const ctx = c.get("ctx");
+  const { ctx, wsId } = getWsCtx(c);
   const member = c.get("member")!;
-  const wsId = c.req.param("wsId")!;
   const conv = await getConvOr404(c, wsId, c.req.param("id")!);
   const updated = await ctx.repos.conversation.setStatus(wsId, conv.id, status);
   await ctx.repos.event.append(wsId, conv.id, {

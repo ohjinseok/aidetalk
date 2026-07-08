@@ -13,6 +13,7 @@ import { Hono } from "hono";
 
 import { validateJson, validated } from "../../http/middleware";
 import type { HonoEnv } from "../../http/types";
+import { getWsCtx } from "../../http/ws-ctx";
 import { serializeInvite, serializeMember } from "../../lib/serialize";
 import { assertOwner } from "./shared";
 
@@ -21,10 +22,9 @@ export function createMemberRoutes(): Hono<HonoEnv> {
 
   // 초대(owner만) — planEnforcer.assertCanAddSeat.
   app.post("/:wsId/members", validateJson(inviteMemberRequestSchema), async (c) => {
-    const ctx = c.get("ctx");
+    const { ctx, wsId } = getWsCtx(c);
     const owner = c.get("member")!;
     assertOwner(owner);
-    const wsId = c.req.param("wsId");
     const body = validated<InviteMemberRequest>(c);
 
     // 시트 한도 검사는 초대(행 생성) 시점에.
@@ -37,7 +37,7 @@ export function createMemberRoutes(): Hono<HonoEnv> {
     if (user) {
       // 기가입 계정 — members 초대(수락 후 합류).
       if (await ctx.repos.member.getRole(wsId, user.id)) {
-        throw AppError.of("conflict", "이미 워크스페이스 멤버다.");
+        throw AppError.of("conflict", "already a workspace member");
       }
       const member = await ctx.repos.member.invite(wsId, { userId: user.id, role: body.role });
       return c.json(
@@ -59,8 +59,7 @@ export function createMemberRoutes(): Hono<HonoEnv> {
 
   // 목록.
   app.get("/:wsId/members", async (c) => {
-    const ctx = c.get("ctx");
-    const wsId = c.req.param("wsId");
+    const { ctx, wsId } = getWsCtx(c);
     const rows = await ctx.repos.member.list(wsId);
     // repo 조인 프로젝션에는 workspaceId가 없다 — 계약(memberSchema)이 요구하므로 경로 값으로 채운다.
     return c.json({
@@ -71,9 +70,9 @@ export function createMemberRoutes(): Hono<HonoEnv> {
 
   // 삭제(owner만).
   app.delete("/:wsId/members/:id", async (c) => {
-    const ctx = c.get("ctx");
+    const { ctx, wsId } = getWsCtx(c);
     assertOwner(c.get("member")!);
-    await ctx.repos.member.remove(c.req.param("wsId"), c.req.param("id"));
+    await ctx.repos.member.remove(wsId, c.req.param("id"));
     return c.body(null, 204);
   });
 
