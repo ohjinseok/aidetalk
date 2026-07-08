@@ -13,9 +13,16 @@ import {
   type ConnectionMode,
   type SocketLike,
 } from "./lib/connection";
+import { detectLocale, detectTimezone } from "./lib/detect";
 import { newClientMsgId } from "./lib/ids";
 import { MessageStore } from "./lib/messageStore";
 import { readReceiptMsgId } from "./lib/readReceipt";
+import {
+  openStateKey,
+  safeStorageGet,
+  safeStorageSet,
+  visitorTokenKey,
+} from "./lib/storage";
 import type {
   ConnectionStatus,
   DisplayItem,
@@ -28,42 +35,6 @@ import type { ServerToWidgetMessage, Visitor } from "./shared";
 
 const ACK_TIMEOUT_MS = 5000;
 const POLL_INTERVAL_MS = 2000;
-
-/** Web Storage 접근은 private 모드/차단 환경에서 throw할 수 있어 항상 안전하게 감싼다. */
-function storageOf(kind: "local" | "session"): Storage {
-  return kind === "local" ? localStorage : sessionStorage;
-}
-function safeStorageGet(kind: "local" | "session", key: string): string | null {
-  try {
-    return storageOf(kind).getItem(key);
-  } catch {
-    return null;
-  }
-}
-function safeStorageSet(kind: "local" | "session", key: string, value: string): void {
-  try {
-    storageOf(kind).setItem(key, value);
-  } catch {
-    /* private 모드 등 — 무시 */
-  }
-}
-
-/** navigator.language 감지 — 구형 브라우저/차단 환경 대비 안전 래핑(실패 시 생략). */
-function detectLocale(): string | undefined {
-  try {
-    return navigator.language || undefined;
-  } catch {
-    return undefined;
-  }
-}
-/** Intl.DateTimeFormat().resolvedOptions().timeZone 감지 — 미지원 브라우저 대비 안전 래핑. */
-function detectTimezone(): string | undefined {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
-  } catch {
-    return undefined;
-  }
-}
 
 /** 렌더용 불변 스냅샷 — 컴포넌트는 이것만 본다. */
 export interface WidgetSnapshot {
@@ -572,23 +543,17 @@ export class WidgetController {
   }
 
   // ---------- 저장소 ----------
-  private tokenKey(): string {
-    return `od_vt_${this.config.workspaceId}`;
-  }
-  private openKey(): string {
-    return `od_open_${this.config.workspaceId}`;
-  }
   private readToken(): string | null {
-    return safeStorageGet("local", this.tokenKey());
+    return safeStorageGet("local", visitorTokenKey(this.config.workspaceId));
   }
   private writeToken(token: string): void {
-    safeStorageSet("local", this.tokenKey(), token);
+    safeStorageSet("local", visitorTokenKey(this.config.workspaceId), token);
   }
   private persistOpen(open: boolean): void {
-    safeStorageSet("session", this.openKey(), open ? "1" : "0");
+    safeStorageSet("session", openStateKey(this.config.workspaceId), open ? "1" : "0");
   }
   wasOpen(): boolean {
-    return safeStorageGet("session", this.openKey()) === "1";
+    return safeStorageGet("session", openStateKey(this.config.workspaceId)) === "1";
   }
 
   private wsUrl(token: string): string {
