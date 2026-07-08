@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import Link from "next/link";
 
 import type { ConversationStatus, InboxItem } from "@aidetalk/shared";
@@ -9,6 +7,7 @@ import type { ConversationStatus, InboxItem } from "@aidetalk/shared";
 import { visitorApi } from "@/lib/api/endpoints";
 import { formatMessageTime } from "@/lib/format";
 import { td, type TranslationKey } from "@/lib/i18n";
+import { useResource } from "@/hooks/useResource";
 import { Badge } from "@/components/ui/badge";
 import { DetailsSection } from "../DetailsSidebar";
 
@@ -33,19 +32,17 @@ export function VisitorConversationsSection({
   visitorId: string;
   currentConvId: string;
 }) {
-  const [items, setItems] = useState<InboxItem[] | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    setItems(null);
-    visitorApi
-      .conversations(wsId, visitorId)
-      .then((r) => alive && setItems(r.items.filter((i) => i.conversation.id !== currentConvId)))
-      .catch(() => alive && setItems([]));
-    return () => {
-      alive = false;
-    };
-  }, [wsId, visitorId, currentConvId]);
+  // 실패해도 items는 초기값(null)에 머물고 list는 빈 배열로 취급된다(기존 동작과 동치).
+  // 방문자/대화 전환 시 이전 목록 잔상 방지를 위해 resetOnDepsChange.
+  const { data: items } = useResource<InboxItem[] | null>(
+    () =>
+      visitorApi
+        .conversations(wsId, visitorId)
+        .then((r) => r.items.filter((i) => i.conversation.id !== currentConvId)),
+    null,
+    [wsId, visitorId, currentConvId],
+    { onError: () => {}, resetOnDepsChange: true },
+  );
 
   const list = items ?? [];
   if (list.length === 0) return null;

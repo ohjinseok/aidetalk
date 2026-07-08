@@ -10,7 +10,7 @@ import { td } from "@/lib/i18n";
 import { useToast } from "@/components/providers/ToastProvider";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { DetailsSection } from "../DetailsSidebar";
 

@@ -7,7 +7,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { agentApi } from "@/lib/api/endpoints";
 import { formatMessageTime } from "@/lib/format";
 import { td, type TranslationKey } from "@/lib/i18n";
+import { fromSentinel, toSentinel } from "@/lib/selectSentinel";
 import type { Agent, AgentLog, AgentLogOutcome } from "@aidetalk/shared";
+import { useResource } from "@/hooks/useResource";
 import { useToast } from "@/components/providers/ToastProvider";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { PageHeader, PageShell } from "@/components/layout/PageShell";
@@ -63,7 +65,13 @@ export function LogsScreen({ agentId }: { agentId: string }) {
   const wsId = workspace.id;
   const toast = useToast();
 
-  const [agent, setAgent] = useState<Agent | null>(null);
+  // 커넥터명 맥락 표시용 — 단건 조회 API가 없어 목록에서 찾는다(v1). 실패 시 조용히 null 유지.
+  const { data: agent } = useResource<Agent | null>(
+    () => agentApi.list(wsId).then((list) => list.find((a) => a.id === agentId) ?? null),
+    null,
+    [wsId, agentId],
+    { onError: () => {} },
+  );
   const [logs, setLogs] = useState<AgentLog[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -88,11 +96,6 @@ export function LogsScreen({ agentId }: { agentId: string }) {
 
   useEffect(() => {
     void load(true);
-    // 커넥터명 맥락 표시용 — 단건 조회 API가 없어 목록에서 찾는다(v1).
-    agentApi
-      .list(wsId)
-      .then((list) => setAgent(list.find((a) => a.id === agentId) ?? null))
-      .catch(() => setAgent(null));
   }, [wsId, agentId]);
 
   // outcome 필터는 클라이언트에서 적용(단순 검색, v1).
@@ -122,8 +125,10 @@ export function LogsScreen({ agentId }: { agentId: string }) {
       <div className="mb-3 flex items-center gap-2">
         <span className="text-xs text-muted-foreground">{td("dashboard.logs.filterOutcome")}</span>
         <Select
-          value={outcomeFilter || ALL_OUTCOMES}
-          onValueChange={(v) => setOutcomeFilter(v === ALL_OUTCOMES ? "" : (v as AgentLogOutcome))}
+          value={toSentinel(outcomeFilter, ALL_OUTCOMES, "")}
+          onValueChange={(v) =>
+            setOutcomeFilter(fromSentinel(v, ALL_OUTCOMES, "") as AgentLogOutcome | "")
+          }
         >
           <SelectTrigger className="h-8 w-40 text-xs" aria-label={td("dashboard.logs.filterOutcome")}>
             <SelectValue />

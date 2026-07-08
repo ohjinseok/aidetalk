@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Lock } from "lucide-react";
 
@@ -9,10 +9,11 @@ import type { ConversationNote } from "@aidetalk/shared";
 import { noteApi } from "@/lib/api/endpoints";
 import { formatRelativeTime } from "@/lib/format";
 import { td } from "@/lib/i18n";
+import { useResource } from "@/hooks/useResource";
 import { useToast } from "@/components/providers/ToastProvider";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { DetailsSection } from "../DetailsSidebar";
 
@@ -24,24 +25,18 @@ import { DetailsSection } from "../DetailsSidebar";
 export function NotesSection({ wsId, convId }: { wsId: string; convId: string }) {
   const { me } = useWorkspace();
   const toast = useToast();
-  const [notes, setNotes] = useState<ConversationNote[]>([]);
+  // 실패는 조용히 무시(기존 동작) — 대화 전환 시 이전 메모 잔상 방지를 위해 resetOnDepsChange.
+  const { data: notes, setData: setNotes } = useResource<ConversationNote[]>(
+    () => noteApi.list(wsId, convId),
+    [],
+    [wsId, convId],
+    { onError: () => {}, resetOnDepsChange: true },
+  );
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    setNotes([]);
-    noteApi
-      .list(wsId, convId)
-      .then((items) => alive && setNotes(items))
-      .catch(() => undefined);
-    return () => {
-      alive = false;
-    };
-  }, [wsId, convId]);
 
   async function onCreate() {
     const body = draft.trim();

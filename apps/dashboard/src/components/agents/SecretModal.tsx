@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { AlertTriangle, Eye, EyeOff, KeyRound } from "lucide-react";
 
-import { CopyButton } from "@/components/ui/CopyButton";
-import { Modal } from "@/components/ui/Modal";
+import { CopyButton } from "@/components/ui/copy-button";
+import { Modal } from "@/components/ui/modal";
 import { td, type TranslationKey } from "@/lib/i18n";
 
 const NODE_EXAMPLE = `import crypto from "node:crypto";

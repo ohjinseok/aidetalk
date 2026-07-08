@@ -3,6 +3,7 @@
 import type { Conversation, Member } from "@aidetalk/shared";
 
 import { td } from "@/lib/i18n";
+import { fromSentinel, toSentinel } from "@/lib/selectSentinel";
 import {
   Select,
   SelectContent,
@@ -28,8 +29,8 @@ export function AssignSection({
   return (
     <DetailsSection name="assign" title={td("dashboard.conversation.assignSection")}>
       <Select
-        value={conversation.assigneeId ?? UNASSIGNED}
-        onValueChange={(v) => onAssign(v === UNASSIGNED ? null : v)}
+        value={toSentinel(conversation.assigneeId, UNASSIGNED, null)}
+        onValueChange={(v) => onAssign(fromSentinel(v, UNASSIGNED, null))}
       >
         <SelectTrigger className="h-9 w-full text-[13px]" aria-label={td("dashboard.conversation.assign")}>
           <SelectValue />

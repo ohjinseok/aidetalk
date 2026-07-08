@@ -1,12 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 
 import { ApiError } from "@/lib/api/client";
 import { authApi, workspaceApi } from "@/lib/api/endpoints";
 import { td } from "@/lib/i18n";
 import type { Me, Membership, Workspace } from "@aidetalk/shared";
+import { useResource } from "@/hooks/useResource";
 import { Spinner } from "@/components/ui/spinner";
 
 interface WorkspaceCtx {
@@ -16,6 +17,13 @@ interface WorkspaceCtx {
   /** owner 여부 — owner 전용 액션 게이팅. */
   isOwner: boolean;
   refreshWorkspace: () => Promise<void>;
+}
+
+/** useResource로 로드하는 원본 데이터 — refreshWorkspace 등 파생 필드는 렌더 시점에 합성한다. */
+interface WorkspaceData {
+  me: Me;
+  workspace: Workspace;
+  membership: Membership;
 }
 
 const Ctx = createContext<WorkspaceCtx | null>(null);
@@ -32,46 +40,33 @@ export function useWorkspace(): WorkspaceCtx {
  */
 export function WorkspaceProvider({ wsId, children }: { wsId: string; children: ReactNode }) {
   const router = useRouter();
-  const [state, setState] = useState<WorkspaceCtx | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let alive = true;
-    async function load() {
-      try {
-        const me = await authApi.me();
-        const membership = me.memberships.find((m) => m.workspaceId === wsId);
-        if (!membership) {
-          const first = me.memberships[0];
-          router.replace(first ? `/w/${first.workspaceId}/inbox` : "/onboarding");
-          return;
-        }
-        const workspace = await workspaceApi.get(wsId);
-        if (!alive) return;
-        setState({
-          me,
-          workspace,
-          membership,
-          isOwner: membership.role === "owner",
-          refreshWorkspace: async () => {
-            const fresh = await workspaceApi.get(wsId);
-            if (alive) setState((s) => (s ? { ...s, workspace: fresh } : s));
-          },
-        });
-      } catch (err) {
-        if (!alive) return;
+  const { data, setData } = useResource<WorkspaceData | null>(
+    async () => {
+      const me = await authApi.me();
+      const membership = me.memberships.find((m) => m.workspaceId === wsId);
+      if (!membership) {
+        const first = me.memberships[0];
+        router.replace(first ? `/w/${first.workspaceId}/inbox` : "/onboarding");
+        // 리다이렉트 진행 중 — data는 초기값(null)에 머물러 스피너를 계속 보여준다.
+        return null;
+      }
+      const workspace = await workspaceApi.get(wsId);
+      return { me, workspace, membership };
+    },
+    null,
+    [wsId, router],
+    {
+      onError: (err) => {
         if (err instanceof ApiError && err.httpStatus === 401) {
           router.replace("/login");
           return;
         }
         setError(td("dashboard.common.errorGeneric"));
-      }
-    }
-    void load();
-    return () => {
-      alive = false;
-    };
-  }, [wsId, router]);
+      },
+    },
+  );
 
   if (error) {
     return (
@@ -80,7 +75,7 @@ export function WorkspaceProvider({ wsId, children }: { wsId: string; children: 
       </div>
     );
   }
-  if (!state) {
+  if (!data) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Spinner />
@@ -88,5 +83,16 @@ export function WorkspaceProvider({ wsId, children }: { wsId: string; children: 
     );
   }
 
-  return <Ctx.Provider value={state}>{children}</Ctx.Provider>;
+  const ctxValue: WorkspaceCtx = {
+    me: data.me,
+    workspace: data.workspace,
+    membership: data.membership,
+    isOwner: data.membership.role === "owner",
+    refreshWorkspace: async () => {
+      const fresh = await workspaceApi.get(wsId);
+      setData((d) => (d ? { ...d, workspace: fresh } : d));
+    },
+  };
+
+  return <Ctx.Provider value={ctxValue}>{children}</Ctx.Provider>;
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ArrowUpRight, Calendar, Info, TriangleAlert } from "lucide-react";
 
 import { trackingApi } from "@/lib/api/endpoints";
@@ -10,6 +10,7 @@ import { formatKrw } from "@/lib/format";
 import { td } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { TrackingSummary } from "@aidetalk/shared";
+import { useResource } from "@/hooks/useResource";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { PageHeader, PageShell, SectionCard } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
@@ -81,9 +82,6 @@ function SourceLegend({ swatch, label, value }: { swatch: string; label: string;
 export function TrackingScreen() {
   const { workspace } = useWorkspace();
   const router = useRouter();
-  const [summary, setSummary] = useState<TrackingSummary | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
 
   // S2는 트래킹 접근 불가(규칙 10) — 라우트 진입 시 인박스로.
   useEffect(() => {
@@ -92,19 +90,16 @@ export function TrackingScreen() {
     }
   }, [workspace, router]);
 
-  useEffect(() => {
-    if (workspace.segment === "s2_no_site") return;
-    let alive = true;
-    const range = thisMonthRange();
-    trackingApi
-      .summary(workspace.id, range)
-      .then((s) => alive && setSummary(s))
-      .catch(() => alive && setNotFound(true))
-      .finally(() => alive && setLoading(false));
-    return () => {
-      alive = false;
-    };
-  }, [workspace.id, workspace.segment]);
+  // 실패 시 토스트 대신 notFound 화면으로 대체 — summary는 초기값(null)에 머무른다.
+  const { data: summary, loading } = useResource<TrackingSummary | null>(
+    () =>
+      workspace.segment === "s2_no_site"
+        ? Promise.resolve(null)
+        : trackingApi.summary(workspace.id, thisMonthRange()),
+    null,
+    [workspace.id, workspace.segment],
+    { onError: () => {} },
+  );
 
   if (workspace.segment === "s2_no_site") return null;
   if (loading) {
@@ -116,7 +111,7 @@ export function TrackingScreen() {
       </PageShell>
     );
   }
-  if (notFound || !summary) {
+  if (!summary) {
     return (
       <PageShell width="wide">
         <Empty>
