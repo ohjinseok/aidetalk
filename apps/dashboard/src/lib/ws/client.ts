@@ -2,9 +2,10 @@
  * 대시보드 WebSocket 클라이언트 — 04 §5.3/5.4 `/ws/agent`.
  * 재연결(지수 백오프) + 구독 상태 복원 + 서버→대시보드 이벤트 파싱(알 수 없는 type 무시).
  *
- * TODO(question): `/ws/agent`는 쿠키 인증(04 §5)인데, Next rewrites는 WS 업그레이드를 프록시하지
- * 못한다. 크로스 오리진 WS로 od_session 쿠키를 실어 보내려면 서버/대시보드 동일 오리진 배포거나
- * 별도 WS 티켓이 필요하다. 지금은 NEXT_PUBLIC_WS_URL로 직접 접속하며, 실제 인증 연동은 통합 웨이브.
+ * 인증(od_session 쿠키, 04 §5)은 프로덕션에서 Caddy가 단일 진입점으로 /ws/*를 server로
+ * 라우팅하는 동일 오리진 배포를 전제한다 — 크로스 오리진 WS 티켓은 불필요.
+ * NEXT_PUBLIC_WS_URL이 없으면 window.location 기준으로 같은 호스트의 /ws/agent에 접속하는
+ * defaultWsUrl() 폴백이 정식 경로다(로컬 개발에서 서버 포트가 다를 때만 env로 오버라이드).
  */
 import {
   serverToDashboardMessageSchema,

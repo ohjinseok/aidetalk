@@ -1,0 +1,71 @@
+# AideTalk 리버스 프록시 (docs/10_DEPLOYMENT.md §2).
+#
+# 설계: 단일 도메인 + 경로 라우팅. Caddy가 유일한 진입점이 되어
+#   - `/api/*`     → 프리픽스 제거 후 server (대시보드 REST 클라이언트 전용 경로)
+#   - `/v1/*`      → server (위젯/방문자 REST, 대시보드도 /api 없이 직접 호출 가능)
+#   - `/t/*`       → server (전환 트래킹 픽셀/클릭 — 위젯 로더가 외부 오리진에서 직접 호출)
+#   - `/ws/*`      → server (WebSocket: /ws/visitor, /ws/agent)
+#   - `/widget.js` → server (위젯 로더 스크립트)
+#   - `/widget/*`  → server (위젯 본체 /widget/v{n}/app.js)
+#   - `/healthz`   → server (헬스체크)
+#   - 그 외 전부   → dashboard (Next.js UI)
+#
+# 사이트 주소는 PUBLIC_URL로 주입한다(compose가 전달).
+#   - 미설정(로컬): http://localhost → 평문 HTTP만, TLS/내부 CA 인증서 없음(브라우저 경고 없음).
+#   - 프로덕션:     https://cs.example.com → Caddy 자동 HTTPS(Let's Encrypt) + HTTP→HTTPS 리다이렉트 + HTTP/3.
+# PUBLIC_URL의 scheme(http/https)이 TLS 동작을 결정한다 — http://면 평문, https://면 자동 인증서.
+#
+# 신뢰 모델(중요): 이 구성에서 프록시는 정확히 Caddy 하나뿐이다.
+# 서버(apps/server/src/http/client-ip.ts)는 X-Forwarded-For의 "첫 값"을 클라이언트 IP로 믿고
+# 레이트리밋 키(로그인 10/min/IP 등)로 쓴다. 따라서 클라이언트가 보낸 XFF를 그대로 append하면
+# 공격자가 헤더를 위조해 IP별 레이트리밋을 전부 우회할 수 있다(로그인 브루트포스 + argon2id 메모리 DoS).
+# → 아래 모든 reverse_proxy에서 `header_up X-Forwarded-For {remote_host}`로 클라이언트가 보낸 값을
+#   덮어쓴다(append가 아니라 set). 이 파일이 XFF의 유일한 출처다.
+# Caddy 앞에 또 다른 프록시(CDN/L7 LB)를 두는 구성으로 바꾼다면 이 정책과 client-ip.ts를 함께 재검토할 것.
+{$PUBLIC_URL:http://localhost} {
+	# 압축 응답(대시보드 정적 자산·JSON에 효과).
+	encode zstd gzip
+
+	# 1) `/api/*` — 대시보드 REST 클라이언트(client.ts, base=/api)만 쓰는 경로.
+	#    handle_path가 매칭된 `/api` 프리픽스를 제거하고 나머지를 server로 넘긴다.
+	#    (예: /api/v1/workspaces → server의 /v1/workspaces). 서버는 /api 프리픽스가 없다.
+	handle_path /api/* {
+		reverse_proxy server:4000 {
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+
+	# 2) 나머지 server 경로 — 프리픽스를 보존한 채 그대로 전달.
+	#    위젯이 손님 사이트(외부 오리진)에서 이 경로들을 직접 호출하므로 반드시 server로 라우팅.
+	#    reverse_proxy는 WebSocket Upgrade를 자동 처리하므로 /ws/*도 별도 설정 불필요.
+	#    보안 헤더(3-1)는 이 경로들에 걸지 않는다 — 위젯은 외부 사이트에 <script>로 임베드되므로
+	#    X-Frame-Options 같은 프레임/임베드 제약이 걸리면 안 된다.
+	@server path /v1/* /t/* /ws/* /widget.js /widget/* /healthz
+	handle @server {
+		reverse_proxy server:4000 {
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+
+	# 3) 그 외 전부 → dashboard(Next.js). 정적 자산(/_next/*)·페이지 라우트를 포함.
+	handle {
+		# 3-1) 보안 헤더 — 대시보드 응답에만 적용(08_SECURITY.md §6).
+		#      위젯/트래킹 경로(2번 handle)에는 의도적으로 걸지 않는다.
+		header {
+			# HSTS: https 사이트에서만 의미가 있다. http://localhost 로컬 구성에서도 헤더 자체는 나가지만
+			# 브라우저는 평문 응답의 HSTS를 무시하므로 로컬 개발에 지장이 없다(스펙 RFC 6797 §7.2).
+			Strict-Transport-Security "max-age=31536000; includeSubDomains"
+			# MIME 스니핑 차단.
+			X-Content-Type-Options "nosniff"
+			# 대시보드는 어떤 사이트에도 프레임되지 않는다(클릭재킹 차단).
+			X-Frame-Options "DENY"
+			# 크로스 오리진으로는 오리진만 전송(경로·쿼리에 담긴 식별자 유출 방지).
+			Referrer-Policy "strict-origin-when-cross-origin"
+			# 서버 소프트웨어 노출 제거.
+			-Server
+		}
+		reverse_proxy dashboard:3000 {
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+}

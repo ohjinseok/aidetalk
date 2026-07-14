@@ -1,7 +1,9 @@
-# AideTalk 셀프호스팅 docker compose 초안 (docs/11_ROADMAP.md M0).
+# AideTalk 셀프호스팅 docker compose (docs/11_ROADMAP.md M2).
 #
 # 기준: `docker compose -f docker/compose.yml up -d`로
-#       postgres + redis + server(/healthz 200) + dashboard가 기동한다.
+#       postgres + redis + server(/healthz 200) + dashboard + caddy가 기동하고,
+#       caddy가 유일한 진입점(80/443)이 되어 단일 도메인으로 서비스한다.
+#       로컬 기본값(PUBLIC_URL 미설정)에서는 http://localhost 로 접속된다.
 #
 # 환경변수 단일 출처: docs/10_DEPLOYMENT.md §1 표.
 # 사용법: `cp docker/.env.example docker/.env` 후 값 채우고
@@ -52,20 +54,32 @@ services:
       S3_BUCKET: ${S3_BUCKET:-}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY:-}
       S3_SECRET_KEY: ${S3_SECRET_KEY:-}
-      SERVER_URL: ${SERVER_URL}
-      DASHBOARD_URL: ${DASHBOARD_URL}
+      # 단일 도메인 구성: 공개 오리진(PUBLIC_URL)이 곧 server·dashboard의 공개 URL이다.
+      # 별도 오리진으로 분리 배포(기존 리버스 프록시 사용자)할 때만 .env에서 SERVER_URL/DASHBOARD_URL을
+      # 명시해 오버라이드한다 — docs/10_DEPLOYMENT.md §2 "기존 리버스 프록시 사용자".
+      SERVER_URL: ${SERVER_URL:-${PUBLIC_URL:-http://localhost}}
+      DASHBOARD_URL: ${DASHBOARD_URL:-${PUBLIC_URL:-http://localhost}}
       PORT: 4000
       VISITOR_TOKEN_SECRET: ${VISITOR_TOKEN_SECRET}
       SESSION_SECRET: ${SESSION_SECRET}
       SECRET_ENC_KEY: ${SECRET_ENC_KEY:-}
       EDITION: ${EDITION:-}
       ALLOW_INSECURE_AGENT_ENDPOINT: ${ALLOW_INSECURE_AGENT_ENDPOINT:-false}
+      # 공개 가입 허용 여부(기본 false) — 유저 0명인 첫 가입과 초대받은 이메일은 false여도 허용된다
+      # (docs/10_DEPLOYMENT.md §1-2).
+      ALLOW_PUBLIC_SIGNUP: ${ALLOW_PUBLIC_SIGNUP:-false}
       SMTP_URL: ${SMTP_URL:-}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       TELEMETRY_ENABLED: ${TELEMETRY_ENABLED:-false}
       TELEMETRY_ENDPOINT: ${TELEMETRY_ENDPOINT:-https://telemetry.aidetalk.invalid/v1/ping}
-    ports:
-      - "4000:4000"
+      # 부팅 시 마이그레이션 자동 실행 — compose는 단일 서버 인스턴스라 동시 실행 경합이 없고,
+      # 이게 꺼져 있으면 최초 `docker compose up`에서 테이블이 없어 서버가 죽는다(원커맨드 설치 전제).
+      # 여러 인스턴스로 수평 확장하는 배포에서는 false로 두고 마이그레이션을 별도 스텝으로 돌린다.
+      RUN_MIGRATIONS_ON_BOOT: ${RUN_MIGRATIONS_ON_BOOT:-true}
+    # 호스트 포트를 직접 노출하지 않는다 — 진입점은 caddy 하나뿐(내부 네트워크로만 접근).
+    # 기존 리버스 프록시로 직접 붙이려면 caddy 서비스를 제거하고 여기서 포트를 노출한다(§2 문서).
+    expose:
+      - "4000"
     volumes:
       - files:/data/files
     healthcheck:
@@ -75,10 +89,6 @@ services:
       retries: 10
       start_period: 10s
     networks: [aidetalk]
-    # 마이그레이션: 서버는 RUN_MIGRATIONS_ON_BOOT=true 환경변수로 부팅 시 자동 마이그레이션을
-    # 지원한다(apps/server/src/index.ts, docs/10_DEPLOYMENT.md §2). 기본값은 false이고 이 compose
-    # 파일도 명시적으로 켜지 않으므로, 최초 기동 전/후 `pnpm db:migrate`를 수동 실행하거나
-    # .env에 RUN_MIGRATIONS_ON_BOOT=true를 설정해 자동화한다.
 
   dashboard:
     build:
@@ -88,15 +98,42 @@ services:
       server:
         condition: service_healthy
     environment:
-      NEXT_PUBLIC_SERVER_URL: ${SERVER_URL}
+      # NEXT_PUBLIC_SERVER_URL은 빌드 시점에 이미지에 박히며, 단일 도메인 구성의 런타임 라우팅은
+      # caddy가 대신한다(대시보드는 REST를 /api 상대경로로, WS를 window.location 기반으로 접속).
+      # 여기 값은 개발/빌드 파라미터일 뿐 프로덕션 라우팅에 관여하지 않는다(docs/10 §2 근거).
+      NEXT_PUBLIC_SERVER_URL: ${SERVER_URL:-${PUBLIC_URL:-http://localhost}}
       PORT: 3000
+    # server와 동일 — 호스트 포트 미노출, caddy를 통해서만 접근.
+    expose:
+      - "3000"
+    networks: [aidetalk]
+
+  caddy:
+    # 리버스 프록시 겸 유일한 공개 진입점 — TLS 종단·HTTP/3·경로 라우팅(docker/Caddyfile).
+    image: caddy:2-alpine
+    depends_on:
+      server:
+        condition: service_healthy
+      dashboard:
+        condition: service_started
+    environment:
+      # Caddyfile 사이트 주소로 주입. 미설정 시 http://localhost(로컬 평문 HTTP, 인증서 경고 없음).
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost}
     ports:
-      - "3000:3000"
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3(QUIC)
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data # ACME 인증서/키 영속(재발급 rate limit 회피)
+      - caddy_config:/config
     networks: [aidetalk]
 
 volumes:
   pgdata: {}
   files: {}
+  caddy_data: {}
+  caddy_config: {}
 
 networks:
   aidetalk: {}
