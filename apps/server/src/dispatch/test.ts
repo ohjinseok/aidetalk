@@ -7,7 +7,7 @@ import { decryptSecret } from "@aidetalk/db";
 import { parseAgentResponse, type AgentRequest } from "@aidetalk/shared";
 
 import type { AppContext } from "../context";
-import { assertResolvesToPublicIp } from "../lib/agent-endpoint";
+import { assertEndpointHostAllowed, endpointPolicy } from "../lib/agent-endpoint";
 import { resolveSecretEncKeyMaterial } from "../lib/secret-enc-key";
 import { postToAgent } from "./http";
 
@@ -44,12 +44,11 @@ export async function testAgentConnection(
     return { ok: false, latencyMs: 0, error: "secret_decrypt_failed" };
   }
 
-  if (app.env.EDITION === "cloud" && !app.env.ALLOW_INSECURE_AGENT_ENDPOINT) {
-    try {
-      await assertResolvesToPublicIp(new URL(agent.endpointUrl).hostname);
-    } catch {
-      return { ok: false, latencyMs: 0, error: "ssrf_blocked" };
-    }
+  // 테스트 호출도 실제 dispatch와 동일한 SSRF 정책을 따른다(에디션 무관).
+  try {
+    await assertEndpointHostAllowed(new URL(agent.endpointUrl).hostname, endpointPolicy(app.env));
+  } catch {
+    return { ok: false, latencyMs: 0, error: "ssrf_blocked" };
   }
 
   const now = new Date().toISOString();

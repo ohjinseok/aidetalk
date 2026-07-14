@@ -67,7 +67,8 @@ curl http://localhost:4000/healthz
 | `SESSION_SECRET` | - | ✅ | 상담원/대시보드 세션 서명 키 |
 | `SECRET_ENC_KEY` | (없음) | | Agent/웹훅 secret을 AES-256-GCM으로 암호화하는 전용 키(32바이트, hex 또는 base64). 비워두면 `SESSION_SECRET`에서 파생한 키로 폴백하고 부팅 시 경고 로그를 남깁니다. 세션 키 로테이션과 분리하려면 값을 채우는 것을 권장합니다 |
 | `EDITION` | (없음) | | `cloud`면 ee(클라우드 전용) 모듈을 로드합니다. 비워두면 셀프호스팅 모드 |
-| `ALLOW_INSECURE_AGENT_ENDPOINT` | `false` | | 로컬 개발 등에서 `http://` Agent 엔드포인트를 허용할지 여부. 프로덕션에서는 `false` 권장 |
+| `ALLOW_INSECURE_AGENT_ENDPOINT` | `false` | | Agent/웹훅 엔드포인트의 SSRF 가드 완화 스위치. 기본값(`false`)은 `https` + 공인 IP만 허용합니다. 내부망 Agent를 쓰려면 `true` — 아래 설명 참고 |
+| `ALLOW_PUBLIC_SIGNUP` | `false` | | 공개 회원가입 허용 여부. 기본값이어도 **설치 직후 첫 가입(유저 0명)**과 **초대받은 이메일의 가입**은 허용됩니다 — 즉 첫 관리자 계정을 만들고 나면 공개 가입이 자동으로 닫히고, 이후 팀원은 초대로 합류합니다. 누구나 가입 가능하게 열려면 `true` |
 | `SMTP_URL` | (없음) | | 비워두면 이메일 발송이 전부 스킵되고 로그만 남습니다(셀프호스팅 기본 동작) |
 | `LOG_LEVEL` | `info` | | pino 로그 레벨 |
 | `TELEMETRY_ENABLED` | `false` | | **opt-in** 익명 텔레메트리. 기본은 꺼져 있으며, `true`로 명시적으로 켰을 때만 동작합니다 |
@@ -75,6 +76,24 @@ curl http://localhost:4000/healthz
 
 시크릿(`VISITOR_TOKEN_SECRET`, `SESSION_SECRET`, `SECRET_ENC_KEY` 등)은 절대 코드나 로그에
 남기지 마세요. 로그에는 항상 마스킹된 형태(`sk_live_ab****`)로만 남습니다.
+
+### 내부망 Agent를 쓰려면 (`ALLOW_INSECURE_AGENT_ENDPOINT`)
+
+AideTalk 서버는 여러분이 등록한 Agent 엔드포인트와 웹훅 URL로 **직접 요청을 보냅니다**. 그래서
+기본값(`false`)에서는 엔드포인트가 `https`여야 하고, 공인 IP로 리졸브돼야 합니다. 사설/루프백 대역
+(`10.x`, `172.16~31.x`, `192.168.x`, `127.x`, `::1`, `fc00::/7`)은 등록·발송 모두 거부됩니다.
+
+이 검사가 없으면 워크스페이스 멤버가 엔드포인트를 `http://169.254.169.254/...`(클라우드 메타데이터)나
+사내망 주소로 지정해 서버가 대신 요청하게 만들 수 있고, 그 응답이 상담 화면에 노출됩니다
+(SSRF — AWS/GCP VM에 설치했다면 인스턴스 자격증명이 새어나갈 수 있습니다).
+
+**같은 Docker 네트워크나 LAN에 Agent를 띄운 경우**(예: `http://my-agent:8080`,
+`http://192.168.1.10:3000`, 로컬 개발의 `http://localhost:5000`)에는 `ALLOW_INSECURE_AGENT_ENDPOINT=true`가
+필요합니다. 다만 켜는 순간 **서버가 워크스페이스 멤버가 지정한 내부망 주소로 요청을 보낼 수 있게 된다**는
+점을 이해하고 켜세요 — 멤버가 전부 신뢰할 수 있는 내부 인원일 때만 권장합니다.
+
+켜더라도 클라우드 메타데이터/링크로컬 대역(`169.254.0.0/16`, `fe80::/10`, `fd00:ec2::254`)은 **항상
+차단**됩니다.
 
 ### 텔레메트리(opt-in) 수집 항목
 

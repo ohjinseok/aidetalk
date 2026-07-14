@@ -3,7 +3,7 @@
  * users는 워크스페이스 밖 전역 리소스(auth). 따라서 workspaceId를 받지 않는다(문서 예외).
  */
 import { newId } from "@aidetalk/shared";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import type { Database } from "../client";
 import { hashPassword, verifyPassword } from "../crypto";
@@ -30,6 +30,15 @@ export function makeUserRepo(db: Database) {
         })
         .returning();
       return row!;
+    },
+
+    /**
+     * 인스턴스 전체 유저 수 — 공개 가입 게이트의 부트스트랩 판정용(0명이면 첫 관리자 가입 허용).
+     * 인스턴스 전역 카운트라 workspaceId를 받지 않는다(instanceRepo와 동일한 예외).
+     */
+    async countAll(): Promise<number> {
+      const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(users);
+      return row?.count ?? 0;
     },
 
     async getByEmail(email: string) {

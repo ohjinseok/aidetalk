@@ -122,6 +122,100 @@ describe("08 §2 Agent 응답 Content-Type 검증", () => {
   });
 });
 
+// ================= §2·§7 SSRF 가드 적용 조건(에디션 무관) =================
+describe("08 §2·§7 SSRF 가드 — 셀프호스팅 기본(ALLOW_INSECURE_AGENT_ENDPOINT=false)", () => {
+  let strict: Harness;
+  beforeAll(async () => {
+    // EDITION 미설정(셀프호스팅) + 완화 플래그 off = 기본값.
+    strict = await createHarness({ ALLOW_INSECURE_AGENT_ENDPOINT: "false" });
+  });
+  afterAll(async () => {
+    await strict.close();
+  });
+
+  const blocked = [
+    "http://169.254.169.254/latest/meta-data/", // 클라우드 메타데이터
+    "https://169.254.169.254/computeMetadata/v1/",
+    "https://192.168.1.10/agent", // 내부망
+    "https://127.0.0.1:5000/agent", // 루프백
+    "http://203.0.113.10/agent", // 공인 IP지만 http
+  ];
+
+  it("에이전트 등록: 사설/메타데이터/http endpoint는 400 validation/failed", async () => {
+    const m = await newUserWithWorkspace(strict);
+    for (const endpointUrl of blocked) {
+      const res = await http(strict, "POST", `/v1/workspaces/${m.workspaceId}/agents`, {
+        cookie: m.cookie,
+        body: { name: "봇", endpointUrl },
+      });
+      expect(res.status, endpointUrl).toBe(400);
+      expect(res.json.error.code).toBe("validation/failed");
+    }
+  });
+
+  it("웹훅 등록: 동일 정책으로 거부된다", async () => {
+    const m = await newUserWithWorkspace(strict);
+    for (const url of blocked) {
+      const res = await http(strict, "POST", `/v1/workspaces/${m.workspaceId}/webhooks`, {
+        cookie: m.cookie,
+        body: { url, events: ["agent.auto_disabled"] },
+      });
+      expect(res.status, url).toBe(400);
+      expect(res.json.error.code).toBe("validation/failed");
+    }
+  });
+
+  it("공인 IP + https 에이전트는 등록 가능", async () => {
+    const m = await newUserWithWorkspace(strict);
+    const res = await http(strict, "POST", `/v1/workspaces/${m.workspaceId}/agents`, {
+      cookie: m.cookie,
+      body: { name: "봇", endpointUrl: "https://203.0.113.10/agent" },
+    });
+    expect(res.status).toBe(201);
+  });
+});
+
+describe("08 §2·§7 SSRF 가드 — ALLOW_INSECURE_AGENT_ENDPOINT=true(내부망 에이전트 허용)", () => {
+  // 기본 harness가 완화 모드(loopback mock agent 사용)라 그대로 쓴다.
+  it("에이전트 등록: 사설 IP + http는 허용된다", async () => {
+    const m = await newUserWithWorkspace(h);
+    const res = await http(h, "POST", `/v1/workspaces/${m.workspaceId}/agents`, {
+      cookie: m.cookie,
+      body: { name: "내부망 봇", endpointUrl: "http://192.168.1.10:3000/agent" },
+    });
+    expect(res.status).toBe(201);
+  });
+
+  it("에이전트 등록: 그래도 클라우드 메타데이터 주소는 차단된다", async () => {
+    const m = await newUserWithWorkspace(h);
+    const res = await http(h, "POST", `/v1/workspaces/${m.workspaceId}/agents`, {
+      cookie: m.cookie,
+      body: {
+        name: "탈취 시도",
+        endpointUrl: "http://169.254.169.254/latest/meta-data/iam/security-credentials/",
+      },
+    });
+    expect(res.status).toBe(400);
+    expect(res.json.error.code).toBe("validation/failed");
+  });
+
+  it("웹훅 등록: 사설 IP는 허용, 메타데이터는 차단", async () => {
+    const m = await newUserWithWorkspace(h);
+    const ok = await http(h, "POST", `/v1/workspaces/${m.workspaceId}/webhooks`, {
+      cookie: m.cookie,
+      body: { url: "http://192.168.1.10:3000/hook", events: ["agent.auto_disabled"] },
+    });
+    expect(ok.status).toBe(201);
+
+    const denied = await http(h, "POST", `/v1/workspaces/${m.workspaceId}/webhooks`, {
+      cookie: m.cookie,
+      body: { url: "http://169.254.169.254/hook", events: ["agent.auto_disabled"] },
+    });
+    expect(denied.status).toBe(400);
+    expect(denied.json.error.code).toBe("validation/failed");
+  });
+});
+
 // ================= §5 WS 동시 연결 상한 =================
 describe("08 §5 WS 동일 visitor 동시 연결 상한(5)", () => {
   it("6번째 연결은 4429로 거부된다", async () => {

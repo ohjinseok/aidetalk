@@ -5,7 +5,7 @@
  * (userRepo.getByEmail / memberRepo.getByInviteToken과 동일한 03 §3 예외).
  */
 import { newId } from "@aidetalk/shared";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull } from "drizzle-orm";
 
 import type { Database } from "../client";
 import { invites } from "../schema/invites";
@@ -45,6 +45,26 @@ export function makeInviteRepo(db: Database) {
     async getByTokenHash(tokenHash: string) {
       const [row] = await db.select().from(invites).where(eq(invites.tokenHash, tokenHash));
       return row;
+    },
+
+    /**
+     * 해당 이메일로 아직 유효한(미수락·미만료) 초대가 있는지 — ALLOW_PUBLIC_SIGNUP=false일 때도
+     * 초대받은 사람은 가입할 수 있어야 하므로 필요하다(auth 라우트의 가입 게이트).
+     * 워크스페이스를 모르는 상태의 조회라 getByTokenHash와 동일하게 workspaceId를 받지 않는다.
+     */
+    async hasPendingByEmail(email: string): Promise<boolean> {
+      const [row] = await db
+        .select({ id: invites.id })
+        .from(invites)
+        .where(
+          and(
+            eq(invites.email, email),
+            isNull(invites.acceptedAt),
+            gt(invites.expiresAt, new Date()),
+          ),
+        )
+        .limit(1);
+      return row !== undefined;
     },
 
     /** 수락 처리(acceptedAt 기록). 이미 수락됐으면(acceptedAt not null) 갱신 없이 undefined 반환 → 재수락 거부. */

@@ -15,7 +15,7 @@ import type { WebhookEventName } from "@aidetalk/shared";
 
 import type { AppContext } from "../context";
 import { signBody } from "../dispatch/http";
-import { assertResolvesToPublicIp } from "../lib/agent-endpoint";
+import { assertEndpointHostAllowed, endpointPolicy } from "../lib/agent-endpoint";
 import { resolveSecretEncKeyMaterial } from "../lib/secret-enc-key";
 
 export type { WebhookEventName };
@@ -135,14 +135,12 @@ export class HttpWebhookDispatcher implements WebhookDispatcher {
 
   /** 서명된 POST 1회. 응답 본문은 읽지 않는다(fire-and-forget) — status<300만 성공 처리. */
   private async postOnce(url: string, secret: string, rawBody: string): Promise<boolean> {
-    // 발송 직전 SSRF 재검사(08 §7 = §2 규약 공유, 클라우드·DNS 리바인딩 대비). 셀프호스팅/완화 모드는 스킵.
-    if (this.app.env.EDITION === "cloud" && !this.app.env.ALLOW_INSECURE_AGENT_ENDPOINT) {
-      try {
-        await assertResolvesToPublicIp(new URL(url).hostname);
-      } catch {
-        this.app.logger.warn("웹훅 endpoint가 사설/루프백 IP로 리졸브됨 — 발송 차단(SSRF 가드)");
-        return false;
-      }
+    // 발송 직전 SSRF 재검사(08 §7 = §2 규약 공유, DNS 리바인딩 대비) — 에이전트 커넥터와 동일 정책.
+    try {
+      await assertEndpointHostAllowed(new URL(url).hostname, endpointPolicy(this.app.env));
+    } catch {
+      this.app.logger.warn("웹훅 endpoint가 차단 대역으로 리졸브됨 — 발송 차단(SSRF 가드)");
+      return false;
     }
     const timestampSec = Math.floor(Date.now() / 1000);
     const { timestamp, signature } = signBody(secret, rawBody, timestampSec);

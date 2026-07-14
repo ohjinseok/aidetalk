@@ -19,7 +19,7 @@ import {
 import type { AppContext } from "./context";
 import { buildAgentRequest, HISTORY_LIMIT } from "./dispatch/build-request";
 import { postToAgent, type DispatchOutcome } from "./dispatch/http";
-import { assertResolvesToPublicIp } from "./lib/agent-endpoint";
+import { assertEndpointHostAllowed, endpointPolicy } from "./lib/agent-endpoint";
 import { resolveSecretEncKeyMaterial } from "./lib/secret-enc-key";
 import { serializeSuggestion } from "./lib/serialize";
 import {
@@ -152,20 +152,21 @@ export class HttpAgentDispatcher implements AgentDispatcher {
       return;
     }
 
-    // dispatch 직전 SSRF 재검사(클라우드, DNS 리바인딩 대비).
-    if (this.app.env.EDITION === "cloud" && !this.app.env.ALLOW_INSECURE_AGENT_ENDPOINT) {
-      try {
-        await assertResolvesToPublicIp(new URL(agent.endpointUrl).hostname);
-      } catch {
-        if (mode === "reply") {
-          await this.handleReplyFailure(agent, vmCtx, request, {
-            kind: "network_error",
-            message: "ssrf blocked",
-            latencyMs: 0,
-          });
-        }
-        return;
+    // dispatch 직전 SSRF 재검사(DNS 리바인딩 대비) — 에디션 무관, 정책은 endpointPolicy가 결정한다.
+    try {
+      await assertEndpointHostAllowed(
+        new URL(agent.endpointUrl).hostname,
+        endpointPolicy(this.app.env),
+      );
+    } catch {
+      if (mode === "reply") {
+        await this.handleReplyFailure(agent, vmCtx, request, {
+          kind: "network_error",
+          message: "ssrf blocked",
+          latencyMs: 0,
+        });
       }
+      return;
     }
 
     // ---------- dispatch ----------

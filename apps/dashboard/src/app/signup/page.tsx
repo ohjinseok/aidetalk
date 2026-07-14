@@ -7,6 +7,7 @@ import { AuthCard, AuthSuspense } from "@/components/auth/AuthCard";
 import { useToast } from "@/components/providers/ToastProvider";
 import { FormRow } from "@/components/ui/form-row";
 import { Input } from "@/components/ui/input";
+import { ApiError } from "@/lib/api/client";
 import { authApi, memberApi } from "@/lib/api/endpoints";
 import { td } from "@/lib/i18n";
 
@@ -39,7 +40,13 @@ function SignupInner() {
       // 신규 가입은 워크스페이스가 없으므로 온보딩으로.
       router.replace("/onboarding");
     } catch (err) {
-      toast.error(err);
+      // 가입 라우트의 403은 "공개 가입 비활성화"뿐이다(ALLOW_PUBLIC_SIGNUP=false + 초대 없음).
+      // 일반 권한 문구 대신 초대를 요청하라는 안내를 보여준다.
+      if (err instanceof ApiError && err.code === "auth/forbidden") {
+        toast.toast("error", td("dashboard.auth.signupDisabled"));
+      } else {
+        toast.error(err);
+      }
     } finally {
       setBusy(false);
     }

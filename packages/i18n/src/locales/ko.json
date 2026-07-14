@@ -82,7 +82,8 @@
       "toLogin": "이미 계정이 있으신가요? 로그인",
       "logout": "로그아웃",
       "loginFailed": "이메일 또는 비밀번호가 올바르지 않습니다",
-      "signupFailed": "회원가입에 실패했습니다"
+      "signupFailed": "회원가입에 실패했습니다",
+      "signupDisabled": "이 인스턴스는 공개 가입이 비활성화되어 있습니다. 관리자에게 초대를 요청해주세요."
     },
     "onboarding": {
       "title": "워크스페이스 만들기",

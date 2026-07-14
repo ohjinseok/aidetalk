@@ -76,6 +76,7 @@ export type TranslationKey =
   | "dashboard.auth.logout"
   | "dashboard.auth.loginFailed"
   | "dashboard.auth.signupFailed"
+  | "dashboard.auth.signupDisabled"
   | "dashboard.onboarding.title"
   | "dashboard.onboarding.subtitle"
   | "dashboard.onboarding.wsName"
@@ -509,6 +510,7 @@ export const translationKeys = [
   "dashboard.auth.logout",
   "dashboard.auth.loginFailed",
   "dashboard.auth.signupFailed",
+  "dashboard.auth.signupDisabled",
   "dashboard.onboarding.title",
   "dashboard.onboarding.subtitle",
   "dashboard.onboarding.wsName",

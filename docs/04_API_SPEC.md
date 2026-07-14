@@ -27,6 +27,7 @@
 | visitor 메시지 전송 | 10 msg/min/visitor | `429 rate/limited` |
 | `POST /v1/widget/session` | 30/min/IP | 〃 |
 | 로그인 시도 | 10/min/IP | 〃 |
+| 회원가입 시도 | 5/시간/IP | 〃 (가입 1건 = argon2id 1회 → 병렬 남용 시 메모리 고갈 위험) |
 | `/t/*` | 60/min/IP | 204 무시(응답은 항상 성공처럼) |
 
 ## 1. 위젯 API (`/v1/widget/*`) — visitor_token 인증
@@ -78,6 +79,7 @@ POST /v1/auth/login         { email, password } → 200 { user } + Set-Cookie
 POST /v1/auth/logout        → 204
 GET  /v1/me                 → { user, memberships: [{ workspaceId, workspaceName, role }] }
 ```
+- `POST /v1/auth/signup`은 공개 가입 게이트를 통과해야 한다(08 §3): `ALLOW_PUBLIC_SIGNUP=true`이거나, 유저가 0명인 신규 인스턴스이거나, 해당 이메일로 유효한 초대가 있을 때만 허용. 그 외에는 `403 auth/forbidden`. 레이트리밋 5/시간/IP 초과 시 `429 rate/limited`.
 - password: argon2id. 세션: Redis 저장(`sess:{id}` → userId, TTL 14일), 쿠키 httpOnly+SameSite=Lax(+클라우드 Secure).
 
 ### 워크스페이스/멤버

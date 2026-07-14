@@ -12,7 +12,10 @@
 
 ## 2. Agent Dispatcher (아웃바운드)
 - 모든 요청 HMAC-SHA256(`timestamp.body`) + timestamp ±5분 검증 규약(에이전트 측 문서화).
-- endpoint URL: 클라우드(EDITION=cloud)에서 https 강제 + **SSRF 가드** — 등록 시와 dispatch 시(DNS 리바인딩 대비) 모두 resolve된 IP가 사설/루프백/링크로컬 대역(10/8, 172.16/12, 192.168/16, 127/8, 169.254/16, ::1, fc00::/7)이면 거부. 셀프호스팅은 `ALLOW_INSECURE_AGENT_ENDPOINT=true`로 완화 가능.
+- endpoint URL: **에디션 무관 기본 on** — https 강제 + **SSRF 가드**(등록 시와 dispatch 시 모두 검사, DNS 리바인딩 대비). resolve된 IP가 사설/루프백/링크로컬 대역(10/8, 172.16/12, 192.168/16, 127/8, 169.254/16, 0/8, ::1, fe80::/10, fc00::/7)이면 거부.
+  - 완화는 셀프호스팅에서 `ALLOW_INSECURE_AGENT_ENDPOINT=true`일 때만: **http 허용 + 사설/내부 IP 허용**(같은 도커 네트워크·LAN의 자기 에이전트 연결용). `EDITION=cloud`에서는 이 플래그를 무시하고 항상 엄격 모드다.
+  - 완화 모드에서도 **링크로컬/클라우드 메타데이터 대역(169.254.0.0/16, fe80::/10, fd00:ec2::254)은 항상 차단**한다 — 자기 에이전트를 메타데이터 주소에 둘 정당한 사례가 없고, 유출 피해(인스턴스 자격증명)만 크다.
+  - 구현: `apps/server/src/lib/agent-endpoint.ts`(`endpointPolicy`/`validateAgentEndpoint`/`assertEndpointHostAllowed`). 커넥터 dispatch(`dispatcher.ts`, `dispatch/test.ts`)와 웹훅 발송(`services/webhook-dispatcher.ts`)이 같은 정책을 공유한다. 셀프호스터 가이드는 10 §1-3.
 - 응답 본문 64KB 제한(초과 시 에러 처리), redirect 미추적, Content-Type 검증.
 - 연속 실패 5회 → auto_disabled + 구독한 웹훅에 `agent.auto_disabled` 발송(§7) + 대시보드 배너(공통). owner 이메일은 v1에서 웹훅+배너로 대체하며, 이메일 발송은 M3 클라우드에서 검토한다.
 
@@ -24,6 +27,9 @@
   3. `suggestion.new` WS 이벤트는 agent 소켓에만 fan-out (`conv:{id}:agents` 채널 분리).
 - 대시보드 세션: httpOnly + SameSite=Lax(+prod Secure). CSRF: 상태 변경 요청은 `Origin` 헤더 화이트리스트 검증(쿠키 인증 경로 한정).
 - 비밀번호: argon2id (memory 19MiB, iterations 3, parallelism 1 — OWASP 권장 하한), 최소 8자. 구현: `packages/db/src/crypto.ts` `hashPassword`, 스키마: `apps/server/src/http/schemas.ts`(signup `password.min(8)`).
+- **회원가입 남용 방어(공개 인스턴스 필수):**
+  - 레이트리밋: `POST /v1/auth/signup` 5회/시간/IP → 초과 시 `429 rate/limited`. 로그인(10/min)보다 보수적인 이유는 정상 사용자의 가입 빈도가 극히 낮고, 가입 1건마다 argon2id(19MiB)가 돌아 병렬 가입이 메모리 고갈 DoS가 되기 때문.
+  - 공개 가입 게이트: `ALLOW_PUBLIC_SIGNUP`(기본 `false`). false여도 ① 유저 0명인 신규 인스턴스의 첫 가입, ② 유효한(미수락·미만료) 초대를 받은 이메일의 가입은 허용한다. 그 외에는 `403 auth/forbidden`. 즉 기본 동작은 "첫 관리자 계정 생성 후 자동으로 공개 가입이 닫히고, 이후 합류는 초대로만".
 
 ## 4. 입력 검증 / 출력 안전
 - 모든 요청 body는 zod parse 후 사용. 실패 → 400 validation/failed.
@@ -51,7 +57,7 @@
 - 백업(클라우드, ee): pg_dump 일 1회 + 오브젝트 스토리지 암호화 보관 30일.
 
 ## 7. 웹훅(아웃바운드)도 Agent와 동일 규약
-- HMAC 서명(timestamp.body, `X-AideTalk-Timestamp`/`X-AideTalk-Signature`), https 강제(클라우드), SSRF 가드 공유 유틸 사용(`lib/agent-endpoint.ts`), 응답 무시(fire-and-forget). 타임아웃 10초, 실패 시 재시도 3회(1분/5분/30분).
+- HMAC 서명(timestamp.body, `X-AideTalk-Timestamp`/`X-AideTalk-Signature`), https 강제 + SSRF 가드는 §2와 **완전히 동일한 정책**(공유 유틸 `lib/agent-endpoint.ts` — 에디션 무관 기본 on, `ALLOW_INSECURE_AGENT_ENDPOINT`로만 완화, 메타데이터 대역은 항상 차단), 응답 무시(fire-and-forget). 타임아웃 10초, 실패 시 재시도 3회(1분/5분/30분).
 - 이벤트 카탈로그(04 §2): `agent.auto_disabled` { agentId, agentName, failureCount }, `conversation.handoff` { conversationId, reason }. 워크스페이스가 구독(events)한 이벤트에만 발송.
 - ⚠️ v1 한계: 재시도는 in-process `setTimeout`으로 예약한다 — 서버 재시작 시 예약된 재시도는 유실된다(내구성 있는 큐는 후속 웨이브).
 

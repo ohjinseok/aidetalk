@@ -82,7 +82,8 @@
       "toLogin": "Already have an account? Log in",
       "logout": "Log out",
       "loginFailed": "Invalid email or password",
-      "signupFailed": "Sign up failed"
+      "signupFailed": "Sign up failed",
+      "signupDisabled": "Public sign-up is disabled on this instance. Ask an admin for an invite."
     },
     "onboarding": {
       "title": "Create a workspace",

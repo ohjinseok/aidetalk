@@ -36,6 +36,12 @@ export function testEnv(overrides: Partial<NodeJS.ProcessEnv> = {}): Env {
     VISITOR_TOKEN_SECRET: TEST_VISITOR_SECRET,
     SESSION_SECRET: TEST_SESSION_SECRET,
     LOG_LEVEL: "silent",
+    // 테스트 DB는 파일 간 공유라 유저가 이미 존재한다 → 기본은 공개 가입을 열어 둔다.
+    // 가입 게이트 자체를 검증하는 테스트(signup-abuse.test.ts)는 오버라이드로 false를 넘긴다.
+    ALLOW_PUBLIC_SIGNUP: "true",
+    // 테스트 mock agent/webhook 서버는 loopback(http)에 뜬다 — 셀프호스팅 완화 모드와 동일 조건.
+    // SSRF 엄격 모드를 검증하는 테스트는 이 값을 "false"로 덮어쓴다.
+    ALLOW_INSECURE_AGENT_ENDPOINT: "true",
     ...overrides,
   } as NodeJS.ProcessEnv);
 }
