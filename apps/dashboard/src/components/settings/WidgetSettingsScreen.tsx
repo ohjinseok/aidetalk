@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CopyIcon, PlusIcon, Trash2Icon } from "lucide-react";
 
 import { workspaceApi } from "@/lib/api/endpoints";
@@ -63,18 +63,28 @@ export function WidgetSettingsScreen() {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // 빌드 시점에 인라인되는 NEXT_PUBLIC_SERVER_URL은 셀프호스팅 이미지에서 항상 폴백만
+  // 나온다(런타임 env 미반영). 대신 런타임에: env 오버라이드 → 동일 오리진 배포(Caddy 단일
+  // 진입점)라면 window.location.origin이 정답 → 그래도 없으면 플레이스홀더 순으로 결정한다.
+  // window 접근은 SSR/최초 클라이언트 렌더와 값이 다르면 hydration mismatch가 나므로
+  // 마운트 후 useEffect에서만 갱신한다.
+  const [runtimeOrigin, setRuntimeOrigin] = useState<string | null>(null);
+  useEffect(() => {
+    if (!process.env.NEXT_PUBLIC_SERVER_URL) {
+      setRuntimeOrigin(window.location.origin);
+    }
+  }, []);
+
   const embedCode = useMemo(() => {
-    const host = process.env.NEXT_PUBLIC_SERVER_URL ?? "https://your-aidetalk-host";
+    const host =
+      process.env.NEXT_PUBLIC_SERVER_URL ?? runtimeOrigin ?? "https://your-aidetalk-host";
+    // 06 §1 임베드 계약 그대로: 로더는 window.AideTalk.workspaceId를 읽는다(data 속성이 아니다).
+    // 서버 오리진은 로더가 자기 script src에서 유도하므로 별도 설정이 필요 없다.
     return `<script>
-  (function (d) {
-    var s = d.createElement("script");
-    s.src = "${host}/widget.js";
-    s.async = true;
-    s.dataset.workspace = "${workspace.id}";
-    d.body.appendChild(s);
-  })(document);
-</script>`;
-  }, [workspace.id]);
+  window.AideTalk = { workspaceId: "${workspace.id}" };
+</script>
+<script async src="${host}/widget.js"></script>`;
+  }, [runtimeOrigin, workspace.id]);
 
   async function onSave() {
     setSaving(true);

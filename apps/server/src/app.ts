@@ -17,6 +17,7 @@ import { createInviteRoutes } from "./routes/invites";
 import { createTrackingRoutes } from "./routes/tracking";
 import { createWebhookRoutes } from "./routes/webhooks";
 import { createWidgetRoutes } from "./routes/widget";
+import { createWidgetAssetRoutes } from "./routes/widget-assets";
 import { createWorkspaceRoutes } from "./routes/workspaces";
 
 /** AppContext를 주입해 전체 앱을 조립한다. */
@@ -41,6 +42,8 @@ export function createApp(ctx: AppContext): Hono<HonoEnv> {
   app.route("/v1/workspaces", createWorkspaceRoutes());
   app.route("/v1/workspaces", createWebhookRoutes());
   app.route("/t", createTrackingRoutes());
+  // 위젯 정적 자산(/widget.js, /widget/v{n}/app.js) — 무인증·CSRF 무관(06 §1.1, 10 §3).
+  app.route("/", createWidgetAssetRoutes());
 
   return app;
 }

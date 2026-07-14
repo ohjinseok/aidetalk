@@ -13,4 +13,5 @@ export * from "./api-responses";
 export * from "./ws-protocol";
 export * from "./adapters";
 export * from "./widget-api";
+export * from "./widget-assets";
 export * from "./read-receipt";
