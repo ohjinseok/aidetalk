@@ -5,11 +5,18 @@
 node_modules/
 **/node_modules/
 
+# 빌드 산출물은 반드시 하위 디렉토리 패턴(**/)까지 함께 제외한다.
+# 최상위 패턴만 쓰면(예: `dist/`) apps/server/dist 같은 호스트 산출물이 컨텍스트로 딸려 들어가
+# 이미지 안의 새 빌드 결과를 덮거나 낡은 파일이 그대로 남는다(실제로 M0 시절 플레이스홀더
+# apps/server/dist/index.js가 이미지에 섞여 들어가 라우트 없는 서버가 뜨는 사고가 있었다).
 dist/
+**/dist/
 build/
+**/build/
 .next/
 **/.next/
 out/
+**/out/
 .turbo/
 **/.turbo/
 *.tsbuildinfo

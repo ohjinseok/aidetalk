@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/migrate.ts"
+    "db:migrate": "tsx src/migrate-cli.ts"
   },
   "dependencies": {
     "@aidetalk/i18n": "workspace:*",
