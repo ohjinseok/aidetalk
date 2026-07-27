@@ -17,7 +17,7 @@
     "@aidetalk/db": "workspace:*",
     "@aidetalk/i18n": "workspace:*",
     "@aidetalk/shared": "workspace:*",
-    "@hono/node-server": "^2.0.8",
+    "@hono/node-server": "^2.0.12",
     "drizzle-orm": "^0.45.2",
     "hash-wasm": "^4.12.0",
     "hono": "^4.12.27",
